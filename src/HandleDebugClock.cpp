@@ -11,6 +11,7 @@
 #include "Global.h"
 #include "LedDriver_FastLED.h"
 
+//#include myDEBUG
 #include "MyDebug.h"
 
 #include "ESPAsyncWebServer.h"
@@ -158,10 +159,6 @@ void debugClock(AsyncWebServerRequest *request)
   message += " ";
   message += String(mt->year(tempEspTime));
   message += F("</li>\n");
-  message += F("</li>\n<li>UTC-TST:");
-  //message += String(timeZone.mt->toUTC(tempEspTime));
-  message += String(mt->toUTC(tempEspTime));
-  message += F("</li>\n");
   message += F("<li>Uptime: ");
   message += mt->convertSeconds(mt->mytm.upTime, true);
   message += F("</li>\n");
@@ -204,11 +201,11 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</li>\n");
   message += F("<li>Free RAM: ");
   message += str_freeheap + F(" bytes</li>\n");
-  message += F("<li>MaxFreeBlockSize: ");
-  message += str_maxfreeblocks;
+  message += F("<li>StackSize: ");
+  message += String(glb->stackSize);
   message += F(" bytes</li>\n");
-  message += F("<li>MinFreeBlockSize: ");
-  message += String(glb->minFreeBlockSize);
+  message += F("<li>HighWaterMark: ");
+  message += String(glb->highWaterMark);
   message += F("<small> bytes Codeline: <br>");
   message += glb->codetab;
   message += ":";

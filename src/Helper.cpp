@@ -4,7 +4,7 @@
 #include "Settings.h"
 #include "MyTime.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 

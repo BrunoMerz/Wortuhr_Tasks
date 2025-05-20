@@ -3,13 +3,11 @@
    @autor    Bruno Merz
 */
 
-#define USE_EADNS
-
 #include "esp_wps.h"
 #include <WiFi.h>
 
 #include "ESPAsyncWebServer.h"
-#include "ESPAsyncWiFiManager.h"
+//#include "ESPAsyncWiFiManager.h"
 #include <ESPAsyncDNSServer.h>
 #include <ElegantOTA.h>
 
@@ -18,7 +16,7 @@
 #include "Configuration.h"
 //#include "esp_task_wdt.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 //#include "MyTFT.h"
@@ -44,11 +42,10 @@ static TFTImageRenderer *ir = TFTImageRenderer::getInstance();
 
 static AsyncWebServer server(80);
 static AsyncDNSServer dns;
-static AsyncWiFiManager wifiManager(&server, &dns);
+
 
 
 static IconRenderer *icor = IconRenderer::getInstance();
-//static AsyncWiFiManager wifiManager(&server, &dns); // global wm instance
 static Settings *settings = Settings::getInstance();
 
 
@@ -85,7 +82,7 @@ boolean wpsStart(void) {
       _wpsSuccess=true;
       break;
     }
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    delay(1000);
     DEBUG_PRINTF("Waiting for IP, i=%d\n",i);
   }
   if(!_wpsSuccess) {
@@ -120,11 +117,17 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
       DEBUG_PRINTLN("Disconnected from station, attempting reconnection");
       WiFi.reconnect();
       break;
+    case ARDUINO_EVENT_WIFI_STA_STOP:
+      DEBUG_PRINTLN("STA Stop: " + String(WiFi.SSID()));
+      break;
     case ARDUINO_EVENT_WPS_ER_SUCCESS:
       DEBUG_PRINTLN("WPS Successfull, stopping WPS and connecting to: " + String(WiFi.SSID()));
       wpsStop();
       vTaskDelay(pdMS_TO_TICKS(10));
       WiFi.begin();
+      break;
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      DEBUG_PRINTLN("STA_CONNECTED");
       break;
     case ARDUINO_EVENT_WPS_ER_FAILED:
       DEBUG_PRINTLN("WPS Failed, retrying");
@@ -139,26 +142,111 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
     case ARDUINO_EVENT_WPS_ER_PIN:
       DEBUG_PRINTLN("WPS_PIN = " + wpspin2string(info.wps_er_pin.pin_code));
       break;
+    case ARDUINO_EVENT_WIFI_AP_STOP:
+      DEBUG_PRINTLN("AP_STOP");
+      break;
+	  case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
+      DEBUG_PRINTLN("AP_STACONNECTED");
+      break;
+	  case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+      DEBUG_PRINTLN("AP_STADISCONNECTED");
+      break;
+	  case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+      DEBUG_PRINTLN("AP_STAIPASSIGNED");
+      break;
+	  case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
+      DEBUG_PRINTLN("AP_PROBEREQRECVED");
+      break;
     default:
+      DEBUG_PRINTF("Nicht behandelter Event: %d\n", event);
       break;
   }
 }
 
+
 void handleRoot(AsyncWebServerRequest *request) {
   String html = R"rawliteral(
-    <html>
-      <head><title>WiFi Konfiguration</title></head>
-      <body>
-        <h1>WLAN auswählen</h1>
-        <form action="/save" method="GET">
-          <label for="ssid">SSID:</label>
-          <select name="ssid">%OPTIONS%</select><br><br>
-          <label for="pass">Passwort:</label>
-          <input name="pass" type="password"><br><br>
-          <input type="submit" value="Verbinden">
-        </form>
-      </body>
-    </html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wi-Fi Konfiguration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f3f3f3;
+      text-align: center;
+      padding: 20px;
+    }
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      padding: 1px;
+      background-color: #f1f1f1;
+      margin: 5px 0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    li:hover {
+      background-color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Wi-Fi Konfiguration</h1>
+    <form action="/save" method="GET">
+      <h3>Verfügbare Netze</h3>
+      <ul id="item-list">
+        %OPTIONS%
+      </ul>
+      <label for="ssid">SSID (Netzwerkname)</label>
+      <input type="text" id="ssid" name="ssid" required placeholder="SSID eingeben">
+      <label for="password">Passwort</label>
+      <input type="password" id="pass" name="pass" required placeholder="Passwort eingeben">
+      <button type="submit">Verbinden</button>
+    </form>
+  </div>
+  <script>
+    function setInputValue(value) {
+      document.getElementById('ssid').value = value;
+    }
+  </script>
+</body>
+</html>
   )rawliteral";
 
   html.replace("%OPTIONS%", MyWifi::_scanResultHTML);
@@ -192,49 +280,38 @@ MyWifi::MyWifi(void) {
 }
 
 
-bool MyWifi::scanNetworks() {
-  Serial.println("Suche nach WLAN-Netzen...");
+bool MyWifi::startConfigPortal(char *ssid) {
+  DEBUG_PRINTLN("Starting Config Portal");
+  IPAddress apIP(192, 168, 4, 1);
+  const byte DNS_PORT = 53;
+
+  DEBUG_PRINTLN("Suche nach WLAN-Netzen...");
   bool ret;
   int n = WiFi.scanNetworks();
   _scanResultHTML = "";
 
   if (n == 0) {
-    _scanResultHTML = "<option value=\"\">Keine Netzwerke gefunden</option>";
+    _scanResultHTML = "<li>Keine Netzwerke gefunden</li>";
     ret = false;
   } else {
     for (int i = 0; i < n; ++i) {
       String ssid = WiFi.SSID(i);
       ssid.replace("\"", ""); // doppelte Anführungszeichen vermeiden
-      _scanResultHTML += "<option value=\"" + ssid + "\">" + ssid + "</option>\n";
+      if(_scanResultHTML.indexOf(ssid) < 0)
+        _scanResultHTML += "<li onclick=\"setInputValue('"+ ssid + "')\">" + ssid + "</li>";
     }
     ret = true;
   }
-  Serial.printf("Suche nach WLAN-Netzen beendet: ret=%d, _scanResultHTML=%s\n", ret, _scanResultHTML.c_str());
-  return ret;
-}
+  DEBUG_PRINTF("Suche nach WLAN-Netzen beendet: ret=%d, _scanResultHTML=%s\n", ret, _scanResultHTML.c_str());
 
-bool MyWifi::startConfigPortal(char *ssid) {
-  DEBUG_PRINTLN("Starting Config Portal");
-  
-  wifiManager.startConfigPortal("WORTUHR1");
-  DEBUG_PRINTLN("Nach Config Portal");
-  return true;
-}
 
-/*
-bool MyWifi::startConfigPortal(char *ssid) {
-  DEBUG_PRINTLN("Starting Config Portal");
-  IPAddress apIP(192, 168, 4, 1);
-  IPAddress netMsk(255, 255, 255, 0);
-  const byte DNS_PORT = 53;
-  
-  WiFi.mode(WIFI_STA);
   WiFi.disconnect();
+  delay(100);
+  WiFi.mode(WIFI_AP);
   WiFi.softAP(ssid);
-  WiFi.softAPConfig(apIP, apIP, netMsk);
-
-  DEBUG_PRINTLN("Starting DNS Portal");
-  dns.start(DNS_PORT, "*", apIP);
+  delay(100);
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+ 
   DEBUG_PRINTLN("adding handler");
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     handleRoot(request);
@@ -248,18 +325,28 @@ bool MyWifi::startConfigPortal(char *ssid) {
   server.onNotFound([](AsyncWebServerRequest *request) { 
     AsyncWebServerResponse *response = request->beginResponse(302, "text/plain");
     response->addHeader("Location", "/");
-    request->send(response);                                                                                      
+    request->send(response);
   });
+
+  DEBUG_PRINTLN("Starting DNS Portal");
+  dns.start(DNS_PORT, "*", apIP);
+
+  delay(100);
+
   DEBUG_PRINTLN("Starting server");
   server.begin();
-  DEBUG_PRINTLN("Server started");
+  
+ delay(100);
+
   while(!_got_ip) {
-    DEBUG_PRINTLN("Waiting for IP");
-    delay(1000);
+    delay(10);
   }
+  DEBUG_PRINTLN("server.end()");
+  server.end();
+  ESP.restart();
   return true;
 }
-*/
+
 
 bool MyWifi::myStartWPS(void) {
   DEBUG_PRINTLN("WPS Konfiguration gestartet");
@@ -278,12 +365,11 @@ bool MyWifi::myStartWPS(void) {
    Initialize
 */
 void MyWifi::init(void) {
-  WiFi.disconnect();
-  delay(100);
+  WiFi.disconnect(true);
   WiFi.onEvent(WiFiEvent);
   WiFi.mode(WIFI_STA);
+  DEBUG_PRINTF("systemname?%s\n", settings->mySettings.systemname);
   WiFi.setHostname(settings->mySettings.systemname);
-  scanNetworks();
   _connected = false;
 }
 
@@ -300,9 +386,7 @@ void MyWifi::doReset(void) {
   ESP.restart();
 }
 
-/**
-   connects to a network
-*/
+
 bool MyWifi::myBegin(char *ssid, char *passwd) {
   int ret;
   int timeout;
@@ -356,7 +440,10 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
     while(!_got_ip) {
       _wifi_stat = -1;
       DEBUG_PRINTLN("vor WiFi.begin");
-
+      WiFi.disconnect(true, true);  // trennt, vergisst SSID & Hostname
+      delay(100);
+      // Hostname setzen **vor** WiFi.begin()
+      WiFi.setHostname(settings->mySettings.systemname);
       WiFi.begin(_ssid, _passwd);
       i=0;
       while(i++ < timeout && !_got_ip) {
@@ -409,6 +496,7 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
   }
 }
 
+
 bool MyWifi::isConnected(void) {
   return _connected;
 }
@@ -421,6 +509,7 @@ void MyWifi::saveSSIDandPWD(void) {
       settings->saveToNVS();
    }
 }
+
 
 AsyncWebServer *MyWifi::getServer(void) {
   return &server;

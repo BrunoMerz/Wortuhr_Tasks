@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 #include "html_content.h"
@@ -9,7 +9,6 @@
   #include <ESP8266WiFi.h>
   #include <ESP8266WebServer.h>
   extern ESP8266WebServer webServer;
-  extern uint16_t minFreeBlockSize;
 #else
   #include <WiFi.h>
   #include "WebServer.h"
@@ -33,10 +32,6 @@ void initFS();
 void handleUpload();
 
 void formatFS();
-
-
-extern uint16_t codeline;
-extern String codetab;
 
 void initFS() {
   if ( !LittleFS.begin() ) 

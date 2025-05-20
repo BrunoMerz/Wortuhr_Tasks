@@ -8,7 +8,7 @@
 #include "SecondBell.h"
 #include "Settings.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 extern s_taskParams taskParams;
@@ -1154,7 +1154,7 @@ void LedDriver::quadrate(uint16_t screenBufferNew[], uint32_t color)
 void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color)
 {
   transitionInProgress = true;
-  Serial.printf("writeScreenBufferFade brightness=%d\n",brightness);
+  DEBUG_PRINTF("writeScreenBufferFade brightness=%d\n",brightness);
   clear();
   uint8_t brightnessBuffer[10][12] = {};
 

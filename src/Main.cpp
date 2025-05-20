@@ -20,9 +20,9 @@
 #define myDEBUG
 #include "MyDebug.h"
 
+static Global *glb = Global::getInstance();
 
 s_taskParams taskParams;
-TaskHandle_t myTasks[8];
 
 unsigned long ota_progress_millis = 0;
 
@@ -65,11 +65,13 @@ void onOTAEnd(bool success) {
 }
 
 
-void queueScheduler(void *) {
+void queueScheduler(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
   Settings *settings=Settings::getInstance();
   MyTime *mt=MyTime::getInstance();
   OpenWeather *ow = OpenWeather::getInstance();
   LedDriver *ledDriver = LedDriver::getInstance();
+  MyWifi *myWifi=MyWifi::getInstance();
 
   int lastHour=0;
   int lastMinute=0;
@@ -84,6 +86,9 @@ void queueScheduler(void *) {
   dayOnTime = settings->mySettings.dayOnTime;
   uint32_t aktts;
   bool isNightOff;
+  uint16_t autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
+  uint8_t autoMode = 0;
+  uint32_t colorsaver;
   
 
   DEBUG_PRINTF("queueScheduler: Core=%d\n", xPortGetCoreID());
@@ -96,12 +101,6 @@ void queueScheduler(void *) {
     aktMinute = mt->mytm.tm_min;
     aktSecond = mt->mytm.tm_sec;
     
-    if(!(aktMinute % 15) && aktSecond==30) {
-      if (xEventGroupSetBits(xEvent, MODE_DATE)) {
-        DEBUG_PRINTF("Gesendet: MODE_DATE, aktSecond=%d\n", aktSecond);
-      }
-    }
-
     isNightOff=false;
     if(aktMinute != lastMinute) {
       lastMinute = aktMinute;
@@ -126,44 +125,142 @@ void queueScheduler(void *) {
         ledDriver->setOnOff();
 
       if (xEventGroupSetBits(xEvent, MODE_TIME)) {
-        DEBUG_PRINTF("Gesendet: MODE_TIME, aktMinute=%d\n", aktMinute);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
+        glb->stackSize = tp->taskInfo[1].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Gesendet: MODE_TIME, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
       }
     }
 
-    if(!(aktMinute % 14) &&  aktSecond==3) {
-      if (xEventGroupSetBits(xEvent, MODE_MOONPHASE)) {
-        DEBUG_PRINTF("Gesendet: MODE_MOONPHASE, aktMinute=%d, aktSecond=%d\n", aktMinute, aktSecond);
-      }
-    }
-
-    if ( aktMinute % 10 == 4 &&  aktSecond==10 && ow->errorCounterOutdoorWeather < OPENWEATHER_MAX_ERROR)
+    autoModeChangeTimer--;
+    if (!autoModeChangeTimer)
     {
-      if(strlen(settings->mySettings.openweatherapikey) > 25) {
-        if (xEventGroupSetBits(xEvent, MODE_EXT_TEMP)) {
-          DEBUG_PRINTF("Gesendet: MODE_EXT_TEMP, aktMinute=%d, aktSecond=%d\n", aktMinute, aktSecond);
+      if (aktSecond > 45)
+      {
+        autoModeChangeTimer = autoModeChangeTimer + 30;
+      }
+      else if (aktSecond < 15)
+      {
+        autoModeChangeTimer = autoModeChangeTimer + 15;
+      }
+      else
+      {
+
+        DEBUG_PRINTF("autoMode=%d, aktSecond=%d\n", autoMode, aktSecond);
+
+        autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
+        //mode_ohne_sound = true;
+        //single_mode = true;
+        colorsaver = settings->mySettings.ledcol;
+        switch (autoMode)
+        {
+        case 0:
+#ifdef APIKEY
+          if (myWifi->isConnected() && strlen(settings->mySettings.openweatherapikey) > 25) {
+            if (xEventGroupSetBits(xEvent, MODE_EXT_TEMP)) {
+                glb->stackSize = tp->taskInfo[1].stackSize;
+                glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+                glb->codeline = __LINE__;
+                glb->codetab = __NAME__;
+                DEBUG_PRINTF("Gesendet: MODE_EXT_TEMP, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+              }
+            }
+#endif
+          autoMode = 1;
+          break;
+
+        case 1:
+
+#ifdef APIKEY
+          if (myWifi->isConnected() && strlen(settings->mySettings.openweatherapikey) > 25) {
+            if (xEventGroupSetBits(xEvent, MODE_EXT_TEMP)) {
+                glb->stackSize = tp->taskInfo[1].stackSize;
+                glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+                glb->codeline = __LINE__;
+                glb->codetab = __NAME__;
+                DEBUG_PRINTF("Gesendet: MODE_EXT_TEMP, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+              }
+          }
+#else
+#ifdef SHOW_MODE_DATE
+          if (xEventGroupSetBits(xEvent, MODE_DATE)) {
+            glb->stackSize = tp->taskInfo[1].stackSize;
+            glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+            glb->codeline = __LINE__;
+            glb->codetab = __NAME__;
+            DEBUG_PRINTF("Gesendet: MODE_DATE, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+          }
+#endif
+#endif
+
+          autoMode = 2;
+          break;
+
+        case 2:
+#ifdef SHOW_MODE_MOONPHASE
+          if (xEventGroupSetBits(xEvent, MODE_MOONPHASE)) {
+            glb->stackSize = tp->taskInfo[1].stackSize;
+            glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+            glb->codeline = __LINE__;
+            glb->codetab = __NAME__;
+            DEBUG_PRINTF("Gesendet: MODE_MOONPHASE, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+          }
+#endif
+          autoMode = 3;
+          break;
+
+        case 3:
+#ifdef SHOW_MODE_DATE
+          if (xEventGroupSetBits(xEvent, MODE_DATE)) {
+            glb->stackSize = tp->taskInfo[1].stackSize;
+            glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+            glb->codeline = __LINE__;
+            glb->codetab = __NAME__;
+            DEBUG_PRINTF("Gesendet: MODE_DATE, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+          }
+#endif
+          autoMode = 4;
+          break;
+
+        case 4:
+#ifdef APIKEY
+#ifdef SHOW_MODE_WETTER
+          if (strlen(settings->mySettings.openweatherapikey) > 25) {
+            if (xEventGroupSetBits(xEvent, MODE_WETTER)) {
+              glb->stackSize = tp->taskInfo[1].stackSize;
+              glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+              glb->codeline = __LINE__;
+              glb->codetab = __NAME__;
+              DEBUG_PRINTF("Gesendet: MODE_WETTER, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+            } 
+          }
+#endif
+#else
+#ifdef SHOW_MODE_MOONPHASE
+          if (xEventGroupSetBits(xEvent, MODE_MOONPHASE)) {
+            glb->stackSize = tp->taskInfo[1].stackSize;
+            glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+            glb->codeline = __LINE__;
+            glb->codetab = __NAME__;
+            DEBUG_PRINTF("Gesendet: MODE_MOONPHASE, aktMinute=%d, uxHighWaterMark=%d\n", aktMinute, glb->highWaterMark);
+          }
+#endif
+#endif
+          autoMode = 0;
+          break;
         }
       }
     }
 
-    //if ( aktMinute % 10 == 4 && mt->mytm.tm_loc > LastOutdoorWeatherTime + OPENWEATHER_PERIODE && ow->errorCounterOutdoorWeather < OPENWEATHER_MAX_ERROR)
-    if(!(aktMinute % 2) &&  aktSecond==5)
-    {
-      if(strlen(settings->mySettings.openweatherapikey) > 25) {
-        if (xEventGroupSetBits(xEvent, MODE_WETTER)) {
-          DEBUG_PRINTF("Gesendet: MODE_WETTER, aktMinute=%d, aktSecond=%d\n", aktMinute, aktSecond);
-        }
-      }
-    }
     ElegantOTA.loop();
     vTaskDelay(pdMS_TO_TICKS(500)); // 1 Sekunde warten
   }
 }
 
 
-void weatherQueueHandler(void *) {
+void weatherQueueHandler(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
@@ -176,10 +273,13 @@ void weatherQueueHandler(void *) {
     if (xEventGroupWaitBits(xEvent, MODE_WETTER, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-        DEBUG_PRINTF("Erhalten: MODE_WETTER, aktMinute=%d, aktSecond=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
+
+        glb->stackSize = tp->taskInfo[6].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Erhalten: MODE_Wetter, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->highWaterMark);
+
         renderer->clearScreenBuffer(matrix);
         outdoorWeather->getOutdoorConditions(String(settings->mySettings.openweatherlocation), String(settings->mySettings.openweatherapikey));
         if ( outdoorWeather->retcodeOutdoorWeather > 0 )
@@ -216,7 +316,8 @@ void weatherQueueHandler(void *) {
 }
 
 
-void tempQueueHandler(void *) {
+void tempQueueHandler(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
@@ -227,10 +328,13 @@ void tempQueueHandler(void *) {
     if (xEventGroupWaitBits(xEvent, MODE_EXT_TEMP, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-        DEBUG_PRINTF("Erhalten: MODE_EXT_TEMP, aktMinute=%d, aktSecond=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
+
+        glb->stackSize = tp->taskInfo[5].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Erhalten: MODE_EXT_TEMP, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
+
         renderer->clearScreenBuffer(matrix);
         outdoorWeather->getOutdoorConditions(String(settings->mySettings.openweatherlocation), String(settings->mySettings.openweatherapikey));
         if ( outdoorWeather->retcodeOutdoorWeather > 0 )
@@ -289,7 +393,8 @@ void tempQueueHandler(void *) {
 }
 
 
-void moonQueueHandler(void *) {
+void moonQueueHandler(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
@@ -303,10 +408,13 @@ void moonQueueHandler(void *) {
     if (xEventGroupWaitBits(xEvent, MODE_MOONPHASE, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-        DEBUG_PRINTF("Erhalten: MODE_MOONPHASE, aktMinute=%d, aktSecond=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
+
+        glb->stackSize = tp->taskInfo[2].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Erhalten: MODE_MOONPHASE, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n",mt->mytm.tm_min, mt->mytm.tm_sec, glb->highWaterMark);
+
         renderer->clearScreenBuffer(matrix);
 
         DEBUG_PRINTLN("moonphase: " + String(ow->moonphase));
@@ -349,12 +457,14 @@ void showTextHandler(void *p) {
     if (xEventGroupWaitBits(xEvent, MODE_FEED, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-        DEBUG_PRINTF("Erhalten: MODE_FEED, feedText=%s\n", tp->feedText.c_str());
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
-        ledDriver->mode = MODE_FEED;
 
+        glb->stackSize = tp->taskInfo[7].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Erhalten: MODE_FEED, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->highWaterMark);
+
+        ledDriver->mode = MODE_FEED;
         DEBUG_PRINTLN(tp->feedText);
 
         tp->feedText.replace("\xC3\x84", "\x7F"); // Ä
@@ -433,7 +543,8 @@ void showTextHandler(void *p) {
 }
 
 
-void dateQueueHandler(void *) {
+void dateQueueHandler(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
@@ -446,10 +557,13 @@ void dateQueueHandler(void *) {
     if (xEventGroupWaitBits(xEvent, MODE_DATE, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-        DEBUG_PRINTF("Erhalten: MODE_DATE, aktMinute=%d, aktSecond=%d, aktDay=%d, aktMonth=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, aktDay, aktMonth);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
+
+        glb->stackSize = tp->taskInfo[0].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Erhalten: MODE_DATE, aktMinute=%d, aktSecond=%d, glb->stackSize=%duxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->highWaterMark);
+
         aktDay = mt->mytm.tm_mday;
         aktMonth = mt->mytm.tm_mon;
         renderer->clearScreenBuffer(matrix);
@@ -527,10 +641,13 @@ void displayTime(void *p) {
     if (xEventGroupWaitBits(xEvent, MODE_TIME, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-        DEBUG_PRINTF("Erhalten: MODE_TIME, aktMinute=%d, aktSecond=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec);
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-        Serial.print("uxHighWaterMark: ");
-        Serial.println(uxHighWaterMark);
+
+        glb->stackSize = tp->taskInfo[3].stackSize;
+        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->codeline = __LINE__;
+        glb->codetab = __NAME__;
+        DEBUG_PRINTF("Erhalten: MODE_TIME, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
+
         ledDriver->mode = MODE_TIME;
         mt->getTime();
         aktDay = mt->mytm.tm_mday;
@@ -539,7 +656,7 @@ void displayTime(void *p) {
         aktSecond = mt->mytm.tm_sec;
         
         ledDriver->saveMatrix(matrix);
-        Serial.printf("New Minute: %d\n",aktMinute);
+        DEBUG_PRINTF("New Minute: %d\n",aktMinute);
         lastMinute=aktMinute;
         ledDriver->setDegreeOffset((aktHour*15+aktMinute*6)%360);
         ledDriver->corcol=settings->mySettings.corcol;
@@ -722,84 +839,91 @@ void startup(void *){
   }
 
 
+  taskParams.taskInfo[0].stackSize=2048;
   xTaskCreatePinnedToCore(
     &dateQueueHandler,   // Function name of the task
     "dateQueueHandler",  // Name of the task (e.g. for debugging)
-    2048,       // Stack size (bytes)
-    NULL,       // Parameter to pass
+    taskParams.taskInfo[0].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[0],// Task handle
+    &taskParams.taskInfo[0].taskHandle,// Task handle
     0
   );
 
+  taskParams.taskInfo[1].stackSize=2048;
   xTaskCreatePinnedToCore(
     &queueScheduler,   // Function name of the task
     "queueScheduler",  // Name of the task (e.g. for debugging)
-    1792,       // Stack size (bytes)
-    NULL,       // Parameter to pass
+    taskParams.taskInfo[1].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[1],// Task handle
+    &taskParams.taskInfo[1].taskHandle,// Task handle
     0
   );
 
+  taskParams.taskInfo[2].stackSize=2048;
   xTaskCreatePinnedToCore(
     &moonQueueHandler,   // Function name of the task
     "moonQueueHandler",  // Name of the task (e.g. for debugging)
-    1536,       // Stack size (bytes)
-    NULL,       // Parameter to pass
+    taskParams.taskInfo[2].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[2],// Task handle
+    &taskParams.taskInfo[2].taskHandle,// Task handle
     0
   );
 
+  taskParams.taskInfo[3].stackSize=2048;
   xTaskCreatePinnedToCore(
     &displayTime,   // Function name of the task
     "DisplayTime",  // Name of the task (e.g. for debugging)
-    2048,           // Stack size (bytes)
+    taskParams.taskInfo[3].stackSize,           // Stack size (bytes)
     &taskParams,    // Parameter to pass
     1,              // Task priority
-    &myTasks[3],// Task handle
+    &taskParams.taskInfo[3].taskHandle,// Task handle
     0
   );
 
-  
+  taskParams.taskInfo[4].stackSize=2048;
   xTaskCreatePinnedToCore(
     &displaySecondBell,   // Function name of the task
     "DisplaySecondBell",  // Name of the task (e.g. for debugging)
-    2048,       // Stack size (bytes)
-    NULL,       // Parameter to pass
+    taskParams.taskInfo[4].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[4],// Task handle
+    &taskParams.taskInfo[4].taskHandle,// Task handle
     0
   );
 
+  taskParams.taskInfo[5].stackSize=2560;
   xTaskCreatePinnedToCore(
     &tempQueueHandler,   // Function name of the task
     "tempQueueHandler",  // Name of the task (e.g. for debugging)
-    1740,       // Stack size (bytes)
-    NULL,       // Parameter to pass
+    taskParams.taskInfo[5].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[5],// Task handle
+    &taskParams.taskInfo[5].taskHandle,// Task handle
     0
   );
 
+  taskParams.taskInfo[6].stackSize=2816;
   xTaskCreatePinnedToCore(
     &weatherQueueHandler,   // Function name of the task
     "weatherQueueHandler",  // Name of the task (e.g. for debugging)
-    2700,       // Stack size (bytes)
-    NULL,       // Parameter to pass
+    taskParams.taskInfo[6].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[6],// Task handle
+    &taskParams.taskInfo[6].taskHandle,// Task handle
     0
   );
 
+  taskParams.taskInfo[7].stackSize=1800;
   xTaskCreatePinnedToCore(
     &showTextHandler,   // Function name of the task
     "showTextHandler",  // Name of the task (e.g. for debugging)
-    1800,       // Stack size (bytes)
+    taskParams.taskInfo[7].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
-    &myTasks[7],// Task handle
+    &taskParams.taskInfo[7].taskHandle,// Task handle
     0
   );
 
@@ -828,7 +952,7 @@ void setup() {
       &startup,   // Function name of the task
       "Startup",  // Name of the task (e.g. for debugging)
       4096,       // Stack size (bytes)
-      NULL,       // Parameter to pass
+      &taskParams,       // Parameter to pass
       1,          // Task priority
       NULL,       // Task handle
       1

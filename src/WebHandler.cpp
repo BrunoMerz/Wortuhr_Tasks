@@ -17,7 +17,7 @@
 
 //#define DEBUG_WEB
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 extern EventGroupHandle_t xEvent;
@@ -97,10 +97,10 @@ bool handleFile(AsyncWebServerRequest *request) {
       mime_type = F("application/octet-stream");
 #endif
 #ifdef DEBUG_WEB
-    DEBUG_PRINTLN(mime_type);
-    UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-    Serial.print("Maximale freie Stack-Größe: ");
-    Serial.println(uxHighWaterMark);
+    glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+    glb->codeline = __LINE__;
+    glb->codetab = __NAME__;
+    DEBUG_PRINTF("handleFile: mime_type=%s uxHighWaterMark=%d\n", mime_type.c_str(), glb->HighWaterMark);
 #endif
     request->send(LittleFS, path, mime_type);
     return true;

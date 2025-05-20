@@ -17,8 +17,8 @@ class Global {
         static Global* getInstance();
         IPAddress myIP = { 0, 0, 0, 0 };
         int Modecount = 0;
-        
-         uint16_t minFreeBlockSize = 10000;
+        uint32_t stackSize;
+        UBaseType_t highWaterMark;
         uint16_t codeline = 0;
         String codetab;
         uint32_t autoModeChangeTimer;

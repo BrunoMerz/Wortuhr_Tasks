@@ -7,7 +7,7 @@
 
 */
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 #include "Configuration.h"
@@ -192,7 +192,7 @@ void time_is_set_scheduled(struct timeval *tv) {
 //  mytm.tm_tzoffset = (lt_hour-gm_hour)*60+lt_min-gm_min;
 
   DEBUG_PRINTF("lt_hour=%d, lt_min=%d, isInitialized=%d\n",lt_hour, lt_min, isInitialized);
-
+   
   isInitialized = true;
   
 }
@@ -212,6 +212,8 @@ MyTime::MyTime(void) {
   mytm.upTime=0;
 }
 
+#define WAITFORTIMEINIT 100
+
 void MyTime::confTime(void) {
   // This is where your time zone is set
    DEBUG_PRINTF("confTime: TZ=%s, NTP=%s\n",mytm.tm_timezone.c_str(), mytm.tm_ntpserver.c_str());
@@ -225,11 +227,10 @@ void MyTime::confTime(void) {
   sntp_set_sync_interval(10800000);   // 3 Stunden
   sntp_init();
   int i=0;
-  while(!isInitialized && i++ < 20) delay(100);
-  if(i<20) {
-    DEBUG_PRINTF("confTime: isInitialized=%d, i=%d\n",isInitialized, i);
+  while(!isInitialized && i++ < WAITFORTIMEINIT) delay(100);
+  DEBUG_PRINTF("confTime: isInitialized=%d, i=%d\n",isInitialized, i);
+  if(i<WAITFORTIMEINIT) {
     getTime();
-    
     mytm.startTime=mytm.tm_loc;
   }
 #endif

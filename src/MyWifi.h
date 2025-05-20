@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include "ESPAsyncWiFiManager.h"
+#include "ESPAsyncWebServer.h"
 
 #define WIFITIMEOUT 240
 #define WPSTIMEOUT  30
@@ -46,7 +46,6 @@ class MyWifi {
   
   private:
     MyWifi(void);
-    bool scanNetworks();
     static MyWifi *instance;
     
     String _ssid;

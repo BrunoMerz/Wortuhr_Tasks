@@ -15,7 +15,7 @@
 
 
 
-LedDriver *ledDriver = LedDriver::getInstance();
+static LedDriver *ledDriver = LedDriver::getInstance();
 
 AnimationFS* AnimationFS::instance = 0;
 

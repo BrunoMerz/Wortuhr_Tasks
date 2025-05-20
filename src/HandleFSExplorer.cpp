@@ -5,8 +5,9 @@
 #include "MyTime.h"
 #include "MyWifi.h"
 #include "Html_content.h"
+#include <list>
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 #include "ESPAsyncWebServer.h"
@@ -362,11 +363,11 @@ bool handleList(AsyncWebServerRequest *request) {
 #if defined(ESP8266)
             if ( ESP.getMaxFreeBlockSize() < minFreeBlockSize )
             {
-                minFreeBlockSize = ESP.getMaxFreeBlockSize();
-                codeline = __LINE__;
-                codetab = __NAME__;
+                glb->minFreeBlockSize = ESP.getMaxFreeBlockSize();
+                glb->codeline = __LINE__;
+                glb->codetab = __NAME__;
 #ifdef DEBUG_WEB
-            DEBUG_PRINTF("minFreeBlockSize: %i Tab: %s Codezeile: %u\n", minFreeBlockSize, codetab.c_str(), codeline);
+            DEBUG_PRINTF("minFreeBlockSize: %i Tab: %s Codezeile: %u\n", glb->minFreeBlockSize, glb->codetab.c_str(), glb->codeline);
 #endif
             }
 #endif
