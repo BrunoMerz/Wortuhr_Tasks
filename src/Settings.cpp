@@ -5,6 +5,9 @@
 #include "Settings.h"
 #include "MyFileAccess.h"
 
+//#define myDEBUG
+#include "MyDebug.h"
+
 // File Access
 static MyFileAccess *fa = MyFileAccess::getInstance();
 
@@ -150,9 +153,7 @@ void Settings::loadFromNVS()
 // Write settings to EEPROM
 void Settings::saveToNVS()
 {
-#ifdef DEBUG
-    Serial.println("Settings saved to EEPROM.");
-#endif
+    DEBUG_PRINTLN("Settings saved to EEPROM.");
     EEPROM.begin(sizeof(mySettings)+8);
     EEPROM.put(0, mySettings);
     //EEPROM.commit();
@@ -163,14 +164,13 @@ void Settings::saveToNVS()
 // Load settings from NVS
 void Settings::loadFromNVS()
 {
-#ifdef DEBUG
-   Serial.println("loadFromNVS");
-#endif
+   DEBUG_PRINTLN("loadFromNVS");
+
    bool ret = preferences.begin("wordclock", false);
    size_t lng = preferences.getBytes("all", (void *)&mySettings, sizeof(mySettings)+8);
-#ifdef DEBUG
-   Serial.printf("loadFromNVS: ret=%d, lng=%d, magicNumber=%d, versiom=%d\n",ret, lng, mySettings.magicNumber, mySettings.version);
-#endif
+
+   DEBUG_PRINTF("loadFromNVS: ret=%d, lng=%d, magicNumber=%d, versiom=%d\n",ret, lng, mySettings.magicNumber, mySettings.version);
+
     if ((mySettings.magicNumber != SETTINGS_MAGIC_NUMBER) || (mySettings.version != SETTINGS_VERSION)) {
         preferences.end();
         resetToDefault();
@@ -181,14 +181,10 @@ void Settings::loadFromNVS()
 // Write settings to NVS
 void Settings::saveToNVS()
 {
-#ifdef DEBUG
-    Serial.println("Settings saved to NVS.");
-#endif
+    DEBUG_PRINTLN("Settings saved to NVS.");
     bool ret = preferences.begin("wordclock", false);
     size_t lng = preferences.putBytes("all",(const void*)&mySettings, sizeof(mySettings)+8);
     preferences.end();
-#ifdef DEBUG
-    Serial.printf("saveToNVS: ret=%d, lng=%d\n", ret, lng);
-#endif
+    DEBUG_PRINTF("saveToNVS: ret=%d, lng=%d\n", ret, lng);
 }
 #endif

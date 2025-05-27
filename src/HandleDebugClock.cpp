@@ -10,6 +10,7 @@
 #include "MyFileAccess.h"
 #include "Global.h"
 #include "LedDriver_FastLED.h"
+#include "Events.h"
 
 //#include myDEBUG
 #include "MyDebug.h"
@@ -29,6 +30,7 @@ static MyFileAccess *fa = MyFileAccess::getInstance();
 static OpenWeather *ow = OpenWeather::getInstance();
 static Global *glb = Global::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
+static Events *evt = Events::getInstance();
 
 
 //debugClock
@@ -452,9 +454,9 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li>" LANG_MODECOUNT ": ");
   message += String(glb->Modecount);
   message += F("</li>\n");
-  message += F("<li>Event-Timer: ");
-  message += String(glb->showEventTimer);
-  message += F("</li>\n");
+  //message += F("<li>Event-Timer: ");
+  //message += String(evt->showEventTimer);
+  //message += F("</li>\n");
   message += F("<li>autoModeChange-Timer: ");
   message += String(glb->autoModeChangeTimer);
   message += F("</li>\n");

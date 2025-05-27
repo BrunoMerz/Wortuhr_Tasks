@@ -6,7 +6,7 @@
 #include "Helper.h"
 #include "TaskStructs.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 #include "ESPAsyncWebServer.h"
@@ -25,7 +25,7 @@ void handleShowText(AsyncWebServerRequest *request)
     farbwert.toUpperCase();
     taskParams.feedColor = string_to_num(farbwert);
     taskParams.feedText = "  " + request->arg(F("text")).substring(0, 80) + "   ";
-     request->send(200, TEXT_PLAIN, F("OK."));
+    request->send(200, TEXT_PLAIN, F("OK."));
 
 #ifdef DEBUG
     DEBUG_PRINT(F("Show text: "));

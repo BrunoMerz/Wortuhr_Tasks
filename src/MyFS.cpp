@@ -11,8 +11,8 @@
   extern ESP8266WebServer webServer;
 #else
   #include <WiFi.h>
-  #include "WebServer.h"
-  extern WebServer webServer;
+  #include "ESPAsyncWebServer.h"
+  
 #endif
 
 #include <list>
@@ -29,7 +29,7 @@ void initFS();
 
 //void handleContent(const uint8_t * image, size_t size, const char * mime_type);
 
-void handleUpload();
+//void handleUpload();
 
 void formatFS();
 
@@ -85,17 +85,17 @@ void initFS() {
 #endif
 }
 
-
+/* Dateien ins Filesystem schreiben
 void handleUpload() {      
-                                                   // Dateien ins Filesystem schreiben
+  static AsyncWebServer *webServer = mywifi->getServer();
   static File fsUploadFile;
-  HTTPUpload& upload = webServer.upload();
+  HTTPUpload& upload = webServer->upload();
  
   if (upload.status == UPLOAD_FILE_START) {
     if (upload.filename.length() > 31) {  // Dateinamen kürzen
       upload.filename = upload.filename.substring(upload.filename.length() - 31, upload.filename.length());
     }
-    fsUploadFile = LittleFS.open(webServer.arg(0) + "/" + webServer.urlDecode(upload.filename), "w");
+    fsUploadFile = LittleFS.open(webServer->arg(0) + "/" + webServer->urlDecode(upload.filename), "w");
   } else if (upload.status == UPLOAD_FILE_WRITE) {
      fsUploadFile.write(upload.buf, upload.currentSize);
   } else if (upload.status == UPLOAD_FILE_END) {
@@ -103,6 +103,7 @@ void handleUpload() {
   }
 
 }
+*/
 
 void formatFS() {                                                                      // Formatiert das Filesystem
   LittleFS.format();
@@ -117,21 +118,21 @@ void handleContent(const uint8_t * image, size_t size, const char * mime_type) {
   size_t buffer_size = sizeof(buffer);
   size_t sent_size = 0;
 
-  webServer.setContentLength(size);
-  webServer.send(200, mime_type, "");
-//  WiFiClient client = webServer.client();
+  webServer->setContentLength(size);
+  webServer->send(200, mime_type, "");
+//  WiFiClient client = webServer->client();
 
   while (sent_size < size) {
     size_t chunk_size = min(buffer_size, size - sent_size);
     memcpy_P(buffer, image + sent_size, chunk_size);
-    webServer.client().write(buffer, chunk_size);
+    webServer->client().write(buffer, chunk_size);
     sent_size += chunk_size;
     delay(0);
 #ifdef DEBUG_WEB
     DEBUG_PRINTF("sendContent: %i byte : %i byte of %i byte\n", chunk_size, sent_size,size );
 #endif
   }
-  webServer.sendContent("");
+  webServer->sendContent("");
   delay(0);
 }
 */

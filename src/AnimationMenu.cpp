@@ -9,15 +9,16 @@
 #include "MyWifi.h"
 #include "MyTime.h"
 #include "Animation.h"
+#include "TaskStructs.h"
 #include <LittleFS.h>
 
 #define DEBUG_ANIMATION
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
-
-static String animation;
+extern s_taskParams taskParams;
+extern EventGroupHandle_t xEvent;
 
 static AnimationFS *anifs = AnimationFS::getInstance();
 
@@ -130,14 +131,14 @@ void makeAnimationmenue(AsyncWebServerRequest *request)
 void startAnimationsmenue(AsyncWebServerRequest *request)
 {
   anifs->getAnimationList();
-  animation = anifs->myanimationslist[0];
+  taskParams.animation = anifs->myanimationslist[0];
   anifs->akt_aniframe = 0;
   anifs->akt_aniloop = 0;
   anifs->frame_fak = 1;
 
 
 #ifdef  DEBUG_ANIMATION
-  DEBUG_PRINTLN("Start Animationsmenue: " + animation + " Frame: " + String(anifs->akt_aniframe) );
+  DEBUG_PRINTLN("Start Animationsmenue: " + taskParams.animation + " Frame: " + String(anifs->akt_aniframe) );
 #endif
 //  mode = MODE_SHOWANIMATION;
 //  screenBufferNeedsUpdate = true;
@@ -164,7 +165,7 @@ void startmakeAnimation(AsyncWebServerRequest *request)
       copyframe.delay = anifs->myanimation.frame[0].delay;
     }
   }
-  request->send(200, TEXT_HTML, "<!doctype html><html><head><script>window.onload=function(){window.location.replace('/web/animation.html?animation=" + String(animation) + "');}</script></head></html>");
+  request->send(200, TEXT_HTML, "<!doctype html><html><head><script>window.onload=function(){window.location.replace('/web/animation.html?animation=" + String(taskParams.animation) + "');}</script></head></html>");
 }
 
 //Verarbeitung Animationsauswahl
@@ -172,10 +173,10 @@ void handleaniselect(AsyncWebServerRequest *request)
 {
   if ( request->arg("value") != "BACK" ) // wenn wir vom Editor zurückkommen
   {
-    animation = request->arg("value");
-    animation.toUpperCase();
+    taskParams.animation = request->arg("value");
+    taskParams.animation.toUpperCase();
 #ifdef  DEBUG_ANIMATION
-  DEBUG_PRINTLN("Animation gewählt: " + animation );
+  DEBUG_PRINTLN("Animation gewählt: " + taskParams.animation );
 #endif
   }
 #ifdef  DEBUG_ANIMATION
@@ -184,12 +185,8 @@ void handleaniselect(AsyncWebServerRequest *request)
     DEBUG_PRINTLN("BACK");
   }
 #endif
-  anifs->akt_aniframe = 0;
-  anifs->akt_aniloop = 0;
-  bool load = anifs->loadAnimation(animation);
-  delay(100);
-//  mode = MODE_SHOWANIMATION;
-//  screenBufferNeedsUpdate = true;
-request->send(200, TEXT_PLAIN, F("OK"));
-
+  bool load = anifs->loadAnimation(taskParams.animation);
+  request->send(200, TEXT_PLAIN, F("OK"));
+  if(load)
+    xEventGroupSetBits(xEvent, MODE_SHOWANIMATION);
 }

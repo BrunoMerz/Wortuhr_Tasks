@@ -10,6 +10,7 @@
 #include "MyTime.h"
 #include "LedDriver_FastLED.h"
 #include "SecondBell.h"
+#include "TaskStructs.h"
 
 #include "ESPAsyncWebServer.h"
 
@@ -20,8 +21,8 @@
 //#define myDEBUG
 #include "MyDebug.h"
 
+extern s_taskParams taskParams;
 extern EventGroupHandle_t xEvent;
-
 
 extern void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, uint8_t web_moonphase, time_t upTime, uint8_t sunriseMinute, uint8_t sunriseHour, uint8_t sunsetMinute, uint8_t sunsetHour);
 extern void handleButtonSettings(AsyncWebServerRequest *request);
@@ -34,6 +35,11 @@ extern void handlebacktoMODE_TIME(AsyncWebServerRequest *request);
 extern void debugClock(AsyncWebServerRequest *request);
 extern void handleCommitSettings(AsyncWebServerRequest *request);
 extern void handleShowText(AsyncWebServerRequest *request);
+extern void handleEvents(AsyncWebServerRequest *request);
+extern void buttonModePressed(AsyncWebServerRequest *request);
+extern void buttonTimePressed(AsyncWebServerRequest *request);
+extern void formatFS();
+extern void handleUpload();
 
 static Settings *settings = Settings::getInstance();
 static MyWifi *mywifi = MyWifi::getInstance();
@@ -123,8 +129,10 @@ void buttonOnOffPressed(AsyncWebServerRequest *request)
 // Zurück zum Hauptmenü + MODE_TIME
 void handlebacktoMODE_TIME(AsyncWebServerRequest *request)
 {
-//mz  curControl = BTN_EXIT;
-//mz  setMode(MODE_TIME);
+  //mz  curControl = BTN_EXIT;
+  //mz  setMode(MODE_TIME);
+  taskParams.animation = "";
+  taskParams.updateSceen = true;
   callRoot(request);
 }
 
@@ -267,10 +275,75 @@ void WebHandler::webRequests()
     mywifi->doReset();
   });
 
+
+  webServer->on("/handleevents", HTTP_POST, [](AsyncWebServerRequest *request) { // Eventseite
+    handleEvents(request);
+  });
+
+
+  webServer->on("/handleButtonMode", [](AsyncWebServerRequest *request) {
+    buttonModePressed(request);
+    request->send(200, TEXT_PLAIN, F("OK")); 
+  });
+
+  webServer->on("/handleButtonTime", [](AsyncWebServerRequest *request) {
+      if ( ledDriver->mode != MODE_TIME) 
+        buttonTimePressed(request);
+#ifdef SHOW_MODE_ANSAGE
+      else 
+      {
+        //single_mode = true;
+#ifdef WITH_AUDIO
+        mode_ohne_sound = false;
+#endif
+        //setMode(MODE_ANSAGE);
+      }
+#endif
+    request->send(200, TEXT_PLAIN, F("OK")); 
+  });
+
+  webServer->on("/format", HTTP_POST, [](AsyncWebServerRequest *request) {
+    formatFS();
+    request->send(200, "text/plain", "Format erfolgreich");
+  });
+
+  /*
+  webServer->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
+    handleUpload();
+    request->send(200, "text/plain", "Upload erfolgreich");
+  });
+  */
+
+
+    webServer->on("/upload", HTTP_POST, 
+    [](AsyncWebServerRequest *request){
+      request->send(200, "text/plain", "Upload erfolgreich");
+    }, 
+    [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+      if(!index){
+        DEBUG_PRINTF("Upload beginnt: %s\n", filename.c_str());
+        // Datei im Schreibmodus öffnen
+        request->_tempFile = LittleFS.open("/" + filename, "w");
+      }
+      if(request->_tempFile){
+        request->_tempFile.write(data, len);
+      }
+      if(final){
+        DEBUG_PRINTF("Upload abgeschlossen: %s, Größe: %u\n", filename.c_str(), index+len);
+        if(request->_tempFile){
+          request->_tempFile.close();
+        }
+      }
+    }
+  );
+
+
   webServer->onNotFound([](AsyncWebServerRequest *request) {
     if (!handleFile(request))
       request->send(404, TEXT_PLAIN, F("FileNotFound"));
   });
+
+  
 
   webServer->begin();
   

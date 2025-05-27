@@ -26,13 +26,8 @@ class Global {
         uint8_t randomHour = 0;
         uint8_t randomMinute = 0;
         uint8_t randomSecond = 0;
-         uint8_t akt_transition = 1;
+        uint8_t akt_transition = 1;
         uint8_t akt_transition_old = 1;
-
-        // Events
-        #ifdef EVENT_TIME
-        uint32_t showEventTimer = EVENT_TIME;
-        #endif
 
     private:
         Global(void);

@@ -26,6 +26,7 @@ OpenWeather::OpenWeather()
 {
   errorCounterOutdoorWeather = 0;
   LastOutdoorWeatherTime = 0;
+  WetterSequenz = 1;
 }
 
 

@@ -24,6 +24,7 @@ typedef struct
 
 typedef struct
   {
+    String lastAnimation;
     char name[20];
     uint8_t loops;
     uint8_t laufmode;

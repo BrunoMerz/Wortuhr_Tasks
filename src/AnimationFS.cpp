@@ -13,7 +13,10 @@
 #include "Helper.h"
 #include <LittleFS.h>
 
+//#define DEBUG_ANIMATION
 
+//#define myDEBUG
+#include "MyDebug.h"
 
 static LedDriver *ledDriver = LedDriver::getInstance();
 
@@ -21,7 +24,8 @@ AnimationFS* AnimationFS::instance = 0;
 
 
 
-AnimationFS *AnimationFS::getInstance() {
+AnimationFS *AnimationFS::getInstance()
+{
   if (!instance)
   {
       instance = new AnimationFS();
@@ -249,7 +253,7 @@ bool AnimationFS::loadAnimation(String aniname )
       Serial.println(" ");
     }          
   }
-  Serial.printf("AnimationFrames ESP.getMaxFreeBlockSize: %i Codezeile: %u\n", ESP.getMaxFreeBlockSize(),  __LINE__);
+  //Serial.printf("AnimationFrames ESP.getMaxFreeBlockSize: %i Codezeile: %u\n", ESP.getMaxFreeBlockSize(),  __LINE__);
 #endif
   return true;
 }
@@ -407,12 +411,18 @@ bool AnimationFS::showAnimation(uint8_t brightness)
     if (myanimation.laufmode < 2)
       frame_fak = 1;
   }
-
+#ifdef DEBUG_ANIMATION
+    DEBUG_PRINTF("Start Animation: akt_aniloop=%d, loops=%d\n", akt_aniloop, myanimation.loops);
+#endif
   if (akt_aniloop >= myanimation.loops)
   {
     akt_aniloop = 0;
     akt_aniframe = 0;
     frame_fak = 1;
+#ifdef DEBUG_ANIMATION
+    DEBUG_PRINTLN("Start Animation: returning false");
+#endif
+
     return false;
   }
   else
@@ -432,22 +442,13 @@ bool AnimationFS::showAnimation(uint8_t brightness)
       }
     }
     ledDriver->show();
-    // handle_Webserver(__LINE__);
-    if (myanimation.frame[akt_aniframe].delay > 200)
-    {
-      vTaskDelay(pdMS_TO_TICKS(myanimation.frame[akt_aniframe].delay / 2));
-      // handle_Webserver(__LINE__);
-      vTaskDelay(pdMS_TO_TICKS(myanimation.frame[akt_aniframe].delay / 2));
-    }
-    else
-    {
-      vTaskDelay(pdMS_TO_TICKS(myanimation.frame[akt_aniframe].delay));
-    }
-    // handle_Webserver(__LINE__);
+
+    vTaskDelay(pdMS_TO_TICKS(myanimation.frame[akt_aniframe].delay));
+
     if (myanimation.laufmode == 0)
     {
       akt_aniframe++;
-      if ((myanimation.frame[akt_aniframe].delay == 0 || akt_aniframe > MAXFRAMES))
+      if ((myanimation.frame[akt_aniframe].delay == 0 || akt_aniframe >= MAXFRAMES))
       {
         akt_aniframe = 0;
         akt_aniloop++;
@@ -456,7 +457,7 @@ bool AnimationFS::showAnimation(uint8_t brightness)
     if (myanimation.laufmode == 1)
     {
       akt_aniframe = akt_aniframe + frame_fak;
-      if (myanimation.frame[akt_aniframe].delay == 0 || akt_aniframe > MAXFRAMES)
+      if (myanimation.frame[akt_aniframe].delay == 0 || akt_aniframe >= MAXFRAMES)
       {
         frame_fak = -1;
         akt_aniframe = akt_aniframe - 2;
@@ -490,6 +491,9 @@ bool AnimationFS::showAnimation(uint8_t brightness)
 //mz      frame_fak = 1;
 //mz    }
     //screenBufferNeedsUpdate = true;
+#ifdef DEBUG_ANIMATION
+    DEBUG_PRINTLN("Start Animation: returning true");
+#endif
     return true;
   }
 }

@@ -1182,13 +1182,23 @@ void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color
         {
           if ( i  >=    brightness / 3 && brightnessBuffer[y][x] < 255 ) brightnessBuffer[y][x]++;
           if ( i  > 2 * brightness / 3 && brightnessBuffer[y][x] < 255 ) brightnessBuffer[y][x]++;
-          if ( x < 11 ) setPixel(x, y, color, brightnessBuffer[y][x]);
+          if ( x < 11 ) {
+            if ( mode == MODE_DATE && y > 4 )
+              setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
+            else
+              setPixel(x, y, color, brightnessBuffer[y][x]);
+          }
         }
         else if ((bitRead(screenBufferOld[y], 15 - x)) && !(bitRead(screenBufferNew[y], 15 - x)))
         {
           if ( brightnessBuffer[y][x] > 0 ) brightnessBuffer[y][x]--;
           if ( i < brightness / 3 && brightnessBuffer[y][x] > 0 ) brightnessBuffer[y][x]--;
-          if ( x < 11 ) setPixel(x, y, colorold, brightnessBuffer[y][x]);
+          if ( x < 11 ) {
+            if ( mode == MODE_DATE && y > 4 )
+              setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
+            else
+              setPixel(x, y, colorold, brightnessBuffer[y][x]);
+          }
         }
         else
         {
@@ -1196,11 +1206,17 @@ void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color
           {
             if ( i < brightness / 2 )
             {
-              setPixel(x, y, colorold, brightnessBuffer[y][x]);
+              if ( mode == MODE_DATE && y > 4 )
+                setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
+              else
+                setPixel(x, y, colorold, brightnessBuffer[y][x]);
             }
             else
             {
-              setPixel(x, y, color, brightnessBuffer[y][x]);
+              if ( mode == MODE_DATE && y > 4 )
+                setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
+              else
+                setPixel(x, y, color, brightnessBuffer[y][x]);
             }
           }
         }

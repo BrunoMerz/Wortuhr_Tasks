@@ -228,16 +228,16 @@ void handleRoot(AsyncWebServerRequest *request) {
 <body>
   <div class="container">
     <h1>Wi-Fi Konfiguration</h1>
-    <form action="/save" method="GET">
-      <h3>Verfügbare Netze</h3>
+    <form action="/save" method="POST">
+      <h3>%LANG_AP_SEL%</h3>
       <ul id="item-list">
         %OPTIONS%
       </ul>
-      <label for="ssid">SSID (Netzwerkname)</label>
-      <input type="text" id="ssid" name="ssid" required placeholder="SSID eingeben">
-      <label for="password">Passwort</label>
-      <input type="password" id="pass" name="pass" required placeholder="Passwort eingeben">
-      <button type="submit">Verbinden</button>
+      <label for="ssid">%LANG_AP_SSID%</label>
+      <input type="text" id="ssid" name="ssid" required placeholder="%LANG_AP_SSID_INP%">
+      <label for="password">%LANG_AP_PWD%</label>
+      <input type="password" id="pass" name="pass" required placeholder="%LANG_AP_PWD_INP%">
+      <button type="submit">%LANG_AP_CONN%</button>
     </form>
   </div>
   <script>
@@ -250,6 +250,12 @@ void handleRoot(AsyncWebServerRequest *request) {
   )rawliteral";
 
   html.replace("%OPTIONS%", MyWifi::_scanResultHTML);
+  html.replace("%LANG_AP_SEL%", LANG_AP_SEL);
+  html.replace("%LANG_AP_SSID%", LANG_AP_SSID);
+  html.replace("%LANG_AP_SSID_INP%", LANG_AP_SSID_INP);
+  html.replace("%LANG_AP_PWD%", LANG_AP_PWD);
+  html.replace("%LANG_AP_PWD_INP%", LANG_AP_PWD_INP);
+  html.replace("%LANG_AP_CONN%", LANG_AP_CONN);
   request->send(200, "text/html", html);
 }
 
@@ -305,12 +311,12 @@ bool MyWifi::startConfigPortal(char *ssid) {
   DEBUG_PRINTF("Suche nach WLAN-Netzen beendet: ret=%d, _scanResultHTML=%s\n", ret, _scanResultHTML.c_str());
 
 
-  WiFi.disconnect();
+  WiFi.disconnect(true);
   delay(100);
   WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(ssid);
   delay(100);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
  
   DEBUG_PRINTLN("adding handler");
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -318,7 +324,7 @@ bool MyWifi::startConfigPortal(char *ssid) {
   });
   
 
-  server.on("/save", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request) {
     handleSave(request);
   });
 
@@ -336,14 +342,13 @@ bool MyWifi::startConfigPortal(char *ssid) {
   DEBUG_PRINTLN("Starting server");
   server.begin();
   
- delay(100);
+  delay(100);
 
   while(!_got_ip) {
     delay(10);
   }
   DEBUG_PRINTLN("server.end()");
   server.end();
-  ESP.restart();
   return true;
 }
 
@@ -465,6 +470,10 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
     ir->renderAndDisplayPNG("/tft/accesspoint.png",0,1);
 #endif
     ret = startConfigPortal(settings->mySettings.systemname);
+    _ssid = WiFi.SSID();
+    _passwd = WiFi.psk();
+    saveSSIDandPWD();
+    ESP.restart();
   }
 
   if (!_got_ip) {

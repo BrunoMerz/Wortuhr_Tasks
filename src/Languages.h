@@ -520,6 +520,12 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_LOGGING "Protokollierung einschalten"
 #define LANG_INSTALL "Installieren"
 #define LANG_NEW "NEU"
+#define LANG_AP_SEL "Netz auswählen"
+#define LANG_AP_SSID "SSID (Netzwerkname)"
+#define LANG_AP_SSID_INP "SSID eingeben"
+#define LANG_AP_PWD "Passwort"
+#define LANG_AP_PWD_INP "Passwort eingeben"
+#define LANG_AP_CONN "Verbinden"
 
 #endif
 //Ende FRONTCOVER_DE
