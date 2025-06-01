@@ -385,8 +385,6 @@ void handleCommitSettings(AsyncWebServerRequest *request)
     //  settings->mySettings.nightOffTime += 3600;
     //DEBUG_PRINTF("nightOffTime=%lld\n", settings->mySettings.nightOffTime);
     DEBUG_PRINTF("tm_isdst=%d\n", mt->mytm.tm_isdst);
-
-
   }
   // ------------------------------------------------------------------------
   // Tag ein Zeit
@@ -546,8 +544,11 @@ void handleCommitSettings(AsyncWebServerRequest *request)
     if (!settings->mySettings.itIs && ((mt->mytm.tm_min / 5) % 6))
       renderer->clearEntryWords(matrix);
     ledDriver->writeScreenBufferFade(matrix, settings->mySettings.ledcol);
-    nightOffTime = settings->mySettings.nightOffTime;
-    dayOnTime = settings->mySettings.dayOnTime;
+
+    nightOffTime  =  (settings->mySettings.nightOffTime / 3600) * 60;
+    nightOffTime  += (settings->mySettings.nightOffTime % 3600) / 60;
+    dayOnTime     =  (settings->mySettings.dayOnTime / 3600) * 60;
+    dayOnTime     += (settings->mySettings.dayOnTime % 3600) / 60;
 
     callRoot(request);
   }

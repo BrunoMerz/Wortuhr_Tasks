@@ -107,6 +107,7 @@ void queueScheduler(void *p) {
   OpenWeather *ow       = OpenWeather::getInstance();
   LedDriver *ledDriver  = LedDriver::getInstance();
   MyWifi *myWifi        = MyWifi::getInstance();
+  Events *evt            = Events::getInstance();
 
   int lastHour=0;
   int lastMinute=0;
@@ -117,8 +118,8 @@ void queueScheduler(void *p) {
   int aktSecond;
   glb->akt_transition = 1;
   uint8_t akt_transition_old = 1;
-  nightOffTime = settings->mySettings.nightOffTime;
-  dayOnTime = settings->mySettings.dayOnTime;
+  nightOffTime = mt->hour(settings->mySettings.nightOffTime) * 60 + mt->minute(settings->mySettings.nightOffTime);
+  dayOnTime = mt->hour(settings->mySettings.dayOnTime) * 60 + mt->minute(settings->mySettings.dayOnTime);
   uint32_t aktts;
   bool isNightOff;
   glb->autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
@@ -173,8 +174,9 @@ void queueScheduler(void *p) {
     if(aktMinute != lastMinute) {
       lastMinute = aktMinute;
 
+      
       isNightOff=false;
-      aktts = aktHour * 3600 + aktMinute * 60;
+      aktts = aktHour * 60 + aktMinute;
       if (nightOffTime <= dayOnTime)
       {
         if (aktts >= nightOffTime && aktts < dayOnTime)
@@ -183,14 +185,18 @@ void queueScheduler(void *p) {
       else
       {
         if ((aktts >= nightOffTime && aktts < 1440) || (aktts >= 0 && aktts < dayOnTime))
-        isNightOff=true;
+          isNightOff=true;
       }
+
+      DEBUG_PRINTF("isNightOff=%d, dayOnTime=%d, nightOffTime=%d, aktts=%d, mode=%d\n", isNightOff, dayOnTime, nightOffTime, aktts, ledDriver->mode);
 
       if(isNightOff && ledDriver->mode != MODE_BLANK) 
         ledDriver->setOnOff();
 
-      if(!isNightOff && ledDriver->mode == MODE_BLANK)
+      if(!isNightOff && ledDriver->mode == MODE_BLANK) {
+        evt->mustLoad = true;
         ledDriver->setOnOff();
+      }
 
       if (xEventGroupSetBits(xEvent, MODE_TIME)) {
         glb->stackSize = tp->taskInfo[TASK_SCHEDULER].stackSize;
@@ -214,7 +220,7 @@ void queueScheduler(void *p) {
       }
       else
       {
-        DEBUG_PRINTF("autoMode=%d, aktSecond=%d\n", autoMode, aktSecond);
+        //DEBUG_PRINTF("autoMode=%d, aktSecond=%d\n", autoMode, aktSecond);
 
         glb->autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
         
@@ -413,7 +419,7 @@ void eventQueueHandler(void *p) {
 
 
   while(true) {
-    while(!tp->taskInfo[TASK_EVENT].handleEvent)
+    while(!tp->taskInfo[TASK_EVENT].handleEvent || ledDriver->mode == MODE_BLANK)
       vTaskDelay(pdMS_TO_TICKS(500));
 
     mt->getTime();
@@ -425,9 +431,10 @@ void eventQueueHandler(void *p) {
     aktTime = mt->mytm.tm_loc;
 
     if(evt->mustLoad) {
+      DEBUG_PRINTLN("mustload");
       evt->loadEvents();
 
-      mt->getTime();
+      aktTime += (5-aktSecond);
       for(uint8_t i=0; i<=MAXEVENTS; i++) {
         lastCall[i] = aktTime;
       }
@@ -436,6 +443,8 @@ void eventQueueHandler(void *p) {
     for (uint8_t i = 0; i <= MAXEVENTS; i++) {
       if (evt->events[i].aktiv && (evt->events[i].start == ST_DATE &&  aktDay == evt->events[i].day && aktMonth == evt->events[i].month) || evt->events[i].start == ST_ALWAYS) {
         if(aktTime - lastCall[i] >= evt->events[i].intervall*60) {
+          // Damit keine Anzeige während der Eventbehandlung auftritt autoModeChangeTimer hochsetzen
+          glb->autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
           DEBUG_PRINTF("event: found=%d, Sekunde=%d\n", i, aktSecond);
           evt->runEvent(i);
           DEBUG_PRINTF("event: %d processed\n", i);
