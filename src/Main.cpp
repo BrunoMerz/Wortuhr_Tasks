@@ -16,9 +16,10 @@
 #include "TaskStructs.h"
 #include "DisplayModes.h"
 #include "Events.h"
+//#include "Game.h"
 
 
-//#define myDEBUG
+#define myDEBUG
 #include "MyDebug.h"
 
 s_taskParams taskParams;

@@ -11,6 +11,7 @@
 #include "LedDriver_FastLED.h"
 #include "SecondBell.h"
 #include "TaskStructs.h"
+#include "Game.h"
 
 #include "ESPAsyncWebServer.h"
 
@@ -18,7 +19,7 @@
 
 //#define DEBUG_WEB
 
-//#define myDEBUG
+#define myDEBUG
 #include "MyDebug.h"
 
 extern s_taskParams taskParams;
@@ -38,6 +39,8 @@ extern void handleShowText(AsyncWebServerRequest *request);
 extern void handleEvents(AsyncWebServerRequest *request);
 extern void buttonModePressed(AsyncWebServerRequest *request);
 extern void buttonTimePressed(AsyncWebServerRequest *request);
+extern void startGame(AsyncWebServerRequest *request);
+extern void handleGameControl(AsyncWebServerRequest *request);
 extern void formatFS();
 extern void handleUpload();
 
@@ -47,6 +50,7 @@ static MyTime *mt = MyTime::getInstance();
 static AsyncWebServer *webServer = mywifi->getServer();
 static OpenWeather *ow = OpenWeather::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
+static Game *game = Game::getInstance();
 
 
 WebHandler* WebHandler::instance = 0;
@@ -307,35 +311,37 @@ void WebHandler::webRequests()
     request->send(200, "text/plain", "Format erfolgreich");
   });
 
-  /*
-  webServer->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
-    handleUpload();
-    request->send(200, "text/plain", "Upload erfolgreich");
+  webServer->on("/StartGame", [](AsyncWebServerRequest *request) {
+    game->startGame(request);
   });
-  */
+
+  webServer->on("/game", HTTP_POST, [](AsyncWebServerRequest *request) {
+    game->handleGameControl(request);
+  });
 
 
-    webServer->on("/upload", HTTP_POST, 
-    [](AsyncWebServerRequest *request){
-      request->send(200, "text/plain", "Upload erfolgreich");
-    }, 
-    [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
-      if(!index){
-        DEBUG_PRINTF("Upload beginnt: %s\n", filename.c_str());
-        // Datei im Schreibmodus öffnen
-        request->_tempFile = LittleFS.open("/" + filename, "w");
-      }
+  webServer->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
+    request->redirect("/fs");
+    //request->send(200, "text/plain", "Upload erfolgreich");
+  }, 
+  [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+    if(!index) {
+      DEBUG_PRINTF("Upload beginnt: <%s>\n", (request->getParam("f")->value() + "/" + filename).c_str());
+      // Datei im Schreibmodus öffnen
+      request->_tempFile = LittleFS.open(request->getParam("f")->value() + "/" + filename, "w");
+      if (!request->_tempFile) 
+        Serial.println("Fehler: Datei konnte nicht geöffnet werden!");
+    }
+    if(request->_tempFile){
+      request->_tempFile.write(data, len);
+    }
+    if(final){
+      DEBUG_PRINTF("Upload abgeschlossen: %s, Größe: %u\n", filename.c_str(), index+len);
       if(request->_tempFile){
-        request->_tempFile.write(data, len);
-      }
-      if(final){
-        DEBUG_PRINTF("Upload abgeschlossen: %s, Größe: %u\n", filename.c_str(), index+len);
-        if(request->_tempFile){
-          request->_tempFile.close();
-        }
+        request->_tempFile.close();
       }
     }
-  );
+  });
 
 
   webServer->onNotFound([](AsyncWebServerRequest *request) {

@@ -4,8 +4,7 @@
 #include "Settings.h"
 #include "MyTime.h"
 #include "Html_content.h"
-#include "Spiel_externals.h"
-#include "Spiel_main.h"
+#include "Game.h"
 #include "OpenWeather.h"
 #include "MyFileAccess.h"
 #include "Global.h"
@@ -31,12 +30,12 @@ static OpenWeather *ow = OpenWeather::getInstance();
 static Global *glb = Global::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
 static Events *evt = Events::getInstance();
+static Game *game = Game::getInstance();
 
 
 //debugClock
 void debugClock(AsyncWebServerRequest *request)
 {
-  AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
 #ifdef DEBUG
   DEBUG_PRINTLN("Info Seite refresh!");
 #endif
@@ -50,17 +49,18 @@ void debugClock(AsyncWebServerRequest *request)
   String str_maxfreeblocks = String(heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
   String str_heapfragmentation = String(getHeapFragmentation());  
 #endif
-  delay(0);
-  response->setContentLength(CONTENT_LENGTH_UNKNOWN);
   String message;
   message = F("<!doctype html>"
-              "<html>"
+              "<html lang=\"");
+  message += LANG_HTMLLANG;
+  message += F("\">"
               "<head>");
   message += F("<title>");
   message += String(settings->mySettings.systemname);
-  message += F(" Info</title>");
-  message += F("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-               "<meta http-equiv=\"refresh\" content=\"30\" charset=\"UTF-8\">"
+  message += F("Info</title>");
+  message += F("<meta charset=\"UTF-8\">"
+               "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+               "<meta http-equiv=\"refresh\" content=\"30\">"
                "<link rel=\"icon\" type=\"image/png\" sizes=\"192x192\" href=\"/web/android-icon-192x192.png\">"
                "<link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/web/favicon-32x32.png\">"
                "<link rel=\"icon\" type=\"image/png\" sizes=\"96x96\" href=\"/web/favicon-96x96.png\">"
@@ -70,21 +70,17 @@ void debugClock(AsyncWebServerRequest *request)
                "</style>"
                "</head>\n"
                "<body>");
-  // ################### sende html Teil 1
-  response->print(message);
-  message = "";
-
-
+  
   message += F("<h2>");
   message += String(settings->mySettings.systemname);
   message += F(" Info</h2>");
-  message += F("<hr>\n"
-               "<small><br></small>");
-  message += F("<big><b>&bull;  Firmware: ");
+  message += F("<hr>\n");
+  
+  message += F("<b>&bull;  Firmware: ");
   message += String(FIRMWARE_VERSION);
   message += " ";
   message += __DATE__;
-  message += F("</b></big>\n");
+  message += F("</b>\n");
 #if defined(FRONTCOVER_DE_DE) || defined(FRONTCOVER_DE_SW) || defined(FRONTCOVER_DE_BA) || defined(FRONTCOVER_DE_SA) || defined(FRONTCOVER_D3) || defined(FRONTCOVER_DE_MKF_DE) || defined(FRONTCOVER_DE_MKF_SW) || defined(FRONTCOVER_DE_MKF_BA) || defined(FRONTCOVER_DE_MKF_SA) || defined(FRONTCOVER_CH) || defined(FRONTCOVER_CH_AG) || defined(FRONTCOVER_CH_AL)
   message += F("<a href=\"https://merz-aktuell.de/Wordclock/Doku/WortuhrBeschreibung10.x.pdf\" target=\"_blank\" style=\"font-size:30px;\">&#128214;</a>\n");
 #else
@@ -134,14 +130,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li>" LANG_TIMEZONE ": ");
   message += String(settings->mySettings.timezone);
   message += F("</li>\n");
-  //message += F("<li>Error (NTP): ");
-  //message += String(errorCounterNTP);
-  //message += F("</li>\n");
-  //message += F("<li>ESP-Time Drift in sek: ");
-  //message += String(mt->mytm.esptimedrift);
-  //message += F(" <small>(max: ");
-  //message += String(mt->mytm.maxesptimedrift);
-  //message += F(")</small></li>\n");
+ 
   time_t tempEspTime = mt->local();
   message += F("<li>" LANG_TIME ": ");
   message += String(mt->hour(tempEspTime)) + ":";
@@ -150,7 +139,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += ":";
   if (mt->second(tempEspTime) < 10) message += "0";
   message += String(mt->second(tempEspTime));
-  //if (timeZone.locIsDST(mt->local(())) message += " (Sommerzeit)";
+  
   if (mt->mytm.tm_isdst) message += " (Sommerzeit)";
   message += F("<li>" LANG_DATE ":");
   message += String(mt->dayStr(mt->weekday(tempEspTime)));
@@ -164,7 +153,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li>Uptime: ");
   message += mt->convertSeconds(mt->mytm.upTime, true);
   message += F("</li>\n");
-  //time_t lokalstartTime = timeZone.toLocal(startTime);
+  
   time_t lokalstartTime = mt->mytm.startTime;
   message += F("<li>Starttime: ");
   message += String(mt->hour(lokalstartTime)) + ":";
@@ -191,10 +180,6 @@ void debugClock(AsyncWebServerRequest *request)
   message += String(ow->web_moonphase);
   message += F("</li>\n");
   message += F("</ul>\n</li>\n");
-
-  //##################### sende 2. html Teil
-  response->print(message);
-  message = "";
 
   // ######################### SYSTEM ##################
   message += F("<li><b>System</b>\n<ul>\n");
@@ -320,12 +305,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</ul>\n</li>\n");
 #endif
 
-
-  //##################### sende 3. html Teil
-  response->print(message);
-  message = "";
-
-  // ######################### BME280 ##################
+// ######################### BME280 ##################
 #ifdef SENSOR_BME280
   message += F("<li><b>BME280</b>\n"
                "<ul>\n");
@@ -356,7 +336,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</ul>\n</li>\n");
 #endif
 
-  // ######################### OPENWEATHER ##################
+// ######################### OPENWEATHER ##################
 #ifdef APIKEY
   message += F("<li><b>OpenWeather</b>\n"
                "<ul>\n");
@@ -369,17 +349,12 @@ void debugClock(AsyncWebServerRequest *request)
   message += outdoorWeather->owfehler;
   message += F("</li>\n");
   message += F("<li>" LANG_OW_LASTUPDATE ": ");
-  //message += String(mt->hour(timeZone.toLocal(LastOutdoorWeatherTime)));
-  message += String(mt->hour(outdoorWeather->LastOutdoorWeatherTime));
+   message += String(mt->hour(outdoorWeather->LastOutdoorWeatherTime));
   message += ":";
-  //if (mt->minute(timeZone.toLocal(LastOutdoorWeatherTime)) < 10) message += "0";
   if (mt->minute(outdoorWeather->LastOutdoorWeatherTime) < 10) message += "0";
-  //message += String(mt->minute(timeZone.toLocal(LastOutdoorWeatherTime)));
    message += String(mt->minute(outdoorWeather->LastOutdoorWeatherTime));
   message += ":";
-  //if (mt->second(timeZone.toLocal(LastOutdoorWeatherTime)) < 10) message += "0";
   if (mt->second(outdoorWeather->LastOutdoorWeatherTime) < 10) message += "0";
-  //message += String(mt->second(timeZone.toLocal(LastOutdoorWeatherTime)));
   message += String(mt->second(outdoorWeather->LastOutdoorWeatherTime));
   message += F("</li>\n");
   message += F("<li>" LANG_WEATHER " Info 1: <small>ID: ");
@@ -395,23 +370,19 @@ void debugClock(AsyncWebServerRequest *request)
   message += outdoorWeather->weathericon2;
   message += F("</small></li>\n");
   message += F("<li>" LANG_INFOSUNSETRISE ": ");
-  //if ( !global->ani_sunrise_done ) message += F("<b>");
   message += String(mt->hour(outdoorWeather->sunrise));
   message += ":";
   if (mt->minute(outdoorWeather->sunrise) < 10) message += "0";
   message += String(mt->minute(outdoorWeather->sunrise)) + ":";
   if (mt->second(outdoorWeather->sunrise) < 10) message += "0";
   message += String(mt->second(outdoorWeather->sunrise));
-  //if ( !global->ani_sunrise_done ) message += F("</b>");
 
   message += F("/");
-  //if ( !global->ani_sunset_done ) message += F("<b>");
   message += String(mt->hour(outdoorWeather->sunset)) + ":";
   if (mt->minute(outdoorWeather->sunset) < 10) message += "0";
   message += String(mt->minute(outdoorWeather->sunset)) + ":";
   if (mt->second(outdoorWeather->sunset) < 10) message += "0";
   message += String(mt->second(outdoorWeather->sunset));
-  //if ( !global->ani_sunset_done ) message += F("</b>");
   message += F("</li>\n");
   message += F("</ul>\n"
                "</li>\n");
@@ -422,31 +393,22 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li><b>SunRiseLib</b>\n"
                "<ul>\n");
   message += F("<li>" LANG_INFOSUNSETRISE ": ");
-  //if ( !global->ani_sunrise_done ) message += F("<b>");
   message += String(mt->hour(ow->sunRiseTime)) + ":";
   if (mt->minute(ow->sunRiseTime) < 10) message += "0";
   message += String(mt->minute(ow->sunRiseTime)) + ":";
   if (mt->second(ow->sunRiseTime) < 10) message += "0";
   message += String(mt->second(ow->sunRiseTime));
-  //if ( !global->ani_sunrise_done ) message += F("</b>");
 
   message += F("/");
-  //if ( !global->ani_sunset_done ) message += F("<b>");
   message += String(mt->hour(ow->sunSetTime)) + ":";
   if (mt->minute(ow->sunSetTime) < 10) message += "0";
   message += String(mt->minute(ow->sunSetTime)) + ":";
   if (mt->second(ow->sunSetTime) < 10) message += "0";
   message += String(mt->second(ow->sunSetTime));
-  //if ( !global->ani_sunset_done ) message += F("</b>");
   message += F("</li>\n");
   message += F("</ul>\n"
                "</li>\n");
 #endif
-
-  //##################### sende 4. html Teil
-  response->print(message);
-  message = "";
-
 
   // ######################### Events/Modes/Transitions ##################
   message += F("<li><b>Events/Mode/Transitions</b>\n"
@@ -454,9 +416,6 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li>" LANG_MODECOUNT ": ");
   message += String(glb->Modecount);
   message += F("</li>\n");
-  //message += F("<li>Event-Timer: ");
-  //message += String(evt->showEventTimer);
-  //message += F("</li>\n");
   message += F("<li>autoModeChange-Timer: ");
   message += String(glb->autoModeChangeTimer);
   message += F("</li>\n");
@@ -491,32 +450,24 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li><b>" LANG_GAMES "</b>\n"
                "<ul>\n");
   message += F("<li>" LANG_SNAKE " Count/Highscore: ");
-  message += String(gamecount[SNAKE]);
+  message += String(game->gamecount[SNAKE]);
   message += "/";
-  message += String(highscore[SNAKE]);
+  message += String(settings->mySettings.highscore[SNAKE]);
   message += F("</li>\n");
   message += F("<li>" LANG_TETRIS " Count/Highscore: ");
-  message += String(gamecount[TETRIS]);
+  message += String(game->gamecount[TETRIS]);
   message += "/";
-  message += String(highscore[TETRIS]);
+  message += String(settings->mySettings.highscore[TETRIS]);
   message += F("</li>\n");
   message += F("<li>" LANG_BRICKS " Count/Highscore: ");
-  message += String(gamecount[BRICKS]);
-  message += "/" + String(highscore[BRICKS]);
+  message += String(game->gamecount[BRICKS]);
+  message += "/" + String(settings->mySettings.highscore[BRICKS]);
   message += F("</li>\n");
   message += F("<li>" LANG_4GEWINNT " Count/Highscore: ");
-  message += String(gamecount[VIERGEWINNT]);
+  message += String(game->gamecount[VIERGEWINNT]);
   message += "/";
-  message += String(highscore[VIERGEWINNT]);
+  message += String(settings->mySettings.highscore[VIERGEWINNT]);
   message += F("</li>\n");
-  message += F("<li>" LANG_MEMORY1 " Count: ");
-  message += String(gamecount[TIERMEMORY]);  
-  message += F("</li>\n");
-  message += F("<li>" LANG_MEMORY2 " Count: ");
-  message += String(gamecount[MUSIKMEMORY]);
-  message += F("</li>\n");
-  message += F("<li>" LANG_MEMORY3 " Count: ");
-  message += String(gamecount[ABBAMEMORY]) + F("</li>\n");
 
   message += F("</ul>\n</li>\n");
 
@@ -570,9 +521,8 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</ul>\n");
 
   message += F("</body></html>");
-  //##################### sende letzen html Teil
-  response->print(message);
-  request->send(response);
+  request->send(200,TEXT_HTML,message);
+  Serial.println(message);
   message = "";
 
 }
