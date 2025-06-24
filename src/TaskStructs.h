@@ -7,7 +7,8 @@ typedef enum eTask : uint8_t
     TASK_STARTUP=0,
     TASK_SCHEDULER,
     TASK_TIME,
-    TASK_SECONDS,
+    TASK_SECOND_BELL,
+    TASK_SECOND_HAND,
     TASK_MODES,
     TASK_TEXT,
     TASK_ANIMATION,
@@ -39,6 +40,7 @@ typedef struct {
     bool updateSceen;
     String feedText;
     String animation;
+    bool endless_loop;
     s_taskInfo taskInfo[TASK_MAX];
 } s_taskParams;
   

@@ -81,23 +81,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "random"
 #define LANG_LOUDER_ON_WEEKEND "louder 2 hours later on the weekend"
 #define LANG_SINGLEGONG "Singlegong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "Sound 1"               // 0 s1
-#define AUDIO_WEBNAME1  "Sound 2"               // 1 s2
-#define AUDIO_WEBNAME2  "Sound 3"               // 2 s3
-#define AUDIO_WEBNAME3  "Sound 4"               // 3 s4
-#define AUDIO_WEBNAME4  "Cuckoo"                // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Chirch"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "old Clock"             // 9 alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "Dog and Cat"           // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Death"                 // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "Hour announcement Vicki/Hans Format"
 #define LANG_SPEAKER "Speaker"
@@ -337,23 +320,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "zuf&auml;llig"
 #define LANG_LOUDER_ON_WEEKEND "am Wochenende 2h später lauter"
 #define LANG_SINGLEGONG "Einfachgong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "Sound 1"               // 0 s1
-#define AUDIO_WEBNAME1  "Sound 2"               // 1 s2
-#define AUDIO_WEBNAME2  "Sound 3"               // 2 s3
-#define AUDIO_WEBNAME3  "Sound 4"               // 3 s4
-#define AUDIO_WEBNAME4  "Kuckuck"               // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Kirche"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "alte Uhr"              // 9 alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "Hund und Katz"         // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Tod"                   // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "Stundenansage Vicki/Hans Format"
 #define LANG_SPEAKER "Sprecher"
@@ -605,23 +571,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "zuf&auml;llig"
 #define LANG_LOUDER_ON_WEEKEND "am Wochenende 2h später lauter"
 #define LANG_SINGLEGONG "Einfachgong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "Pendule"               // 0 s1
-#define AUDIO_WEBNAME1  "Gong"               // 1 s2
-#define AUDIO_WEBNAME2  "Glogge"               // 2 s3
-#define AUDIO_WEBNAME3  "Glöggli"               // 3 s4
-#define AUDIO_WEBNAME4  "Kuckuck"               // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Chile"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "Regulator"              // 9 alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "Hond ond Chatz"         // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Tod"                   // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "Stundenansage Vicki/Hans Format"
 #define LANG_SPEAKER "Sprecher"
@@ -854,23 +803,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "zuef&auml;llig"
 #define LANG_LOUDER_ON_WEEKEND "am Wocheänd 2h schpöter lüüter"
 #define LANG_SINGLEGONG "Eifachgong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "Pendule"               // 0  Pendule
-#define AUDIO_WEBNAME1  "Gong"                  // 1  Gong
-#define AUDIO_WEBNAME2  "Glogge"                // 2  Glocke
-#define AUDIO_WEBNAME3  "Glöggli"             // 3  Glöckchen
-#define AUDIO_WEBNAME4  "Kuckuck"               // 4  Kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5  Bing
-#define AUDIO_WEBNAME6  "Chile"                // 6  Kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7  Westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8  Westminster 2
-#define AUDIO_WEBNAME9  "Regulator"             // 9  alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "Hond ond Chatz"        // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Tod"                   // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "Schtondeasag Vicki oder Hans"
 #define LANG_SPEAKER "Schprächer"
@@ -1104,23 +1036,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "Coincidentemente:"
 #define LANG_LOUDER_ON_WEEKEND "más fuerte 2 horas más tarde el fin de semana"
 #define LANG_SINGLEGONG "solo gong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "Sound 1"               // 0 s1
-#define AUDIO_WEBNAME1  "Sound 2"               // 1 s2
-#define AUDIO_WEBNAME2  "Sound 3"               // 2 s3
-#define AUDIO_WEBNAME3  "Sound 4"               // 3 s4
-#define AUDIO_WEBNAME4  "cuco"               // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Iglesia"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "reloj antiguo"              // 9 alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "perro y gato"         // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Muerte"                   // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "anuncio de hora Vicki/Hans formato"
 #define LANG_SPEAKER "altavoz"
@@ -1361,23 +1276,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "par coïncidence"
 #define LANG_LOUDER_ON_WEEKEND "plus fort 2 heures plus tard le week-end"
 #define LANG_SINGLEGONG "gong unique"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "du son 1"               // 0 s1
-#define AUDIO_WEBNAME1  "du son 2"               // 1 s2
-#define AUDIO_WEBNAME2  "du son 3"               // 2 s3
-#define AUDIO_WEBNAME3  "du son 4"               // 3 s4
-#define AUDIO_WEBNAME4  "coucou"               // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Église"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "vieille horloge"              // 9 alte Uhr
-#define AUDIO_WEBNAME10 "chose"                  // 10 Ding
-#define AUDIO_WEBNAME11 "chien et chat"         // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "décès"                   // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "annonce de l'heure Vicki/Hans Format"
 #define LANG_SPEAKER "conférencier"
@@ -1618,23 +1516,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "coincidentalmente"
 #define LANG_LOUDER_ON_WEEKEND "più forte 2 ore dopo durante il fine settimana"
 #define LANG_SINGLEGONG "singolo gong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "suoni 1"               // 0 s1
-#define AUDIO_WEBNAME1  "suoni 2"               // 1 s2
-#define AUDIO_WEBNAME2  "suoni 3"               // 2 s3
-#define AUDIO_WEBNAME3  "suoni 4"               // 3 s4
-#define AUDIO_WEBNAME4  "cuculo"                // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Chiesa"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "vecchio orologio"             // 9 alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "cane e gatto"           // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Morte"                 // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "Annuncio dell'ora Formato Vicki/Hans"
 #define LANG_SPEAKER "oratore"
@@ -1875,23 +1756,6 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_RANDOM "toevallig"
 #define LANG_LOUDER_ON_WEEKEND "luider 2 uur later in het weekend"
 #define LANG_SINGLEGONG "enkele gong"
-// Sound Web-Anzeigenamen in Settings:
-#define AUDIO_WEBNAME0  "klinkt 1"               // 0 s1
-#define AUDIO_WEBNAME1  "klinkt 2"               // 1 s2
-#define AUDIO_WEBNAME2  "klinkt 3"               // 2 s3
-#define AUDIO_WEBNAME3  "klinkt 4"               // 3 s4
-#define AUDIO_WEBNAME4  "koekoek"                // 4 kuckuck
-#define AUDIO_WEBNAME5  "Bing"                  // 5 bing
-#define AUDIO_WEBNAME6  "Kerk"                // 6 kirche
-#define AUDIO_WEBNAME7  "Westminster 1"         // 7 westminster 1
-#define AUDIO_WEBNAME8  "Westminster 2"         // 8 westminster 2
-#define AUDIO_WEBNAME9  "oude klok"             // 9 alte Uhr
-#define AUDIO_WEBNAME10 "Ding"                  // 10 Ding
-#define AUDIO_WEBNAME11 "hond en kat"           // 11 Hund und Katz
-#define AUDIO_WEBNAME12 "Dood"                 // 12 Tod
-#define AUDIO_WEBNAME13 "Vicki"                 // 13 Vicki
-#define AUDIO_WEBNAME14 "Hans"                  // 14 Hans
-#define AUDIO_WEBNAME15 "Vicki/Hans"            // 15 Vicki/Hans
 //
 #define LANG_VICKYHANS_FORMAT "Uuraankondiging Vicki/Hans formaat"
 #define LANG_SPEAKER "spreker"

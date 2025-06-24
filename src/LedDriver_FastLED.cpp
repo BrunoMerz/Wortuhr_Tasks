@@ -2,10 +2,14 @@
 // LedDriver_FastLED.cpp
 //******************************************************************************
 
+#include <Arduino.h>
+#include <driver/adc.h>
 #include "LedDriver_FastLED.h"
 #include "Colors.h"
 #include "TaskStructs.h"
+#ifdef WITH_SECOND_BELL
 #include "SecondBell.h"
+#endif
 #include "Settings.h"
 
 //#define myDEBUG
@@ -135,7 +139,6 @@ const byte coorMap[][2] PROGMEM = {
 
 extern uint16_t matrix[];
 
-
 LedDriver* LedDriver::instance = 0;
 
 LedDriver *LedDriver::getInstance() {
@@ -155,6 +158,7 @@ LedDriver::LedDriver()
     transitionInProgress=false;
     minLdrValue=MIN_LDR_STARTVALUE; // The ESP will crash if minLdrValue and maxLdrValue are equal due to an error in map();
     maxLdrValue=MAX_LDR_STARTVALUE;
+    lastLdrValue=0;
     mode = MODE_TIME;
     lastMode = MODE_TIME;
 }
@@ -222,16 +226,17 @@ uint32_t  LedDriver::getRGBFromDegRnd(uint16_t offset, uint16_t dg) {
 
 void LedDriver::clear()
 {
-  FastLED.clear();
+  fill_solid(strip, NUMPIXELS, CRGB::Black); 
 }
 
 void LedDriver::show()
 {
-  if(mode != MODE_BLANK)
+  if(mode != MODE_BLANK) {
     FastLED.show();
+  }
 }
 
-void LedDriver::setPixel(uint8_t x, uint8_t y, uint32_t color, uint8_t brightness)
+void LedDriver::setPixel(uint8_t x, uint8_t y, uint32_t color)
 {
   uint8_t red   = color >> 16;
   uint8_t green = (color >> 8) & 0xff;
@@ -243,13 +248,10 @@ void LedDriver::setPixel(uint8_t x, uint8_t y, uint32_t color, uint8_t brightnes
     green = (c >> 8) & 0xff;
     blue = c & 0xff;
   }
-  red *= brightness * 0.0039;
-  green *= brightness * 0.0039;
-  blue *= brightness * 0.0039;
   setPixelRGB(x, y, red, green, blue);
 }
 
-void LedDriver::setPixel(uint8_t num, uint32_t color, uint8_t brightness)
+void LedDriver::setPixel(uint8_t num, uint32_t color)
 {
     uint8_t red   = color >> 16;
     uint8_t green = (color >> 8) & 0xff;
@@ -261,9 +263,6 @@ void LedDriver::setPixel(uint8_t num, uint32_t color, uint8_t brightness)
       green = (c >> 8) & 0xff;
       blue = c & 0xff;
     }
-    red *= brightness * 0.0039;
-    green *= brightness * 0.0039;
-    blue *= brightness * 0.0039;
 
     setPixelRGB(num, red, green, blue);
 }
@@ -273,12 +272,6 @@ void LedDriver::setPixelRGB(uint8_t x, uint8_t y, uint8_t red, uint8_t green, ui
     setPixelRGB(x + y * 11, red, green, blue);
 }
 
-void LedDriver::setPixelRGB(uint8_t x, uint8_t y, uint8_t red, uint8_t green, uint8_t blue, uint16_t brightness)
-{
-    setPixelRGB(x + y * 11, red * brightness * 0.0039, green * brightness * 0.0039, blue * brightness * 0.0039);
-}
-
-
 void LedDriver::setPixelRGB(uint8_t num, uint8_t red, uint8_t green, uint8_t blue )
 {
   strip[pgm_read_byte(&ledMap[num])] = CRGB(red, green, blue);
@@ -287,6 +280,22 @@ void LedDriver::setPixelRGB(uint8_t num, uint8_t red, uint8_t green, uint8_t blu
 void LedDriver::setPixelRGB(uint8_t x, uint8_t y, uint32_t c) 
 {
   uint16_t num = x + y * LED_COLS;
+  strip[pgm_read_byte(&ledMap[num])]=c;
+}
+
+void LedDriver::setPixelRGB(uint8_t x, uint8_t y, CRGB c) 
+{
+  uint16_t num = x + y * LED_COLS;
+  strip[pgm_read_byte(&ledMap[num])]=c;
+}
+
+void LedDriver::setPixelRGB(uint8_t num, uint32_t c) 
+{
+  strip[pgm_read_byte(&ledMap[num])]=c;
+}
+
+void LedDriver::setPixelRGB(uint8_t num, CRGB c) 
+{
   strip[pgm_read_byte(&ledMap[num])]=c;
 }
 
@@ -329,11 +338,11 @@ void LedDriver::moveScreenBufferUp(uint16_t screenBufferNew[], uint32_t color)
       for (uint8_t x = 0; x <= 10; x++)
       {
         if ( 8 - z >= i ) {
-          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, colorold, brightness);
+          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, colorold);
         }
         else
         {
-          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, color, brightness);
+          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, color);
         }
       }
     }
@@ -363,11 +372,11 @@ void LedDriver::moveScreenBufferDown(uint16_t screenBufferNew[], uint32_t color)
       for (uint8_t x = 0; x <= 10; x++)
       {
         if ( 8 - z >= i ) {
-          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, color, brightness);
+          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, color);
         }
         else
         {
-          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, colorold, brightness);
+          if (bitRead(screenBufferOld[i], 15 - x)) setPixel(x, i, colorold);
         }
       }
     }
@@ -400,11 +409,11 @@ void LedDriver::moveScreenBufferLeft(uint16_t screenBufferNew[], uint32_t color)
       {
         if ( x > 9 - z  )
         {
-          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, color, brightness);
+          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, color);
         }
         else
         {
-          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, colorold, brightness);
+          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, colorold);
         }
       }
     }
@@ -437,11 +446,11 @@ void LedDriver::moveScreenBufferRight(uint16_t screenBufferNew[], uint32_t color
       {
         if ( x > z  )
         {
-          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, colorold, brightness);
+          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, colorold);
         }
         else
         {
-          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, color, brightness);
+          if (bitRead(m_old[i], 15 - x)) setPixel(x, i, color);
         }
       }
     }
@@ -471,11 +480,11 @@ void LedDriver::moveScreenBufferLeftDown(uint16_t screenBufferNew[], uint32_t co
       for (uint8_t x = 0; x <= 10; x++)
       {
         if ( y <= z ) {
-          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, color, brightness);
+          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, color);
         }
         else
         {
-          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold, brightness);
+          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold);
         }
       }
     }
@@ -506,11 +515,11 @@ void LedDriver::moveScreenBufferRightDown(uint16_t screenBufferNew[], uint32_t c
       for (uint8_t x = 0; x <= 10; x++)
       {
         if ( y <= z ) {
-          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, color, brightness);
+          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, color);
         }
         else
         {
-          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold, brightness);
+          if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold);
         }
       }
     }
@@ -650,11 +659,11 @@ void LedDriver::matrix_regen(uint16_t screenBufferNew[], uint32_t color)
         {
           if ( y > mline_max[x] - 1 )
           {
-            if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold, brightness);
+            if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold);
           }
           else
           {
-            if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color, brightness);
+            if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color);
           }
           brightnessBuffer[y][x] = 0;
           if ( wline[x] & (1 << y) )
@@ -671,7 +680,8 @@ void LedDriver::matrix_regen(uint16_t screenBufferNew[], uint32_t color)
 
           if ( brightnessBuffer[y][x] > 0 )
           {
-            setPixel(x, y, GREEN, brightnessBuffer[y][x]);
+            CRGB c(CRGB::Green);
+            setPixelRGB(x, y, c.nscale8(brightnessBuffer[y][x]));
           }
         } // x
       }  // y
@@ -730,11 +740,11 @@ void LedDriver::moveSeriell(uint16_t screenBufferNew[], uint32_t color, uint8_t 
 
       if (  c > a )
       {
-        if (bitRead(screenBufferOld[yold_source], 15 - xold_source)) setPixel(xold_dest, yold_dest, colorold, brightness);
+        if (bitRead(screenBufferOld[yold_source], 15 - xold_source)) setPixel(xold_dest, yold_dest, colorold);
       }
       else
       {
-        if (bitRead(screenBufferNew[ynew_source], 15 - xnew_source)) setPixel(xnew_dest, ynew_dest, color, brightness);
+        if (bitRead(screenBufferNew[ynew_source], 15 - xnew_source)) setPixel(xnew_dest, ynew_dest, color);
       }
     }
     show();
@@ -779,7 +789,7 @@ void LedDriver::farbenmeer(uint16_t screenBufferNew[], uint32_t color)
       zufallsindex = y + x;
       if ( zufallsindex > 10) zufallsindex = zufallsindex - 11;
       screenBufferOld[zufallszeile[y]] = screenBufferOld[zufallszeile[y]] | zufallsspalte[zufallsindex];
-      setPixel(zufallsspalte[zufallsindex], zufallszeile[y], colorArray[random(1, COLOR_COUNT + 1)] , brightness);
+      setPixel(zufallsspalte[zufallsindex], zufallszeile[y], colorArray[random(1, COLOR_COUNT + 1)] );
       show();
       vTaskDelay(pdMS_TO_TICKS (11 - x));
     }
@@ -793,11 +803,11 @@ void LedDriver::farbenmeer(uint16_t screenBufferNew[], uint32_t color)
       if ( zufallsindex > 10) zufallsindex = zufallsindex - 11;
       if ( bitRead(screenBufferNew[zufallszeile[y]], 15 - zufallsspalte[zufallsindex]))
       {
-        setPixel(zufallsspalte[zufallsindex], zufallszeile[y], color , brightness);
+        setPixel(zufallsspalte[zufallsindex], zufallszeile[y], color );
       }
       else
       {
-        setPixel(zufallsspalte[zufallsindex], zufallszeile[y], color , 0);
+        setPixelRGB(zufallsspalte[zufallsindex], zufallszeile[y], CRGB::Black);
       }
       show();
       vTaskDelay(pdMS_TO_TICKS (1 + x));
@@ -836,20 +846,20 @@ void LedDriver::regenbogen(uint16_t screenBufferNew[], uint32_t color)
       if ( startbogen < 0 ) startbogen = 0;
       for (uint8_t x = 0; x <= 10; x++)
       {
-        if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold, brightness);
+        if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold);
         if ( y >= startbogen && bogenidx >= 0 && bogenidx <= 9)                                                                // Regenbogenbereich
         {
-          if ( bogen[bogenidx][x] != 0 && bogen[bogenidx][x] != 99 ) setPixel(x, y, bogen[bogenidx][x], brightness); // Farbe aus Regenbogen
+          if ( bogen[bogenidx][x] != 0 && bogen[bogenidx][x] != 99 ) setPixel(x, y, bogen[bogenidx][x]); // Farbe aus Regenbogen
           if ( bogen[bogenidx][x] == 99 )                                                                                      // Prüfen ob hier kein Regenbogen ist
           {
-            if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color, brightness);                              // Farbe aus color (neue Farbe)
-            else setPixel(x, y, color, 0);                                                                           // Pixel löschen (brightness = 0)
+            if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color);                              // Farbe aus color (neue Farbe)
+            else setPixelRGB(x, y, CRGB::Black); //setPixel(x, y, color, 0);                                                                           // Pixel löschen (brightness = 0)
           }
         }
         if ( y >= startbogen && bogenidx > 9 )                                                                         // Regenbogen ist vorbei
         {
-          if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color, brightness);                        // Neues Pixel gesetzt dann neue Farbe
-          else setPixel(x, y, color, 0);                                                                     // ansonsten Pixel löschen (brightness = 0)
+          if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color);                        // Neues Pixel gesetzt dann neue Farbe
+          else setPixelRGB(x, y, CRGB::Black); //setPixel(x, y, color, 0);                                                                     // ansonsten Pixel löschen (brightness = 0)
         }
       }
     }
@@ -1014,10 +1024,10 @@ void LedDriver::kreise(uint16_t screenBufferNew[], uint32_t color)
 
       for (uint8_t x = 0; x <= 10; x++)
       {
-        if (bitRead( xbuff, 15 - x )) setPixel(x, y, uhrcolor, brightness);
-        if (work1 && bitRead( kreis1[y], 15 - x )) setPixel(x, y, colorArray[WHITE], brightness);
-        if (work2 && bitRead( kreis2[y], 15 - x )) setPixel(x, y, colorArray[WHITE], brightness);
-        if (work3 && bitRead( kreis3[y], 15 - x )) setPixel(x, y, colorArray[WHITE], brightness);
+        if (bitRead( xbuff, 15 - x )) setPixel(x, y, uhrcolor);
+        if (work1 && bitRead( kreis1[y], 15 - x )) setPixel(x, y, colorArray[WHITE]);
+        if (work2 && bitRead( kreis2[y], 15 - x )) setPixel(x, y, colorArray[WHITE]);
+        if (work3 && bitRead( kreis3[y], 15 - x )) setPixel(x, y, colorArray[WHITE]);
       }
     }
 
@@ -1090,12 +1100,12 @@ void LedDriver::quadrate(uint16_t screenBufferNew[], uint32_t color)
       m_old[y] = m_old[y] & ~lquad_disp[y];
       for (uint8_t x = 0; x <= 10; x++)
       {
-        if (bitRead( lquad_disp[y], 15 - x )) setPixel(x, y, colorArray[RED], brightness);
-        if (bitRead( m_old[y], 15 - x )) setPixel(x, y, colorold, brightness);
+        if (bitRead( lquad_disp[y], 15 - x )) setPixel(x, y, colorArray[RED]);
+        if (bitRead( m_old[y], 15 - x )) setPixel(x, y, colorold);
         if ( q2 )
         {
-          if (bitRead( squad_disp[y], 15 - x )) setPixel(x, y, colorArray[GREEN], brightness);
-          if (bitRead( m_new[y] & squad_old[y], 15 - x )) setPixel(x, y, color, brightness);
+          if (bitRead( squad_disp[y], 15 - x )) setPixel(x, y, colorArray[GREEN]);
+          if (bitRead( m_new[y] & squad_old[y], 15 - x )) setPixel(x, y, color);
         }
       }
       if ( q2 ) squad_old[y] = squad_new[y];
@@ -1153,126 +1163,54 @@ void LedDriver::quadrate(uint16_t screenBufferNew[], uint32_t color)
 
 void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color)
 {
+  CRGB oldPattern[NUMPIXELS-1];  // Speichert das alte Muster
+  CRGB newPattern[NUMPIXELS-1];  // Speichert das neue Muster
+  uint16_t blendProgress = 0;  // 0-255 (Fortschritt der Überblendung)
+
   transitionInProgress = true;
-  DEBUG_PRINTF("writeScreenBufferFade brightness=%d\n",brightness);
-  clear();
-  uint8_t brightnessBuffer[10][12] = {};
+
+  for(uint16_t i=0; i<NUMPIXELS-1; i++) {
+    oldPattern[i]=strip[i];
+    newPattern[i]=CRGB::Black;
+  }
 
   for (uint8_t y = 0; y <= 9; y++)
   {
-    for (uint8_t x = 0; x <= 11; x++)
+    if ( mode == MODE_DATE && y > 4 ) color = colorArray[LIGHTBLUE];
+    for (uint8_t x = 0; x <= 10; x++)
     {
-      if (bitRead(screenBufferOld[y], 15 - x)) brightnessBuffer[y][x] = brightness;
+      if (bitRead(screenBufferNew[y], 15 - x)) newPattern[pgm_read_byte(&ledMap[x + y * LED_COLS])]=color?color:getRGBFromDegRnd(_offset,getDegree(y,x));
     }
   }
-  for (uint8_t i = 0; i < brightness; i++)
+
+  // Corner LEDs
+  float deg[4] = {135.00,45.00,315.00,225.00};
+  for (uint8_t y = 0; y <= 3; y++)
   {
-    for (uint8_t y = 0; y <= 9; y++)
-    {
-      if ( lastMode == MODE_DATE && mode == MODE_TIME )
-      {
-        if ( y > 4 ) colorold = colorArray[LIGHTBLUE]; else colorold = colorArray[YELLOW];
-      }
-      for (uint8_t x = 0; x <= 11; x++)
-      {
-        //        if (!(bitRead(screenBufferOld[y], 15 - x)) && (bitRead(screenBufferNew[y], 15 - x))) brightnessBuffer[y][x]++;
-        //        if ((bitRead(screenBufferOld[y], 15 - x)) && !(bitRead(screenBufferNew[y], 15 - x))) brightnessBuffer[y][x]--;
-        //        setPixel(x, y, color, brightnessBuffer[y][x]);
-        if (!(bitRead(screenBufferOld[y], 15 - x)) && (bitRead(screenBufferNew[y], 15 - x)))
-        {
-          if ( i  >=    brightness / 3 && brightnessBuffer[y][x] < 255 ) brightnessBuffer[y][x]++;
-          if ( i  > 2 * brightness / 3 && brightnessBuffer[y][x] < 255 ) brightnessBuffer[y][x]++;
-          if ( x < 11 ) {
-            if ( mode == MODE_DATE && y > 4 )
-              setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
-            else
-              setPixel(x, y, color, brightnessBuffer[y][x]);
-          }
-        }
-        else if ((bitRead(screenBufferOld[y], 15 - x)) && !(bitRead(screenBufferNew[y], 15 - x)))
-        {
-          if ( brightnessBuffer[y][x] > 0 ) brightnessBuffer[y][x]--;
-          if ( i < brightness / 3 && brightnessBuffer[y][x] > 0 ) brightnessBuffer[y][x]--;
-          if ( x < 11 ) {
-            if ( mode == MODE_DATE && y > 4 )
-              setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
-            else
-              setPixel(x, y, colorold, brightnessBuffer[y][x]);
-          }
-        }
-        else
-        {
-          if ( x < 11 )
-          {
-            if ( i < brightness / 2 )
-            {
-              if ( mode == MODE_DATE && y > 4 )
-                setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
-              else
-                setPixel(x, y, colorold, brightnessBuffer[y][x]);
-            }
-            else
-            {
-              if ( mode == MODE_DATE && y > 4 )
-                setPixel(x, y, colorArray[LIGHTBLUE], brightnessBuffer[y][x]);
-              else
-                setPixel(x, y, color, brightnessBuffer[y][x]);
-            }
-          }
-        }
-      }
-    }
+    if (bitRead(screenBufferNew[y], 4)) newPattern[pgm_read_byte(&ledMap[110 + y])]=corcol?corcol:getRGBFromDegRnd(_offset,deg[y]);
+  }
 
-    // Corner LEDs
-    for (uint8_t y = 0; y <= 3; y++)
-    {
-      if (!(bitRead(screenBufferOld[y], 4)) && (bitRead(screenBufferNew[y], 4)))
-      {
-        setPixel(110 + y, corcol, brightnessBuffer[y][11]);
-      }
-      else if ((bitRead(screenBufferOld[y], 4)) && !(bitRead(screenBufferNew[y], 4)))
-      {
-        setPixel(110 + y, cornercolorold, brightnessBuffer[y][11]);
-      }
-      else
-      {
-        if ( i < brightness / 2 )
-        {
-          setPixel(110 + y, cornercolorold, brightnessBuffer[y][11]);
-        }
-        else
-        {
-          setPixel(110 + y, corcol, brightnessBuffer[y][11]);
-        }
-      }
-    }
 
-    // Alarm LED
-#if defined(BUZZER) || defined(WITH_AUDIO)
-#ifdef ALARM_LED_COLOR
-#ifdef ABUSE_CORNER_LED_FOR_ALARM
-    if (settings->mySettings.alarm1 || settings->mySettings.alarm2 || alarmTimerSet)
-    {
-      setPixel(111, ALARM_LED_COLOR, brightnessBuffer[4][11]);
-    }
-#else
-    setPixel(114, ALARM_LED_COLOR, brightnessBuffer[4][11]);
-#endif
-#else
-    setPixel(114, color, brightnessBuffer[4][11]);
-#endif
-#endif
+  
+  while (blendProgress <= 255) {
+    // Überblende jedes Pixels einzeln
+    uint8_t easedProgress = ease8InOutQuad(blendProgress);
+    for (int i = 0; i < NUMPIXELS-1; i++) {
+      CRGB fadedOld = oldPattern[i];
+      fadedOld.nscale8_video(255 - easedProgress);  // Helligkeit reduzieren
 
-    if ( mode == MODE_MOONPHASE )
-    {
-      vTaskDelay(pdMS_TO_TICKS(int((900 - brightness * 3) / brightness )));
-    }
-    else
-    {
-      vTaskDelay(pdMS_TO_TICKS(int((12 * TRANSITION_SPEED + 350 - brightness * 2) / brightness)));
+      // Neues Muster einblenden (Alpha = progress)
+      CRGB fadedNew = newPattern[i];
+      fadedNew.nscale8_video(easedProgress);  // Helligkeit erhöhen
+
+      // Beide Anteile addieren (keine Überblendung, da Helligkeiten komplementär)
+      strip[i] = fadedOld + fadedNew;
     }
     show();
+    blendProgress++;  // Fortschritt erhöhen
+    vTaskDelay(pdMS_TO_TICKS(2));
   }
+
   transitionInProgress = false;
   colorold = color;
   cornercolorold = corcol;
@@ -1282,6 +1220,7 @@ void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color
   }
 }
 
+
 void LedDriver::writeScreenBuffer(uint16_t screenBuffer[], uint32_t color)
 {
   clear();
@@ -1290,32 +1229,15 @@ void LedDriver::writeScreenBuffer(uint16_t screenBuffer[], uint32_t color)
     if ( mode == MODE_DATE && y > 4 ) color = colorArray[LIGHTBLUE];
     for (uint8_t x = 0; x <= 10; x++)
     {
-      if (bitRead(screenBuffer[y], 15 - x)) setPixel(x, y, color, brightness);
+      if (bitRead(screenBuffer[y], 15 - x)) setPixel(x, y, color);
     }
   }
 
   // Corner LEDs
   for (uint8_t y = 0; y <= 3; y++)
   {
-    if (bitRead(screenBuffer[y], 4)) setPixel(110 + y, corcol, brightness);
+    if (bitRead(screenBuffer[y], 4)) setPixel(110 + y, corcol);
   }
-
-  // Alarm LED
-#if defined(BUZZER) || defined(WITH_AUDIO)
-  if (bitRead(screenBuffer[4], 4))
-  {
-#ifdef ALARM_LED_COLOR
-#ifdef ABUSE_CORNER_LED_FOR_ALARM
-    if (settings->mySettings.alarm1 || settings->mySettings.alarm2 || alarmTimerSet) setPixel(111, ALARM_LED_COLOR, brightness);
-    else if (bitRead(screenBuffer[1], 4)) setPixel(111, settings->mySettings.corner_color, brightness);
-#else
-    setPixel(114, ALARM_LED_COLOR, brightness);
-#endif
-#else
-    setPixel(114, color, brightness);
-#endif
-  }
-#endif
 
   show();
   colorold = color;
@@ -1328,15 +1250,15 @@ uint8_t LedDriver::getBrightness(void)
 }
 
 #ifdef LDR
-void LedDriver::setBrightnessFromLdr(void)
-{
 //******************************************************************************
 // get brightness from LDR
 //******************************************************************************
+void LedDriver::setBrightnessFromLdr(void)
+{
 #ifdef LDR_IS_INVERSE
-  ldrValue = 1024 - analogRead(PIN_LDR);
+  ldrValue = 1024 - adc1_get_raw(ADC1_CHANNEL_1);
 #else
-  ldrValue = analogRead(PIN_LDR);
+  ldrValue = adc1_get_raw(PIN_LDR);
 #endif
   if (ldrValue < minLdrValue)
     minLdrValue = ldrValue;
@@ -1346,6 +1268,7 @@ void LedDriver::setBrightnessFromLdr(void)
   {
     lastLdrValue = ldrValue;
     brightness = map(ldrValue, minLdrValue, maxLdrValue, MIN_BRIGHTNESS, abcBrightness);
+    FastLED.setBrightness(brightness);
     show();
   }
 }
@@ -1353,7 +1276,9 @@ void LedDriver::setBrightnessFromLdr(void)
 
 void LedDriver::setBrightness(uint8_t _brightness)
 {
-  brightness = map(_brightness, 10, 100, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+  brightness = _brightness;
+  FastLED.setBrightness(brightness);
+  show();
 }
 
 
@@ -1368,18 +1293,24 @@ void LedDriver::saveMatrix(uint16_t matrix[], bool clear) {
 void LedDriver::setOnOff(void) {
 
   DEBUG_PRINTF("setOnOff: mode=%d\n", mode);
+#ifdef WITH_SECOND_BELL
   SecondBell *secondBell = SecondBell::getInstance();
+#endif
   Settings *settings = Settings::getInstance();
   if(mode != MODE_BLANK) {
     saveMatrix(matrix, true);
     lastMode = mode;
+#ifdef WITH_SECOND_BELL
     secondBell->setStatus(false);
+#endif
     writeScreenBufferFade(matrix, settings->mySettings.ledcol);
     mode = MODE_BLANK;
     taskParams.updateSceen=false;
   } else {
     mode = MODE_TIME;
     taskParams.updateSceen=true;
+#ifdef WITH_SECOND_BELL
     secondBell->setStatus(true);
+#endif
   }
 }

@@ -21,13 +21,8 @@ extern void runMemory(void *p);
 extern bool ButtonIn(uint8_t buttonvalue);
 extern void ButtonClear();
 
-
-
 extern s_taskParams taskParams;
 extern EventGroupHandle_t xEvent;
-
-
-
 
 Game* Game::instance = 0;
 
@@ -74,13 +69,7 @@ void Game::startGame(AsyncWebServerRequest *request)
   webstring += gamestring;
   webstring += F("&highscore=");
   webstring += String(highscore[aktgame]);
-  #ifdef WITH_AUDIO
-    webstring += F("&sound=") ;
-    webstring +=  String(gamesound);
-  #else
-    webstring += F("&sound=-1");
-    gamesound = 0;
-  #endif
+
   if (aktgame == VIERGEWINNT) 
   {
     webstring += F("&level=");
@@ -94,11 +83,7 @@ void Game::startGame(AsyncWebServerRequest *request)
    
   webstring += F("');}</script></head></html>");
   request->send(200, "text/html",webstring);
-#ifdef WITH_AUDIO
-      AUDIO_FILENR = ANSAGEBASE + 180 + aktgame;
-      if ( gamesound < 3 ) Play_MP3(AUDIO_FILENR,false,33*gamesound + 20);
-      else Play_MP3(AUDIO_FILENR,false,33*gamesound);
-#endif
+
   curControl= BTN_NONE;  
   delay(0);
   anzPlayer = 1;
@@ -145,18 +130,14 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
  
       if (curControl != BTN_STOP && aktgame != VIERGEWINNT && aktgame != TIERMEMORY && aktgame != MUSIKMEMORY && aktgame != ABBAMEMORY )
       {
-        delay(800);
-#ifdef WITH_AUDIO
-        AUDIO_FILENR = ANSAGEBASE + 180;
-        if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
-#endif
-        delay(200);
+        //vTaskDelay(pdMS_TO_TICKS(1000));
         uint8_t gor = random(3);
         if ( gor == 0 ) {
 #ifdef DEBUG_GAME
           Serial.println(F("Game over Animation"));
 #endif
           taskParams.animation = "GAME_OVER";
+          taskParams.endless_loop = false;
           if(anifs->loadAnimation(taskParams.animation))
             xEventGroupSetBits(xEvent, MODE_SHOWANIMATION);
           taskParams.taskInfo[TASK_ANIMATION].handleEvent=true;
@@ -166,36 +147,36 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
           Serial.println(F("Game over Pixel"));
 #endif
           ledDriver->clear();
-          ledDriver->setPixel(10,1,YELLOW,ledDriver->getBrightness());
+          ledDriver->setPixel(10,1,colorArray[YELLOW]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(8,3,YELLOW,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(8,3,colorArray[YELLOW]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(6,5,YELLOW,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(6,5,colorArray[YELLOW]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(4,8,YELLOW,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(4,8,colorArray[YELLOW]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(1,3,RED,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(1,3,colorArray[RED]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(4,2,RED,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(4,2,colorArray[RED]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(5,4,RED,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(5,4,colorArray[RED]);
           ledDriver->show();
-          delay(200);
-          ledDriver->setPixel(7,2,RED,ledDriver->getBrightness());
+          vTaskDelay(pdMS_TO_TICKS(200));
+          ledDriver->setPixel(7,2,colorArray[RED]);
           ledDriver->show();
-          delay(1000);
+          vTaskDelay(pdMS_TO_TICKS(3000));
         }
         if ( gor == 2 ) {
 #ifdef DEBUG_GAME
           Serial.println(F("Game over Feed"));
 #endif
-          taskParams.feedColor = MAGENTA;
+          taskParams.feedColor = colorArray[MAGENTA];
           taskParams.feedText = F("  Game Over   ");
           taskParams.feedPosition = 0;
           xEventGroupSetBits(xEvent, MODE_FEED);
@@ -239,21 +220,11 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
 #if defined(WITH_4GEWINNT)
     if ( aktgame == VIERGEWINNT ) fptr = runViergewinnt;
 #endif
-#if defined(WITH_MEMORY)
-    if ( aktgame == TIERMEMORY )  fptr = runMemory;
-    if ( aktgame == MUSIKMEMORY ) fptr = runMemory;
-    if ( aktgame == ABBAMEMORY ) fptr = runMemory;
-    for ( uint8_t pip=0;pip<4;pip++)
-    {
-      PlayerIP[pip]="";
-    }
-    delay(0);
-    ButtonClear();
-#endif
+
     // disable all other led actions
     for(uint8_t i=0; i < TASK_MAX; i++)
       taskParams.taskInfo[i].handleEvent=false;
-    abcBrightness = ledDriver->getBrightness();
+ 
     // create game task
     xTaskCreatePinnedToCore(fptr, "GameTask", 2048, NULL, 1, &gameTaskHandle, 0);
   }
@@ -264,16 +235,6 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
       buttonret = ButtonIn(BTN_STOP);
     }
     
-    if ( request->arg(F("button")) == F("sound0") ) gamesound = 0;
-    if ( request->arg(F("button")) == F("sound1") ) gamesound = 1;
-    if ( request->arg(F("button")) == F("sound2") ) gamesound = 2;
-    if ( request->arg(F("button")) == F("sound3") ) gamesound = 3;
-    if ( request->arg(F("button")) == F("sound1") || request->arg(F("button")) == F("sound2") || request->arg(F("button")) == F("sound3") )
-    {
-#ifdef WITH_AUDIO
-      if (gamesound) Play_MP3(700,false,33*gamesound);
-#endif
-    }
     playerbuttonadd = 0;
    
     if ( request->arg(F("player")) == "2" ) playerbuttonadd = 10;

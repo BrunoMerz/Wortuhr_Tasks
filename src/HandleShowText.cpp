@@ -32,26 +32,6 @@ void handleShowText(AsyncWebServerRequest *request)
     DEBUG_PRINTLN(taskParams.feedText);
 #endif
 
-#ifdef BUZZER
-    for (uint8_t i = 0; i < feedBuzzer; i++)
-    {
-        digitalWrite(PIN_BUZZER, HIGH);
-        delay(75);
-        digitalWrite(PIN_BUZZER, LOW);
-        delay(100);
-    }
-#endif
-#ifdef WITH_AUDIO
-    for (uint8_t i = 0; i < feedBuzzer; i++)
-    {
-        Play_MP3(701, true, 0); // Magical
-    }
-
-    AUDIO_FILENR = ANSAGEBASE + 42; // Eine Nachricht
-    Play_MP3(AUDIO_FILENR, true, 0);
-    Play_MP3(706, false, 0);
-
-#endif
 
     xEventGroupSetBits(xEvent, MODE_FEED);
 }

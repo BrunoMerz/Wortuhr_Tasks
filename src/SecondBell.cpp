@@ -13,7 +13,7 @@ static MyTime *mytm=MyTime::getInstance();
 extern Syslog syslog;
 #endif
  
-//#define DEBUG_SECONDHAND
+//#define DEBUG_SECONDBELL
 
 SecondBell* SecondBell::instance = 0;
 
@@ -32,9 +32,6 @@ SecondBell::SecondBell(void) {
 }
 
 void SecondBell::blinkSecond(void) {
-    //uint8_t color = settings.mySettings.color;
-    //color_s cs = defaultColors[color];
-    //uint32_t c = ((uint32_t)cs.red << 16 & (uint32_t)cs.green << 8 & (uint32_t)cs.blue);
     static MyTime *mytm=MyTime::getInstance();
     if(_status) {
         uint32_t c = settings->mySettings.ledcol;
@@ -44,27 +41,26 @@ void SecondBell::blinkSecond(void) {
         cs.blue = c & 0xff;
         _aktSecond = mytm->second();
 
-    #ifdef DEBUG_SECONDHAND
+    #ifdef DEBUG_SECONDBELL
         Serial.printf("blinkSecond: sec=%d, secondsBell=%d\n",_aktSecond, settings->mySettings.secondsBell);
     #endif
-        //if(color==RAINBOW) {
         if(!c) {
-        c = ledDriver->getRGBFromDegRnd(ledDriver->getDegree(0));
-        cs.red = c >> 16;
-        cs.green =  (c >> 8) & 0xff;
-        cs.blue = c & 0xff;
+            c = ledDriver->getRGBFromDegRnd(ledDriver->getDegree(0));
+            cs.red = c >> 16;
+            cs.green =  (c >> 8) & 0xff;
+            cs.blue = c & 0xff;
         }
     
         if((_aktSecond % 2 == 0) || !settings->mySettings.secondsBell) {
-        cs.red  = 0;
-        cs.green= 0;
-        cs.blue = 0;
+            cs.red  = 0;
+            cs.green= 0;
+            cs.blue = 0;
         } else {
-        cs.red *= brightness * 0.0039;
-        cs.green *= brightness * 0.0039;
-        cs.blue *= brightness * 0.0039;
+            //cs.red *= brightness * 0.0039;
+            //cs.green *= brightness * 0.0039;
+            //cs.blue *= brightness * 0.0039;
         }
-    #ifdef DEBUG_SECONDHAND
+    #ifdef DEBUG_SECONDBELL
         Serial.printf("blinkSecond: r=%d, g=%d, b=%d\n",cs.red,cs.green,cs.blue);
     #endif
 #ifdef SYSLOGSERVER_SERVER

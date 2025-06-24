@@ -44,6 +44,7 @@ bool Events::loadEvents()
 #ifdef DEBUG_EVENTS
    Serial.println(F("There was an error opening the file " EVENTFILE " for reading"));
 #endif
+   mustLoad = false;
    return false;
   }
   // alle events deaktivieren
@@ -215,39 +216,7 @@ void Events::runEvent(uint8_t akteventidx)
 
   taskParams.taskInfo[TASK_TIME].handleEvent = false;
 
-#ifdef WITH_AUDIO
-    audio_stop_nach_feed = false;
-    if (events[akteventidx].audio_file > 0)
-    {
-      int audio_file_einer = events[akteventidx].audio_file % 10;
-      if (audio_file_einer == 0 || events[akteventidx].audio_file < 710 || events[akteventidx].audio_file >= 800)
-      {
-        if (hour() <= 3 && brightness > 40) // wenn es von 0 - 3 Uhr noch hell (Licht an) ist die Lautstärke erhöhen!
-        {
-          Play_MP3(events[akteventidx].audio_file, false, 450);
-        }
-        else
-        {
-          Play_MP3(events[akteventidx].audio_file, false, 0);
-        }
-      }
-      else
-      {
-#ifdef DEBUG_EVENTS
-        Serial.printf("Random-AudioFiles: %i - %i \r\n", (events[akteventidx].audio_file - audio_file_einer), (events[akteventidx].audio_file));
-#endif
-        int audio_file_random = random((events[akteventidx].audio_file - audio_file_einer), (events[akteventidx].audio_file + 1));
-        if (hour() <= 3 && brightness > 40) // wenn es von 0 - 3 Uhr noch hell (Licht an) ist die Lautstärke erhöhen!
-        {
-          Play_MP3(audio_file_random, false, 450);
-        }
-        else
-        {
-          Play_MP3(audio_file_random, false, 0);
-        }
-      }
-    }
-#endif
+
 
     // Lade Pre Animation
     if (events[akteventidx].preani != "KEINE")

@@ -19,7 +19,7 @@
 
 //#define DEBUG_WEB
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 extern s_taskParams taskParams;
@@ -136,7 +136,9 @@ void handlebacktoMODE_TIME(AsyncWebServerRequest *request)
   //mz  curControl = BTN_EXIT;
   //mz  setMode(MODE_TIME);
   taskParams.animation = "";
+  taskParams.endless_loop = false;
   taskParams.updateSceen = true;
+  Serial.println("handlebacktoMODE_TIME");
   callRoot(request);
 }
 
@@ -240,19 +242,6 @@ void WebHandler::webRequests()
   });
  
   webServer->on("/handleButtonTime", [](AsyncWebServerRequest *request) {
-/*
-    if ( mode != MODE_TIME) buttonTimePressed(); 
-#ifdef SHOW_MODE_ANSAGE
-    else 
-    {
-      single_mode = true;
-#ifdef WITH_AUDIO
-      mode_ohne_sound = false;
-#endif
-      setMode(MODE_ANSAGE);
-    }
-#endif
-*/
     request->send(200, TEXT_PLAIN, F("OK"));
   });
 
@@ -297,9 +286,6 @@ void WebHandler::webRequests()
       else 
       {
         //single_mode = true;
-#ifdef WITH_AUDIO
-        mode_ohne_sound = false;
-#endif
         //setMode(MODE_ANSAGE);
       }
 #endif

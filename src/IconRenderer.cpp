@@ -158,7 +158,7 @@ void IconRenderer::renderAndDisplay(String iconFileName, int delayAfter, byte cl
           }
           if(x<_width && y>=(height-_height) && !_i) {
             DEBUG_PRINT("o ");
-            ledDriver->setPixelRGB(x+_x_pos, _height-(y+_y_pos), 0xff, 0xff, 0xff, brightness);
+            ledDriver->setPixelRGB(x+_x_pos, _height-(y+_y_pos), 0xff, 0xff, 0xff);
           } else {
             DEBUG_PRINT("  ");
           }
@@ -188,7 +188,7 @@ void IconRenderer::renderAndDisplay(String iconFileName, int delayAfter, byte cl
             
             if(r || g || b) {
               DEBUG_PRINT("o ");
-              ledDriver->setPixelRGB(x+_x_pos, _height-1-(y+_y_pos), r, g, b, brightness);
+              ledDriver->setPixelRGB(x+_x_pos, _height-1-(y+_y_pos), r, g, b);
             } else {
               DEBUG_PRINT("  ");
             }
@@ -213,7 +213,7 @@ void IconRenderer::renderAndDisplay(String iconFileName, int delayAfter, byte cl
 
           //DEBUG_PRINTF("x=%d, y=%d, c=%#.6x\n",xg,yg,cg);
           if(r || g || b) {
-            ledDriver->setPixelRGB(xg, _height-1-yg, r, g, b, brightness);
+            ledDriver->setPixelRGB(xg, _height-1-yg, r, g, b);
           }
         }
       }

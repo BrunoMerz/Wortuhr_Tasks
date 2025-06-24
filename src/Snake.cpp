@@ -104,9 +104,6 @@ void runSnake(void *p) {
       xs[curLength-1] = 255;
       ys[curLength-1] = 255;
       
-#ifdef WITH_AUDIO
-      if (gamesound) Play_MP3(700,false,33*gamesound - 20);
-#endif
       delay(10);
       newApple();
     }
@@ -149,7 +146,7 @@ void runSnake(void *p) {
     ledDriver->clear();
   
     //Zeichne Apfel
-    ledDriver->setPixel(ax,ay,acolor,game->abcBrightness);
+    ledDriver->setPixel(ax,ay,acolor);
 
     //Zeichne Schlange
     for (int i=0; i<curLength; i++){
@@ -160,9 +157,9 @@ void runSnake(void *p) {
       }
       if ( i > 2 && i%3 == 0 ) 
       {
-        ledDriver->setPixelRGB(xs[i], ys[i], i*game->abcBrightness/curLength/2,i*game->abcBrightness/curLength/2,game->abcBrightness);
+        ledDriver->setPixelRGB(xs[i], ys[i], i*ledDriver->getBrightness()/curLength/2,i*ledDriver->getBrightness()/curLength/2,ledDriver->getBrightness());
       }
-      else ledDriver->setPixelRGB(xs[i], ys[i], i*game->abcBrightness/curLength/2,game->abcBrightness,i*game->abcBrightness/curLength/2);
+      else ledDriver->setPixelRGB(xs[i], ys[i], i*ledDriver->getBrightness()/curLength/2,ledDriver->getBrightness(),i*ledDriver->getBrightness()/curLength/2);
     }
 #ifdef DEBUG_GAME
     //Serial.printf("Snake: x: %i , y: %i\n",xs[0],ys[0]);
@@ -188,9 +185,6 @@ void runSnake(void *p) {
           if (game->curControl != BTN_NONE ) 
           {
             dirChanged = true;
-#ifdef WITH_AUDIO
-            if (gamesound) Play_MP3(806,false,33*gamesound - 20);          //snake
-#endif
             setDirection();
           }
         }

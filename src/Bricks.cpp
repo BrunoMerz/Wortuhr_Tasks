@@ -78,7 +78,7 @@ void runBricks(void *p) {
     {
       for(uint8_t i = AktBall ;i <= 4; i++)
       {
-        ledDriver->setPixel(109+i,colorArray[YELLOW], game->abcBrightness);
+        ledDriver->setPixel(109+i,colorArray[YELLOW]);
       }
     }
     else
@@ -92,22 +92,22 @@ void runBricks(void *p) {
     
     // zeichne Ball
     if ( ballX >= 0 && ballX < FIELD_WIDTH && ballY>=0 && ballY < FIELD_HEIGHT )
-      ledDriver->setPixel(ballX,ballY,colorArray[WHITE], game->abcBrightness);
+      ledDriver->setPixel(ballX,ballY,colorArray[WHITE]);
 
 
     // zeichne Schläger
     if ( hitPlayerC ) 
     {
       hitPlayerC = false;
-      ledDriver->setPixel(positionPlayer-1, FIELD_HEIGHT-1,colorArray[ORANGE], game->abcBrightness);
-      ledDriver->setPixel(positionPlayer, FIELD_HEIGHT-1,colorArray[ORANGE], game->abcBrightness);
-      ledDriver->setPixel(positionPlayer+1, FIELD_HEIGHT-1,colorArray[ORANGE], game->abcBrightness);
+      ledDriver->setPixel(positionPlayer-1, FIELD_HEIGHT-1,colorArray[ORANGE]);
+      ledDriver->setPixel(positionPlayer, FIELD_HEIGHT-1,colorArray[ORANGE]);
+      ledDriver->setPixel(positionPlayer+1, FIELD_HEIGHT-1,colorArray[ORANGE]);
     }
     else
     {
-      ledDriver->setPixel(positionPlayer-1, FIELD_HEIGHT-1,colorArray[YELLOW], game->abcBrightness);
-      ledDriver->setPixel(positionPlayer, FIELD_HEIGHT-1,colorArray[YELLOW], game->abcBrightness);
-      ledDriver->setPixel(positionPlayer+1, FIELD_HEIGHT-1,colorArray[YELLOW], game->abcBrightness);
+      ledDriver->setPixel(positionPlayer-1, FIELD_HEIGHT-1,colorArray[YELLOW]);
+      ledDriver->setPixel(positionPlayer, FIELD_HEIGHT-1,colorArray[YELLOW]);
+      ledDriver->setPixel(positionPlayer+1, FIELD_HEIGHT-1,colorArray[YELLOW]);
     }
     
 #ifdef DEBUG_GAME
@@ -120,7 +120,7 @@ void runBricks(void *p) {
       {
         if(bricksmatrix[blockX][blockY] == 1)
         {
-          ledDriver->setPixel(blockX,blockY,colorArray[Stage], game->abcBrightness);
+          ledDriver->setPixel(blockX,blockY,colorArray[Stage]);
         }
       }
     }
@@ -128,12 +128,7 @@ void runBricks(void *p) {
      ledDriver->show();
     unsigned long curTime;
     boolean dirChanged = false;
-    do{
-
-#ifdef IR_RECEIVER_GAME
-      readIRButton();
-#endif
-      delay(5);
+    do {
       if (game->curControl == BTN_STOP ||  game->curControl == BTN_EXIT){
         bricksRunning = false;
         game->gameisrunning = false;
@@ -173,10 +168,6 @@ void runBricks(void *p) {
 #ifdef DEBUG_GAME
     debugval = steigung * 100;
     if ( debugval == 0 ) debugval = 9999;
-#endif
-
-#ifdef IR_RECEIVER_GAME
-      readIRButton();
 #endif
   }
 }
@@ -602,9 +593,6 @@ void checkBallLost()
   if(ballY >= FIELD_HEIGHT) 
   {
     AktBall++;
-#ifdef WITH_AUDIO
-      if (gamesound) Play_MP3(800,false,33*gamesound);          //fail
-#endif
     delay (300);
     if ( AktBall <= MAX_BAELLE )
     {
@@ -620,19 +608,23 @@ void newBalltoPlayer()
 {
     for(uint8_t X=0;X<FIELD_WIDTH;X++)
     {
-      ledDriver->setPixel(X,FIELD_HEIGHT-1,colorArray[WHITE],0);
+      ledDriver->setPixel(X,FIELD_HEIGHT-1,CRGB::Black);
     }
-    ledDriver->setPixel(positionPlayer-1, FIELD_HEIGHT-1,colorArray[YELLOW], game->abcBrightness);
-    ledDriver->setPixel(positionPlayer, FIELD_HEIGHT-1,colorArray[YELLOW], game->abcBrightness);
-    ledDriver->setPixel(positionPlayer+1, FIELD_HEIGHT-1,colorArray[YELLOW], game->abcBrightness);
-    for ( uint8_t b = 0; b <=  game->abcBrightness; b++)
+    ledDriver->setPixel(positionPlayer-1, FIELD_HEIGHT-1,colorArray[YELLOW]);
+    ledDriver->setPixel(positionPlayer, FIELD_HEIGHT-1,colorArray[YELLOW]);
+    ledDriver->setPixel(positionPlayer+1, FIELD_HEIGHT-1,colorArray[YELLOW]);
+    for ( uint8_t b = 0; b <=  ledDriver->getBrightness(); b++)
     {
-      ledDriver->setPixel(positionPlayer,FIELD_HEIGHT-2,colorArray[WHITE],b);
-      if ( AktBall > 1 && AktBall <= 5) ledDriver->setPixel(108+AktBall,colorArray[YELLOW],game->abcBrightness-b);
+      CRGB c = CRGB::White;
+      c.nscale8(b);
+      ledDriver->setPixelRGB(positionPlayer, FIELD_HEIGHT-2, c);
+      c = CRGB::Yellow;
+      c.nscale8(ledDriver->getBrightness()-b);
+      if ( AktBall > 1 && AktBall <= 5) ledDriver->setPixelRGB(108+AktBall, c);
       ledDriver->show();
       delay (10);
     }
-    ledDriver->setPixel(ballX,ballY,colorArray[WHITE],0);
+    ledDriver->setPixel(ballX,ballY,CRGB::Black);
     ledDriver->show();
     delay (200);
     richtung = UP;
@@ -644,9 +636,6 @@ void newBalltoPlayer()
 void newBricks()
 {
   bricks_left = ANZAHL_BRICKS;
-#ifdef WITH_AUDIO
-      if (gamesound) Play_MP3(801,false,33*gamesound);          //neues Item
-#endif
   delay (200);
   for (uint8_t blockY=0;blockY<=BlockMatrixHEIGHT;blockY++) // Schleife über alle Blocks
   {
@@ -655,7 +644,7 @@ void newBricks()
       if ( blockY < BlockMatrixHEIGHT ) 
       {
         bricksmatrix[blockX][blockY] = 1;                   // Stein setzen
-        ledDriver->setPixel(blockX,blockY,colorArray[Stage], game->abcBrightness);
+        ledDriver->setPixel(blockX,blockY,colorArray[Stage]);
       }
       else bricksmatrix[blockX][blockY] = 0;
     }

@@ -612,26 +612,7 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("&sound=" SMODE_SOUND "\");"
                   "};\n");
   #endif
-  #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
-    message += F("function modetemp() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_TEMP);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
-  #endif              
-  #ifdef SENSOR_BME280              
-    message += F("function modehum() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_HUMIDITY);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
-                  
-    message += F("function luftdruck() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_LUFTDRUCK);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
-  #endif          
+
   #ifdef APIKEY 
     message += F("function modeexttemp() {"
                     "$.post(\"/control?mode="); 

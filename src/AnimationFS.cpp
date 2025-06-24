@@ -435,9 +435,9 @@ bool AnimationFS::showAnimation(uint8_t brightness)
     {
       for (uint8_t x = 0; x <= 10; x++)
       {
-        red = myanimation.frame[akt_aniframe].color[x][z].red * brightness * 0.0039;
-        green = myanimation.frame[akt_aniframe].color[x][z].green * brightness * 0.0039;
-        blue = myanimation.frame[akt_aniframe].color[x][z].blue * brightness * 0.0039;
+        red = myanimation.frame[akt_aniframe].color[x][z].red;// * brightness * 0.0039;
+        green = myanimation.frame[akt_aniframe].color[x][z].green;// * brightness * 0.0039;
+        blue = myanimation.frame[akt_aniframe].color[x][z].blue;// * brightness * 0.0039;
         ledDriver->setPixelRGB(x, z, red, green, blue);
       }
     }

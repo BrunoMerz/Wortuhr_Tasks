@@ -7,7 +7,6 @@
 #include <WiFi.h>
 
 #include "ESPAsyncWebServer.h"
-//#include "ESPAsyncWiFiManager.h"
 #include <ESPAsyncDNSServer.h>
 #include <ElegantOTA.h>
 
@@ -373,7 +372,7 @@ void MyWifi::init(void) {
   WiFi.disconnect(true);
   WiFi.onEvent(WiFiEvent);
   WiFi.mode(WIFI_STA);
-  DEBUG_PRINTF("systemname?%s\n", settings->mySettings.systemname);
+  DEBUG_PRINTF("systemname=%s\n", settings->mySettings.systemname);
   WiFi.setHostname(settings->mySettings.systemname);
   _connected = false;
 }

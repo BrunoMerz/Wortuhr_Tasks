@@ -13,7 +13,7 @@
 #include "OpenWeather.h"
 #include "DisplayModes.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 #include "ESPAsyncWebServer.h"
@@ -87,23 +87,6 @@ void buttonModePressed(AsyncWebServerRequest *request)
   DEBUG_PRINTLN(F("Mode pressed."));
 #endif
 
-#ifdef WITH_AUDIO
-  Play_MP3(700, false, 0); // OK Sound blub
-#endif
-  // Switch off alarm
-
-
-#ifdef WITH_AUDIO
-  if (alarmOn)
-  {
-#ifdef DEBUG
-    DEBUG_PRINTLN(F("Alarm: off"));
-#endif
-    alarmOn = false;
-    setMode(MODE_TIME);
-    return;
-  }
-#endif
   if (ledDriver->mode == MODE_TIME)
   {
     //colorsaver = settings->mySettings.ledcol;
@@ -150,29 +133,6 @@ void buttonTimePressed(AsyncWebServerRequest *request)
 {
 #ifdef DEBUG
   DEBUG_PRINTLN(F("Time pressed."));
-#endif
-#ifdef WITH_AUDIO
-  Play_MP3(700, true, 0); // OK Sound blub
-#endif
-  // Switch off alarm
-#ifdef BUZZER
-  if (alarmOn)
-  {
-#ifdef DEBUG
-    DEBUG_PRINTLN(F("Alarm: off"));
-#endif
-    digitalWrite(PIN_BUZZER, LOW);
-    alarmOn = false;
-  }
-#endif
-#ifdef WITH_AUDIO
-  if (alarmOn)
-  {
-#ifdef DEBUG
-    DEBUG_PRINTLN(F("Alarm: off"));
-#endif
-    alarmOn = false;
-  }
 #endif
   if (ledDriver->mode != MODE_TIME)
   {

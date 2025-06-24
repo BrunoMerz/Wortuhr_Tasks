@@ -35,118 +35,6 @@ void handleCommitSettings(AsyncWebServerRequest *request)
     Serial.printf("name=%s, value=%s\n", request->argName(i).c_str(), request->arg(i).c_str());
 #endif
   // ------------------------------------------------------------------------
-#if defined(BUZZER) || defined(WITH_AUDIO)
-  time_t alarmTimeFromWeb = 0;
-  // Alarm1
-  if (request->arg("a1") == "0")
-    settings->mySettings.alarm1 = false;
-  if (request->arg("a1") == "1")
-    settings->mySettings.alarm1 = true;
-
-  if (request->arg("a1t") != "")
-  {
-    alarmTimeFromWeb = request->arg("a1t").substring(0, 2).toInt() * 3600 + request->arg("a1t").substring(3, 5).toInt() * 60;
-    if (settings->mySettings.alarm1Time != alarmTimeFromWeb)
-      settings->mySettings.alarm1 = true;
-    settings->mySettings.alarm1Time = alarmTimeFromWeb;
-    settings->mySettings.alarm1Weekdays =
-        request->arg("a1w1").toInt() +
-        request->arg("a1w2").toInt() +
-        request->arg("a1w3").toInt() +
-        request->arg("a1w4").toInt() +
-        request->arg("a1w5").toInt() +
-        request->arg("a1w6").toInt() +
-        request->arg("a1w7").toInt();
-  }
-  // ------------------------------------------------------------------------
-  // Alarm2
-  if (request->arg("a2") == "0")
-    settings->mySettings.alarm2 = false;
-  if (request->arg("a2") == "1")
-    settings->mySettings.alarm2 = true;
-  if (request->arg("a2t") != "")
-  {
-    alarmTimeFromWeb = request->arg("a2t").substring(0, 2).toInt() * 3600 + request->arg("a2t").substring(3, 5).toInt() * 60;
-    if (settings->mySettings.alarm2Time != alarmTimeFromWeb)
-      settings->mySettings.alarm2 = true;
-    settings->mySettings.alarm2Time = alarmTimeFromWeb;
-    settings->mySettings.alarm2Weekdays =
-        request->arg("a2w1").toInt() +
-        request->arg("a2w2").toInt() +
-        request->arg("a2w3").toInt() +
-        request->arg("a2w4").toInt() +
-        request->arg("a2w5").toInt() +
-        request->arg("a2w6").toInt() +
-        request->arg("a2w7").toInt();
-  }
-  // ------------------------------------------------------------------------
-  // Stundenschlag
-  if (request->arg("hb") == "0")
-    settings->mySettings.hourBeep = false;
-  if (request->arg("hb") == "1")
-    settings->mySettings.hourBeep = true;
-  // ------------------------------------------------------------------------
-  // Timer
-  if (request->arg("ti") != "")
-  {
-    if (request->arg("ti").toInt())
-    {
-      alarmTimer = request->arg("ti").toInt();
-      alarmTimerSecond = second();
-      alarmTimerSet = true;
-      setMode(MODE_TIMER);
-    }
-  }
-#endif
-#ifdef WITH_AUDIO
-  // Lautstärke
-  if (request->arg("vol") != "")
-    settings->mySettings.volume = request->arg("vol").toInt();
-  // Zufallssound
-  if (request->arg(F("srand")) == "0")
-    settings->mySettings.randomsound = false;
-  if (request->arg(F("srand")) == "1")
-    settings->mySettings.randomsound = true;
-
-  // Stundensound für Wochentage
-  for (uint8_t wti = 0; wti < 7; wti++)
-  {
-    if (request->arg("wsf" + String(wti)) != "")
-      settings->mySettings.weekdaysoundfile[wti] = request->arg("wsf" + String(wti)).toInt();
-  }
-  // Sprecher
-  if (request->arg(F("sprech")) == "1")
-  {
-    settings->mySettings.sprecher = true;
-    ANSAGEBASE = AUDIO_BASENR_VICKI;
-  }
-  if (request->arg(F("sprech")) == "0")
-  {
-    settings->mySettings.sprecher = false;
-    ANSAGEBASE = AUDIO_BASENR_HANS;
-  }
-#ifdef DEBUG
-  DEBUG_PRINTF("ANSAGEBASE: %i\r\n", ANSAGEBASE);
-#endif
-
-  // Wochenend später lauter
-  if (request->arg("wsl") == "0")
-    settings->mySettings.weekendlater = false;
-  if (request->arg("wsl") == "1")
-    settings->mySettings.weekendlater = true;
-  // Singlegong
-  if (request->arg("sg") == "0")
-    settings->mySettings.singlegong = false;
-  if (request->arg("sg") == "1")
-    settings->mySettings.singlegong = true;
-  // 12/24 Stunden Ansage
-  if (request->arg("vh24") == "0")
-    settings->mySettings.vickihans24h = false;
-  if (request->arg("vh24") == "1")
-    settings->mySettings.vickihans24h = true;
-
-#endif
-  // ------------------------------------------------------------------------
   // AutoModeChange / AutoModeChange Timer
   if (request->arg("mc") == "0")
     settings->mySettings.modeChange = false;
@@ -183,6 +71,7 @@ void handleCommitSettings(AsyncWebServerRequest *request)
   {
     settings->mySettings.useAbc = false;
     ledDriver->setBrightness(map(settings->mySettings.brightness, 10, 100, MIN_BRIGHTNESS, MAX_BRIGHTNESS));
+    //Serial.printf("ab: %d, %d, %d\n",settings->mySettings.brightness, map(settings->mySettings.brightness, 10, 100, MIN_BRIGHTNESS, MAX_BRIGHTNESS), ledDriver->getBrightness());
   }
   if (request->arg("ab") == "1")
   {

@@ -189,86 +189,7 @@ typedef enum eFrontcover : uint16_t
 #define MIN_LDR_STARTVALUE 30                 // LDR Startwert bei Dunkelheit (1-1023) (Wert siehe Infoseite)
 #define MAX_LDR_STARTVALUE 70                // LDR Startwert bei Tageslicht (1-1023) (Wert muss größer als MIN_LDR_STARTVALUE sein!)
 
-//#define BUZZER
-//#define BUZZTIME_ALARM_1 10
-//#define BUZZTIME_ALARM_2 10
-//#define BUZZTIME_TIMER 10
-
-// MP3 Spieler vorhanden:
-#if defined(LILYGO_T_HMI)
-#define WITH_AUDIO
-#endif
-
-#ifdef WITH_AUDIO
-
-//#define CHECK_MP3                             // prüft jede Stunde zur Random Minute den MP3 Player
-
-#define SINGLEMODE_MIT_SOUND                  // Wenn z.B. der Mond im Webinterface angeklickt wird kommt die Mondanimation mit oder ohne Ansage 
-
-#define STARTUPSOUNDLEVEL 30                  // Startlautstärke 1-100
-#define AUDIO_EQUALIZER DFPLAYER_EQ_NORMAL    // Einstellungen Equalizer: DFPLAYER_EQ_NORMAL,DFPLAYER_EQ_POP,DFPLAYER_EQ_ROCK,DFPLAYER_EQ_JAZZ,DFPLAYER_EQ_CLASSIC,DFPLAYER_EQ_BASS
-
-#define BUZZTIME_ALARM_1 10                   // wie lange der Alarm1 an ist
-#define BUZZTIME_ALARM_2 10                   // wie lange der Alarm2 an ist
-#define BUZZTIME_TIMER 5                      // wie lange der Timeralarm an ist
-
-// Basiswerte der Soundfiles
-#define AUDIO_BASENR0 0                      //* 0 s1
-#define AUDIO_BASENR1 20                     //* 1 s2
-#define AUDIO_BASENR2 40                     //* 2 s3
-#define AUDIO_BASENR3 60                     //* 3 s4
-#define AUDIO_BASENR4 80                     //* 4 kuckuck
-#define AUDIO_BASENR5 120                    //* 5 bing
-#define AUDIO_BASENR6 140                    //* 6 kirche
-#define AUDIO_BASENR7 100                    //* 7 westminster 1
-#define AUDIO_BASENR8 160                    //* 8 westminster 2
-#define AUDIO_BASENR9 180                    //* 9 alte Uhr
-#define AUDIO_BASENR10 200                   //* 10 ding
-#define AUDIO_BASENR11 220                   //* 11 Hund und Katz
-#define AUDIO_BASENR12 240                   //* 12 Tod
-
-#define AUDIO_BASENR_VICKI 1000              //* 13 vicki
-#define AUDIO_BASENR_HANS  2000              //* 14 hans
-#define AUDIO_BASENR_VICKI_HANS 9999         //* 15 vicki und hans im wechsel
-#define AUDIO_BASENR_RANDOM  0               //* 16 Random
-
-// Lautstärke Level pro Stunde in Prozent:
-#define AUDIO_H00 30
-#define AUDIO_H01 20
-#define AUDIO_H02 10
-#define AUDIO_H03 10
-#define AUDIO_H04 10
-#define AUDIO_H05 20
-#define AUDIO_H06 30
-#define AUDIO_H07 50
-#define AUDIO_H08 80
-#define AUDIO_H09 90
-#define AUDIO_H10 100
-#define AUDIO_H11 100
-#define AUDIO_H12 100
-#define AUDIO_H13 100
-#define AUDIO_H14 100
-#define AUDIO_H15 100
-#define AUDIO_H16 100
-#define AUDIO_H17 100
-#define AUDIO_H18 100
-#define AUDIO_H19 100
-#define AUDIO_H20 100
-#define AUDIO_H21 90
-#define AUDIO_H22 80
-#define AUDIO_H23 60
-#define AUDIO_H24 30
-
-#ifdef SINGLEMODE_MIT_SOUND
- #define SMODE_SOUND "1"
-#else
- #define SMODE_SOUND "0"
-#endif
-
-#else
- #define SMODE_SOUND "0"
-#endif //Ende WITH_AUDIO
-
+#define SMODE_SOUND "0"
 
 #define NUMPIXELS 115                       // mit Alarm LED
 #define NUMSECONDS 59
@@ -405,9 +326,8 @@ typedef enum eFrontcover : uint16_t
 // ARDUINO_LOLIN_S2_MINI / WeMos Anschlüsse:
 //******************************************************************************
 
-//                                 V1      KELLY
-//#define PIN_IR_RECEIVER  D6     //                          wird für IR-Receiver benötigt
-#define ANALOG_PIN       A0
+//
+#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
 #define PIN_MODE_BUTTON  D7     // D7      D3,mode/flash
@@ -421,7 +341,8 @@ typedef enum eFrontcover : uint16_t
 #if defined(WITH_SECOND_HAND)
 #define PIN_SECONDS_DATA 17     //
 #endif
-#define PIN_LDR          A1     // GPI02
+#define PIN_LDR          ADC1_CHANNEL_1     // ADC1_1
+#define WIDTH_LDR        ADC_WIDTH_BIT_13
 #define PIN_SHOW_TIME_BUTTON RX //         RX,time
 #define PIN_ONOFF_BUTTON TX     //         TX,on/off
 #define WIFI_RESET       (14)
@@ -434,7 +355,7 @@ typedef enum eFrontcover : uint16_t
 
 //                                 V1      KELLY
 //#define PIN_IR_RECEIVER  D6     //                          wird für IR-Receiver benötigt
-#define ANALOG_PIN       A0
+#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
 #define PIN_MODE_BUTTON  D7     // D7      D3,mode/flash
@@ -446,7 +367,8 @@ typedef enum eFrontcover : uint16_t
 //#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    16     //
 #define PIN_SECONDS_DATA 18     //
-#define PIN_LDR          A0     // GPIO1
+#define PIN_LDR          ADC1_CHANNEL_1     // ADC1_0
+#define WIDTH_LDR        ADC_WIDTH_BIT_12
 #define PIN_SHOW_TIME_BUTTON RX //         RX,time
 #define PIN_ONOFF_BUTTON TX     //         TX,on/off
 #define WIFI_RESET       (14)

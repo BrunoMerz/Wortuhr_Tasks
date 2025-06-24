@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <driver/adc.h>
 #include "Configuration.h"
 #include "Settings.h"
 #include "Renderer.h"
@@ -6,7 +7,6 @@
 #include "LedDriver_FastLED.h"
 #include "MyWifi.h"
 #include "MyTime.h"
-#include "SecondBell.h"
 #include "Modes.h"
 #include "WebHandler.h"
 #include "OpenWeather.h"
@@ -16,10 +16,17 @@
 #include "TaskStructs.h"
 #include "DisplayModes.h"
 #include "Events.h"
-//#include "Game.h"
 
 
-#define myDEBUG
+#ifdef WITH_SECOND_BELL
+#include "SecondBell.h"
+#endif
+
+#ifdef WITH_SECOND_HAND
+#include "SecondHand.h"
+#endif
+
+//#define myDEBUG
 #include "MyDebug.h"
 
 s_taskParams taskParams;
@@ -117,8 +124,7 @@ void queueScheduler(void *p) {
   int aktHour;
   int aktMinute;
   int aktSecond;
-  glb->akt_transition = 1;
-  uint8_t akt_transition_old = 1;
+  
   nightOffTime = mt->hour(settings->mySettings.nightOffTime) * 60 + mt->minute(settings->mySettings.nightOffTime);
   dayOnTime = mt->hour(settings->mySettings.dayOnTime) * 60 + mt->minute(settings->mySettings.dayOnTime);
   uint32_t aktts;
@@ -170,6 +176,16 @@ void queueScheduler(void *p) {
           tp->updateSceen = true;
         }     
       }
+    }
+
+    if (aktSecond != lastSecond)
+    {
+      lastSecond = aktSecond;
+#ifdef LDR
+      // Set brightness from LDR
+      if (settings->mySettings.useAbc)
+        ledDriver->setBrightnessFromLdr();
+#endif
     }
 
     if(aktMinute != lastMinute) {
@@ -335,12 +351,6 @@ void showTextHandler(void *p) {
             ledDriver->show();
             vTaskDelay(pdMS_TO_TICKS(FEED_SPEED));
           }
-
-  #ifdef WITH_AUDIO
-          if (audio_stop_nach_feed)
-            Play_MP3(99, false, 0); // Stop
-          audio_stop_nach_feed = true;
-  #endif
         }
         
         xEventGroupClearBits(xEvent, MODE_FEED);
@@ -376,8 +386,7 @@ void animationQueueHandler(void *p) {
 
         renderer->clearScreenBuffer(matrix);
  
-
-        while(tp->animation != "") {
+        do {
           anifs->akt_aniframe = 0;
           anifs->akt_aniloop = 0;
           anifs->frame_fak = 0;
@@ -385,7 +394,7 @@ void animationQueueHandler(void *p) {
             vTaskDelay(pdMS_TO_TICKS(30));
           }
           DEBUG_PRINTF("nach showAnimation: frame=%d, loop=%d, fak=%d\n",anifs->akt_aniframe, anifs->akt_aniloop, anifs->frame_fak);
-        }
+        } while(tp->endless_loop);
         
 
         xEventGroupClearBits(xEvent, MODE_SHOWANIMATION);
@@ -432,7 +441,7 @@ void eventQueueHandler(void *p) {
     aktTime = mt->mytm.tm_loc;
 
     if(evt->mustLoad) {
-      DEBUG_PRINTLN("mustload");
+      DEBUG_PRINTLN("mustLoad");
       evt->loadEvents();
 
       aktTime += (5-aktSecond);
@@ -458,7 +467,7 @@ void eventQueueHandler(void *p) {
   } // while
 }
 
-
+#ifdef WITH_SECOND_BELL
 void displaySecondBell(void *) {
   MyTime *mt=MyTime::getInstance();
   SecondBell *secondBell=SecondBell::getInstance();
@@ -466,7 +475,7 @@ void displaySecondBell(void *) {
 
   int lastSecond=0;
   int aktSecond;
-  DEBUG_PRINTF("second: Core=%d\n", xPortGetCoreID());
+  DEBUG_PRINTF("secondBell: Core=%d\n", xPortGetCoreID());
   while(true) {
     mt->getTime();
     aktSecond = mt->mytm.tm_sec;
@@ -477,7 +486,28 @@ void displaySecondBell(void *) {
     vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
+#endif
 
+#ifdef WITH_SECOND_HAND
+void displaySecondHand(void *) {
+  MyTime *mt=MyTime::getInstance();
+  SecondHand *secondHand=SecondHand::getInstance();
+  LedDriver *ledDriver=LedDriver::getInstance();
+
+  int lastSecond=0;
+  int aktSecond;
+  DEBUG_PRINTF("secondHand: Core=%d\n", xPortGetCoreID());
+  while(true) {
+    mt->getTime();
+    aktSecond = mt->mytm.tm_sec;
+    if(aktSecond!=lastSecond) {
+      lastSecond=aktSecond;
+      secondHand->drawSecond();
+    }
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
+}
+#endif
 
 void displayTime(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
@@ -494,8 +524,7 @@ void displayTime(void *p) {
   int aktMinute;
   int aktSecond;
   uint8_t lastDay = 0;
-  glb->akt_transition = 1;
-  uint8_t akt_transition_old = 1;
+
   mt->mytm.tm_ntpserver = settings->mySettings.ntphost;
   mt->mytm.tm_timezone = settings->mySettings.timezone; //"CET-1CEST,M3.5.0,M10.5.0/3";
   mt->mytm.tm_lon = settings->mySettings.longitude;
@@ -537,16 +566,6 @@ void displayTime(void *p) {
         if (!settings->mySettings.itIs && ((aktMinute / 5) % 6))
           renderer->clearEntryWords(matrix);
 
-        if (aktSecond != lastSecond)
-        {
-          lastSecond = aktSecond;
-#ifdef LDR
-          // Set brightness from LDR
-          if (settings->mySettings.useAbc)
-            ledDriver->setBrightnessFromLdr();
-#endif
-        }
-
         if (aktDay != lastDay)
         {
           lastDay = aktDay;
@@ -567,7 +586,6 @@ void displayTime(void *p) {
 #endif
         }
 
-
         if (aktMinute % 5 != 0 || tp->updateSceen)
         {
           ledDriver->writeScreenBufferFade(matrix, settings->mySettings.ledcol);
@@ -577,18 +595,18 @@ void displayTime(void *p) {
           glb->akt_transition = settings->mySettings.transition;
           if ( settings->mySettings.transition == TRANSITION_RANDOM )
           {
-            akt_transition_old = glb->akt_transition;
+            glb->akt_transition_old = glb->akt_transition;
             for (uint8_t i = 0; i <= 20; i++)
             {
               glb->akt_transition = random(TRANSITION_NORMAL + 1, TRANSITION_MAX);
-              if ( glb->akt_transition != akt_transition_old ) break;
+              if ( glb->akt_transition != glb->akt_transition_old ) break;
             }
           }
           if ( settings->mySettings.transition == TRANSITION_ALLE_NACHEINANDER )
           {
-            akt_transition_old++;
-            if ( akt_transition_old >= TRANSITION_MAX ) akt_transition_old = TRANSITION_NORMAL + 1;
-            glb->akt_transition = akt_transition_old;
+            glb->akt_transition_old++;
+            if ( glb->akt_transition_old >= TRANSITION_MAX ) glb->akt_transition_old = TRANSITION_NORMAL + 1;
+            glb->akt_transition = glb->akt_transition_old;
           }
 
           if (glb->akt_transition == TRANSITION_NORMAL)
@@ -633,7 +651,8 @@ void displayTime(void *p) {
           }
           vTaskDelay(pdMS_TO_TICKS(500));
         } // else aktMinute % 5 != 0
-
+        
+        tp->updateSceen = false;
         xEventGroupClearBits(xEvent, MODE_TIME);
         ledDriver->lastMode = MODE_TIME;
         xSemaphoreGive(xMutex);
@@ -645,7 +664,7 @@ void displayTime(void *p) {
 }
 
 
-void startup(void *){
+void startup(void *) {
   Settings *settings=Settings::getInstance();
   Renderer *renderer=Renderer::getInstance();
   IconRenderer *icor=IconRenderer::getInstance();
@@ -657,6 +676,20 @@ void startup(void *){
   DEBUG_PRINTLN("startup called");
   DEBUG_PRINTF("startup: Core=%d\n", xPortGetCoreID());
   settings->init();
+
+  ledDriver->setBrightness(settings->mySettings.brightness);
+
+  // LDR Setup
+  adc1_config_width(WIDTH_LDR);
+  adc1_config_channel_atten(PIN_LDR, ADC_ATTEN_DB_12);  // GPIO1 (A0)
+
+#ifdef LDR
+      // Set brightness from LDR
+      if (settings->mySettings.useAbc)
+        ledDriver->setBrightnessFromLdr();
+#endif
+
+
   renderer->language = settings->mySettings.language;
   renderer->itIs = settings->mySettings.itIs;
   
@@ -665,7 +698,7 @@ void startup(void *){
   renderer->setSmallText("ST", TEXT_POS_TOP, matrix);
   renderer->setSmallText("AR", TEXT_POS_BOTTOM, matrix);
   DEBUG_PRINTLN("nach setSmallText");
-  ledDriver->setBrightness(settings->mySettings.brightness);
+  
   ledDriver->farbenmeer(matrix, colorArray[WHITE]);
 
   icor->renderAndDisplay("/ico/setup.ico",0,1);
@@ -675,8 +708,7 @@ void startup(void *){
   {
     DEBUG_PRINTLN(F("WiFi failed"));
   } else {
-    String myIP = myWifi->IP().toString();
-    Serial.println(myIP);
+    Serial.println(myWifi->IP().toString());
     webHandler->webRequests();
 
     // ElegantOTA
@@ -694,7 +726,7 @@ void startup(void *){
   ledDriver->saveMatrix(matrix);
 
   // Define a random time
-  randomSeed(analogRead(ANALOG_PIN));
+  randomSeed(adc1_get_raw(ANALOG_PIN));
   glb->randomHour = random(9, 16);
   for (uint8_t i = 0; i <= 20; i++)
   {
@@ -727,7 +759,7 @@ void startup(void *){
     0
   );
 
-  taskParams.taskInfo[TASK_TIME].stackSize=2048;
+  taskParams.taskInfo[TASK_TIME].stackSize=3072;
   xTaskCreatePinnedToCore(
     &displayTime,   // Function name of the task
     "DisplayTime",  // Name of the task (e.g. for debugging)
@@ -738,16 +770,31 @@ void startup(void *){
     0
   );
 
-  taskParams.taskInfo[TASK_SECONDS].stackSize=2048;
+#ifdef WITH_SECOND_BELL
+  taskParams.taskInfo[TASK_SECOND_BELL].stackSize=2048;
   xTaskCreatePinnedToCore(
     &displaySecondBell,   // Function name of the task
     "DisplaySecondBell",  // Name of the task (e.g. for debugging)
-    taskParams.taskInfo[TASK_SECONDS].stackSize,       // Stack size (bytes)
+    taskParams.taskInfo[TASK_SECOND_BELL].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
-    &taskParams.taskInfo[TASK_SECONDS].taskHandle,// Task handle
+    &taskParams.taskInfo[TASK_SECOND_BELL].taskHandle,// Task handle
     0
   );
+#endif
+
+#ifdef WITH_SECOND_HAND
+  taskParams.taskInfo[TASK_SECOND_HAND].stackSize=2048;
+  xTaskCreatePinnedToCore(
+    &displaySecondHand,   // Function name of the task
+    "displaySecondHand",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_SECOND_HAND].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
+    1,          // Task priority
+    &taskParams.taskInfo[TASK_SECOND_HAND].taskHandle,// Task handle
+    0
+  );
+#endif
 
   taskParams.taskInfo[TASK_MODES].stackSize=3000;
   xTaskCreatePinnedToCore(

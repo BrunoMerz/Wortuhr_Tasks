@@ -71,7 +71,7 @@ public:
     uint8_t gamesize = 2;
     int8_t aktivPlayer = 0;
     uint8_t anzPlayer = 0;
-    uint8_t abcBrightness;
+    //uint8_t abcBrightness;
 
     String PlayerIP[4]={"","","",""};
 

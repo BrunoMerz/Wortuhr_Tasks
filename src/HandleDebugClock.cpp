@@ -10,6 +10,7 @@
 #include "Global.h"
 #include "LedDriver_FastLED.h"
 #include "Events.h"
+#include "MyWifi.h"
 
 //#include myDEBUG
 #include "MyDebug.h"
@@ -20,7 +21,6 @@
 const char compile_date[] = __DATE__ " " __TIME__;
 
 extern float getHeapFragmentation();
-extern uint16_t getWeatherSound(uint16_t wetterid);
 
 static MyTime *mt = MyTime::getInstance();
 static Settings *settings = Settings::getInstance();
@@ -31,6 +31,7 @@ static Global *glb = Global::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
 static Events *evt = Events::getInstance();
 static Game *game = Game::getInstance();
+static MyWifi *myWifi = MyWifi::getInstance();
 
 
 //debugClock
@@ -112,10 +113,10 @@ void debugClock(AsyncWebServerRequest *request)
   if ( WiFi.RSSI() >= -90 && WiFi.RSSI() < -80 ) message += F(LANG_WIFIQ6);
   if ( WiFi.RSSI() < -90 ) message += F(LANG_WIFIQ7);
   message += F(")</li>\n");
-  message += F("<li>" LANG_WIFIRECON ": ");
-  message += String(glb->WLAN_reconnect) + "</li>\n";
+//  message += F("<li>" LANG_WIFIRECON ": ");
+//  message += String(glb->WLAN_reconnect) + "</li>\n";
   message += F("<li>" LANG_IPADRESS ": ");
-  message += String(glb->myIP[0]) + '.' + String(glb->myIP[1]) + '.' + String(glb->myIP[2]) + '.' + String(glb->myIP[3]);
+  message += myWifi->IP().toString();
   message += F("</li>\n<li>Client IP-Addr: ");
   message += request->client()->remoteIP().toString();
   message += F("</li>\n");
@@ -244,23 +245,6 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</li>\n");
   message += F("</ul>\n</li>\n");
 
-  // ######################### AUDIO ##################
-#ifdef WITH_AUDIO
-  message += F("<li><b>Audio</b>\n"
-               "<ul>\n");
-  message += F("<li>" LANG_SPEAKER ": ");
-  if ( settings->mySettings.sprecher ) message += F("Vicki"); else message += F("Hans");
-  message += F("</li>\n");
-  message += F("<li>" LANG_VOLUME " (0-30): ");  message += String(VOLUME_ALT);
-  message += F("</li>\n");
-#ifdef CHECK_MP3
-  message += F("<li>MP3-Resets: ");  message += String(mp3resetcount);
-  message += F("</li>\n");
-#endif
-  message += F("</ul>\n"
-               "</li>\n");
-#endif
-
   // ######################### LDR ##################
 #ifdef LDR
     message += F("<li><b>LDR</b>\n<ul>\n");
@@ -281,8 +265,6 @@ void debugClock(AsyncWebServerRequest *request)
     message += F(")</small></li>\n");
     message += F("</ul>\n</li>\n");
 #endif
-
-
 
   // ######################### SECONDHAND ##################
 #if defined(WITH_SECOND_HAND) || defined(WITH_SECOND_BELL)
@@ -361,9 +343,6 @@ void debugClock(AsyncWebServerRequest *request)
   message += String(outdoorWeather->weatherid1) + F(" ICON: ");
   message += outdoorWeather->weathericon1 + F(" CLOUDS: ");
   message += outdoorWeather->clouds;
-  message += F("</small></li>\n");
-  message += F("<li>" LANG_WEATHER " Sound 1: <small>");
-  message += String(getWeatherSound(outdoorWeather->weatherid1));
   message += F("</small></li>\n");
   message += F("<li>" LANG_WEATHER " Info 2: <small>ID: ");
   message += String(outdoorWeather->weatherid2) + F(" ICON: ");
@@ -474,25 +453,11 @@ void debugClock(AsyncWebServerRequest *request)
   // ######################### Flags ##################
   message += F("<li><b>Flags</b>\n"
                "<ul>\n<li>");
-#ifdef RTC_BACKUP
-  message += F("RTC ");
-#endif
-#ifdef SENSOR_BME280
-  message += F("BME280 ");
-#endif
+
 #ifdef LDR
   message += F("LDR ");
 #endif
-#ifdef BUZZER
-  message += F("BUZZER ");
-#endif
-#ifdef WITH_AUDIO
-  message += F("AUDIO ");
-#endif
   message += F("</li>\n<li>");
-#ifdef IR_RECEIVER
-  message += F("IR_RECEIVER ");
-#endif
 #ifdef ESP_LED
   message += F("ESP_LED ");
 #endif

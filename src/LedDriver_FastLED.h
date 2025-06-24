@@ -9,7 +9,6 @@
 #include <FastLED.h>
 #include "Modes.h"
 
-
 class LedDriver
 {
 public:
@@ -17,12 +16,18 @@ public:
 
     void clear();
     void show();
-    void setPixel(uint8_t x, uint8_t y, uint32_t color, uint8_t brightness);
-    void setPixel(uint8_t num, uint32_t color, uint8_t brightness);
-    void setPixelRGB(uint8_t x, uint8_t y, uint8_t red, uint8_t green, uint8_t blue);
+    
+    void setPixel   (uint8_t num, uint32_t color);
+    void setPixelRGB(uint8_t num, uint32_t color);
+    void setPixelRGB(uint8_t num, CRGB color);
     void setPixelRGB(uint8_t num, uint8_t red, uint8_t green, uint8_t blue );
-    void setPixelRGB(uint8_t x, uint8_t y, uint8_t red, uint8_t green, uint8_t blue, uint16_t brightness);
-    void setPixelRGB(uint8_t x, uint8_t y, uint32_t c);
+    
+
+    void setPixel   (uint8_t x, uint8_t y, uint32_t color);
+    void setPixelRGB(uint8_t x, uint8_t y, CRGB color);
+    void setPixelRGB(uint8_t x, uint8_t y, uint32_t color);
+    void setPixelRGB(uint8_t x, uint8_t y, uint8_t red, uint8_t green, uint8_t blue);
+
     void setDegreeOffset(uint16_t offset);
     uint16_t getDegree(uint16_t y, uint16_t x);
     uint16_t getDegree(uint16_t sec);
@@ -69,7 +74,9 @@ public:
 private:
     LedDriver();
     static LedDriver *instance;
+
     CRGB strip[NUMPIXELS];
+ 
     uint16_t _offset;
     uint16_t screenBufferOld[10];
     boolean transitionInProgress;

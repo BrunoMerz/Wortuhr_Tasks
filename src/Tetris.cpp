@@ -90,9 +90,7 @@ void runTetris(void *p) {
 
     if ( checkFieldCollisionSound(&activeBrick) && activeBrick.enabled ) 
     {
-#ifdef WITH_AUDIO
-      if (gamesound) Play_MP3(802,false,28*gamesound);   //impact
-#endif
+
     }
     printField();
 
@@ -148,56 +146,56 @@ void printField(){
         }
       }
       if (field.pix[x][y] == 1){
-       ledDriver->setPixel(x,y,field.color[x][y],game->abcBrightness);
+       ledDriver->setPixelRGB(x,y,field.color[x][y]);
       } else if (activeBrickPix == 1){
-          ledDriver->setPixel(x,y,activeBrick.color,game->abcBrightness);
+          ledDriver->setPixelRGB(x,y,activeBrick.color);
       } else {
-         ledDriver->setPixel(x,y,RED,0);  // Pixel löschen!
+         ledDriver->setPixelRGB(x,y,CRGB::Black);  // Pixel löschen!
       }
     }
   }
   switch (nextbrick) {
     case 0:
-      ledDriver->setPixel(110,BLUE,game->abcBrightness);
-      ledDriver->setPixel(111,BLUE,game->abcBrightness);
-      ledDriver->setPixel(112,BLUE,game->abcBrightness);
-      ledDriver->setPixel(113,BLUE,game->abcBrightness);
+      ledDriver->setPixelRGB(110,colorArray[BLUE]);
+      ledDriver->setPixelRGB(111,colorArray[BLUE]);
+      ledDriver->setPixelRGB(112,colorArray[BLUE]);
+      ledDriver->setPixelRGB(113,colorArray[BLUE]);
     break;
     case 1:
-      ledDriver->setPixel(110,RED,0);
-      ledDriver->setPixel(111,RED,0);
-      ledDriver->setPixel(112,RED,game->abcBrightness);
-      ledDriver->setPixel(113,RED,game->abcBrightness);
+      ledDriver->setPixelRGB(110,CRGB::Black);
+      ledDriver->setPixelRGB(111,CRGB::Black);
+      ledDriver->setPixelRGB(112,colorArray[RED]);
+      ledDriver->setPixelRGB(113,colorArray[RED]);
     break;
     case 2:
-      ledDriver->setPixel(110,YELLOW,game->abcBrightness);
-      ledDriver->setPixel(111,YELLOW,0);
-      ledDriver->setPixel(112,YELLOW,game->abcBrightness);
-      ledDriver->setPixel(113,YELLOW,game->abcBrightness);
+      ledDriver->setPixelRGB(110,colorArray[YELLOW]);
+      ledDriver->setPixelRGB(111,CRGB::Black);
+      ledDriver->setPixelRGB(112,colorArray[YELLOW]);
+      ledDriver->setPixelRGB(113,colorArray[YELLOW]);
     break;
     case 3:
-      ledDriver->setPixel(110,MAGENTA,0);
-      ledDriver->setPixel(111,MAGENTA,game->abcBrightness);
-      ledDriver->setPixel(112,MAGENTA,game->abcBrightness);
-      ledDriver->setPixel(113,MAGENTA,game->abcBrightness);
+      ledDriver->setPixelRGB(110,CRGB::Black);
+      ledDriver->setPixelRGB(111,colorArray[MAGENTA]);
+      ledDriver->setPixelRGB(112,colorArray[MAGENTA]);
+      ledDriver->setPixelRGB(113,colorArray[MAGENTA]);
     break;
     case 4:
-      ledDriver->setPixel(110,GREEN,game->abcBrightness);
-      ledDriver->setPixel(111,GREEN,0);
-      ledDriver->setPixel(112,GREEN,0);
-      ledDriver->setPixel(113,GREEN,game->abcBrightness);
+      ledDriver->setPixelRGB(110,colorArray[GREEN]);
+      ledDriver->setPixelRGB(111,CRGB::Black);
+      ledDriver->setPixelRGB(112,CRGB::Black);
+      ledDriver->setPixelRGB(113,colorArray[GREEN]);
     break;
     case 5:
-      ledDriver->setPixel(110,ORANGE,0);
-      ledDriver->setPixel(111,ORANGE,game->abcBrightness);
-      ledDriver->setPixel(112,ORANGE,0);
-      ledDriver->setPixel(113,ORANGE,game->abcBrightness);
+      ledDriver->setPixelRGB(110,CRGB::Black);
+      ledDriver->setPixelRGB(111,colorArray[ORANGE]);
+      ledDriver->setPixelRGB(112,CRGB::Black);
+      ledDriver->setPixelRGB(113,colorArray[ORANGE]);
     break;
     case 6:
-      ledDriver->setPixel(110,CYAN,game->abcBrightness);
-      ledDriver->setPixel(111,CYAN,0);
-      ledDriver->setPixel(112,CYAN,game->abcBrightness);
-      ledDriver->setPixel(113,CYAN,0);
+      ledDriver->setPixelRGB(110,colorArray[CYAN]);
+      ledDriver->setPixelRGB(111,CRGB::Black);
+      ledDriver->setPixelRGB(112,colorArray[CYAN]);
+      ledDriver->setPixelRGB(113,CRGB::Black);
     break;
   }
   
@@ -209,12 +207,6 @@ void printField(){
 void newActiveBrick(){
 //  uint8_t selectedBrick = 3;
 
-#ifdef WITH_AUDIO
-      while (!digitalRead(PIN_AUDIO_BUSY)) {
-        delay(20);
-      }
-      if (gamesound) Play_MP3(801,false,33*gamesound - 20);       // neues Item
-#endif
   uint8_t selectedBrick = nextbrick;
   nextbrick = random(7);
   game->aktscore++;
@@ -445,21 +437,6 @@ void checkFullLines(){
     if (rowSum>=FIELD_WIDTH){
        // Ganze Zeile gefunden 
       pixel_aktiv = pixel_aktiv - FIELD_WIDTH;
-#ifdef WITH_AUDIO
-      AudioBufferClear();
-      if (gamesound) 
-      {
-        while ( Soundaktiv() ) // warte bis Sound zu Ende ist
-        {    
-          delay(5);
-        }
-        Play_MP3(803,false,33*gamesound);       //slide
-        while ( !Soundaktiv() ) // warte bis Sound läuft
-        {    
-          delay(5);
-        }
-      }
-#endif
      
       delay(200);
       //starte Löschanimation
@@ -468,33 +445,12 @@ void checkFullLines(){
         printField();
         delay(100);
       }
-#ifdef WITH_AUDIO
-      if (gamesound && pixel_aktiv > 0 ) 
-      {
-        while ( Soundaktiv() ) // warte bis Sound zu Ende ist
-        {    
-          delay(5);
-        }
-        AudioBufferIn(802);             //impact
-        PlayAudioBuffer(29*gamesound);
-        while ( !Soundaktiv() ) // warte bis Sound läuft
-        {    
-          delay(5);
-        }
-      }
-#endif
+
       // Bewege alle Zeilen oberhalb eins runter
       delay(450);
       moveFieldDownOne(y);
       y++; minY++;
       printField();
-#ifdef WITH_AUDIO
-      while ( Soundaktiv() )
-      {    
-        delay(10);
-        webServer.handleClient();
-      }
-#endif
       
       nbRowsThisLevel++; nbRowsTotal++;
       if (nbRowsThisLevel >= LEVELUP){

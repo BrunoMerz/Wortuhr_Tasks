@@ -27,7 +27,6 @@ static AnimationFS *anifs = AnimationFS::getInstance();
 //###########################################################################
 void makeAnimationmenue(AsyncWebServerRequest *request)
 {
-  AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
   String checked = F("checked");
   uint8_t anzani = 0;
   
@@ -52,10 +51,7 @@ void makeAnimationmenue(AsyncWebServerRequest *request)
   "<div class=\"section over-hide z-bigger\">\n"
     "<div class=\"row justify-content-center pb-5\">\n"
       "<div class=\"checkboxcontainer\">\n");
-// ################################################# sende html Teil 1
-    response->print(message);
-    message = "";
-// ###################################################################
+
   for ( int aninr=0; aninr <= MAXANIMATION; aninr++ )
   {
     if ( anifs->myanimationslist[aninr].length() == 0 || anifs->myanimationslist[aninr] == LANG_NEW ) continue;
@@ -76,15 +72,8 @@ void makeAnimationmenue(AsyncWebServerRequest *request)
     message += String(anifs->myanimationslist[aninr]); 
     message += F("</label>\n");
     checked = "";
-//########################################################################### sende Liste html
-    if ( aninr %5 == 0 )
-    {
-      response->print(message);
-      message = "";
-      delay(0);
-    }
-//########################################################################### 
   }
+
   if ( anzani < MAXANIMATION ) 
   {
     message += F("<input class=\"checkbox-tools\" type=\"radio\" name=\"myselect\" id=\"" LANG_NEW "\" ");
@@ -114,10 +103,8 @@ void makeAnimationmenue(AsyncWebServerRequest *request)
     "});\n"
     "</script>\n"
     "</body></html>\n");
-//##################### sende letzen html Teil
-  response->print(message);
-  request->send(response);
-//    return message;
+
+  request->send(200, TEXT_HTML, message);
 }
 
 //###########################################################################
@@ -132,6 +119,7 @@ void startAnimationsmenue(AsyncWebServerRequest *request)
 {
   anifs->getAnimationList();
   taskParams.animation = anifs->myanimationslist[0];
+  taskParams.endless_loop = true;
   anifs->akt_aniframe = 0;
   anifs->akt_aniloop = 0;
   anifs->frame_fak = 1;
@@ -140,9 +128,7 @@ void startAnimationsmenue(AsyncWebServerRequest *request)
 #ifdef  DEBUG_ANIMATION
   DEBUG_PRINTLN("Start Animationsmenue: " + taskParams.animation + " Frame: " + String(anifs->akt_aniframe) );
 #endif
-//  mode = MODE_SHOWANIMATION;
-//  screenBufferNeedsUpdate = true;
-  //  webServer.send(200, TEXT_HTML, makeAnimationmenue());
+
   makeAnimationmenue(request);
 }
 
@@ -175,6 +161,7 @@ void handleaniselect(AsyncWebServerRequest *request)
   {
     taskParams.animation = request->arg("value");
     taskParams.animation.toUpperCase();
+    taskParams.endless_loop = true;
 #ifdef  DEBUG_ANIMATION
   DEBUG_PRINTLN("Animation gewählt: " + taskParams.animation );
 #endif

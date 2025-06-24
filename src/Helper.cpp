@@ -65,35 +65,3 @@ float getHeapFragmentation() {
   
     return fragmentation;
   }
-
-#if defined(WITH_AUDIO)
-// finde den passenden Sound zur Wetter-Id
-uint16_t getWeatherSound(uint16_t wetterid)
-{
-  uint8_t soundmapidx = 0;
-  uint16_t soundidx = 0;
-  uint16_t soundnr = 0;
-  uint16_t wettermapid = 0;
-
-  do
-  {
-    soundnr = pgm_read_word(&wettersoundmapping[soundmapidx][0]);
-    wettermapid = pgm_read_word(&wettersoundmapping[soundmapidx][1]);
-    if ( wettermapid == wetterid )
-    {
-      soundidx = WETTERSOUNDBASE - 1 + soundnr;
-      soundnr = 0;
-    }
-    soundmapidx++;
-  } while ( soundnr != 0 );
-
-  if ( soundidx == WETTERSOUNDBASE - 1 || soundidx == 0 ) soundidx = 99; // kein Sound vorhanden
-  return soundidx;
-}
-#else
-uint16_t getWeatherSound(uint16_t wetterid)
-{
-  return 99;
-}
-#endif
-

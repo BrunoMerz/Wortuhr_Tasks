@@ -452,4 +452,3 @@ void OpenWeather::sunriseset(void)
 #endif
 
 }
-

@@ -18,7 +18,7 @@
 
 uint8_t g_maxDepth = 5;
 uint8_t g_maxLDepth = 0;
-//int8_t board[VG_HEIGHT+1][VG_WIDTH] = {0};
+
 boolean ViergewinntRunning;
 unsigned long steinzeit;  //:-)
 int8_t g_4g_posy = 0;
@@ -46,24 +46,6 @@ extern void leereBoard();
 extern void BoardInit();
 extern bool innerhalb(int y, int x);
 extern int8_t freieSpalteWahl(int8_t pos, bool lr, int8_t spieler);
-
-
-
-/*
-extern int8_t board[9][9];
-extern uint8_t abcBrightness;
-extern bool gameisrunning;
-extern uint8_t curControl;
-extern uint16_t highscore[9];
-extern uint8_t gamecount[9];
-extern uint8_t gamelevel;
-extern uint8_t gamesize;
-extern uint8_t lastMinute;
-extern int gamesound;
-extern uint8_t PABStatus;
-extern int AUDIO_FILENR;
-extern int ANSAGEBASE;
-*/
 
 static Game *game = Game::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
@@ -101,10 +83,6 @@ void runViergewinnt(void *p)
         #endif    
         ViergewinntRunning = false;
         delay(200);
-        #ifdef WITH_AUDIO
-          AUDIO_FILENR = ANSAGEBASE + 198;   // unendschieden
-          if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
-        #endif
         for ( uint8_t d=0; d<10;d++)
         {
           delay(500);
@@ -133,10 +111,6 @@ void runViergewinnt(void *p)
       if ( B_wirfStein ) while ( wirfStein(g_4g_eingeworfen, SPIELER_B));
       #ifdef DEBUG_GAME
         Serial.println(F("Du hast 4gewinnt gewonnen!\n"));
-      #endif
-      #ifdef WITH_AUDIO
-        AUDIO_FILENR = ANSAGEBASE + 192 + random(0,2);   // ich verloren/du gewonnen
-        if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
       #endif
       markiereGewinnSteine();
       if ( game->highscore[VIERGEWINNT] < 999 ) game->highscore[VIERGEWINNT]++;
@@ -173,10 +147,6 @@ void runViergewinnt(void *p)
           #ifdef DEBUG_GAME
             Serial.println(F("Ich habe 4gewinnt gewonnen!"));
           #endif
-          #ifdef WITH_AUDIO
-            AUDIO_FILENR = ANSAGEBASE + 190 + random(0,2);   // ich gewonnen/du verloren
-            if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
-          #endif
           markiereGewinnSteine();
           if ( game->highscore[VIERGEWINNT] > 0 ) game->highscore[VIERGEWINNT]--;
           break;
@@ -189,10 +159,6 @@ void runViergewinnt(void *p)
         #endif     
         ViergewinntRunning = false;
         delay(200);
-        #ifdef WITH_AUDIO
-          AUDIO_FILENR = ANSAGEBASE + 198;   // unendschieden
-          if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
-        #endif
         for ( uint8_t d=0; d<10;d++)
         {
           delay(500);
@@ -306,21 +272,14 @@ void abMinimax(int maximizeOrMinimize, int8_t spieler, uint8_t depth, int8_t boa
     
       if (depth == g_maxLDepth && !B_wirfStein )
       {
-        if ( column % 4 == 0 ) ledDriver->setPixel(110,colorArray[RED],game->abcBrightness); else ledDriver->setPixel(110,colorArray[RED],0);
-        if ( column % 4 == 1 ) ledDriver->setPixel(111,colorArray[RED],game->abcBrightness); else ledDriver->setPixel(111,colorArray[RED],0);
-        if ( column % 4 == 2 ) ledDriver->setPixel(112,colorArray[RED],game->abcBrightness); else ledDriver->setPixel(112,colorArray[RED],0);
-        if ( column % 4 == 3 ) ledDriver->setPixel(113,colorArray[RED],game->abcBrightness); else ledDriver->setPixel(113,colorArray[RED],0);
+        if ( column % 4 == 0 ) ledDriver->setPixel(110,colorArray[RED]); else ledDriver->setPixel(110,colorArray[RED],0);
+        if ( column % 4 == 1 ) ledDriver->setPixel(111,colorArray[RED]); else ledDriver->setPixel(111,colorArray[RED],0);
+        if ( column % 4 == 2 ) ledDriver->setPixel(112,colorArray[RED]); else ledDriver->setPixel(112,colorArray[RED],0);
+        if ( column % 4 == 3 ) ledDriver->setPixel(113,colorArray[RED]); else ledDriver->setPixel(113,colorArray[RED],0);
         ledDriver->show(); 
         delay(0);     
       }
         
-      #ifdef WITH_AUDIO
-        if ( depth == g_maxDepth && column == 4 && !B_wirfStein && g_4g_posymax > 2) 
-        {
-          AUDIO_FILENR = ANSAGEBASE + 196 + random(0,2);   // ich überlege / was mach ich als nächstes
-          if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
-        }
-      #endif    
       if (depth == g_maxDepth)
       {
         #ifdef DEBUG_GAME
@@ -399,17 +358,6 @@ int8_t warteAufEinwurf()
         dbdw++;
       }
     }
-    #ifdef WITH_AUDIO
-      if ( millis() > steinzeit + 10000 )
-      {
-        AUDIO_FILENR = ANSAGEBASE + 195;   // du bist dran
-        if (gamesound) Play_MP3(AUDIO_FILENR,false,33*gamesound);
-        steinzeit = millis()+ dbdw*5000;
-        dbdw++;
-        if ( dbdw > 250 ) dbdw = 250;
-      }
-    #endif
-
     delay(10);            
   } while ( wae );
   return pos;
@@ -455,8 +403,8 @@ int8_t freieSpalteWahl(int8_t pos, bool lr, int8_t spieler)
       }
     }
   }
-  if ( spieler == SPIELER_A ) ledDriver->setPixel(retval+1,0,colorArray[RED],game->abcBrightness);
-  if ( spieler == SPIELER_B ) ledDriver->setPixel(retval+1,0,colorArray[YELLOW],game->abcBrightness);  
+  if ( spieler == SPIELER_A ) ledDriver->setPixel(retval+1,0,colorArray[RED]);
+  if ( spieler == SPIELER_B ) ledDriver->setPixel(retval+1,0,colorArray[YELLOW]);  
   ledDriver->show();
   return retval;
 }
@@ -472,10 +420,10 @@ bool wirfStein(int8_t &posx, int8_t w_spieler)
   if ( g_4g_posy <= g_4g_posymax )
   {
     if ( g_4g_posy == 0 ) ledDriver->setPixelRGB(posx+1,g_4g_posy,0,0,0);
-    else ledDriver->setPixel(posx+1,g_4g_posy,colorArray[BLUE],game->abcBrightness/5);
+    else ledDriver->setPixel(posx+1,g_4g_posy,colorArray[BLUE]/5);
     g_4g_posy++;
-    if ( w_spieler == SPIELER_A ) ledDriver->setPixel(posx+1,g_4g_posy,colorArray[RED],game->abcBrightness);
-    if ( w_spieler == SPIELER_B ) ledDriver->setPixel(posx+1,g_4g_posy,colorArray[YELLOW],game->abcBrightness);
+    if ( w_spieler == SPIELER_A ) ledDriver->setPixel(posx+1,g_4g_posy,colorArray[RED]);
+    if ( w_spieler == SPIELER_B ) ledDriver->setPixel(posx+1,g_4g_posy,colorArray[YELLOW]);
     ledDriver->show(); 
     delay(10);
     return true;
@@ -540,8 +488,10 @@ void markiereGewinnSteine()
       {
         pruefx = gewinnstartsteine[g].x + pruefrichtung[gewinnstartsteine[g].r][i][0];
         pruefy = gewinnstartsteine[g].y + pruefrichtung[gewinnstartsteine[g].r][i][1];
-        if ( bl%2 == 0 ) ledDriver->setPixel(pruefx+1,pruefy+1,colorArray[gewinnerfarbe],10);
-        else ledDriver->setPixel(pruefx+1,pruefy+1,colorArray[gewinnerfarbe],game->abcBrightness);
+        CRGB c(colorArray[gewinnerfarbe]);
+        c.nscale8(10);
+        if ( bl%2 == 0 ) ledDriver->setPixelRGB(pruefx+1, pruefy+1, c);
+        else ledDriver->setPixel(pruefx+1,pruefy+1,colorArray[gewinnerfarbe]);
       }
     }
     ledDriver->show();
@@ -570,19 +520,24 @@ void ShowBoard()
   {
     for(uint8_t y=1;y<FIELD_HEIGHT;y++)
     {
-      ledDriver->setPixel(x,y,colorArray[rahmen],game->abcBrightness/4);
+      CRGB c(colorArray[rahmen]);
+      c.nscale8(ledDriver->getBrightness()/4);
+      ledDriver->setPixelRGB(x,y, c);
     }
   }
   
   //board
   for (uint8_t i = 0; i < VG_HEIGHT ; i++){
     for (uint8_t j = 0; j < VG_WIDTH ; j++){
-      if (game->board[i][j] == LEERES_FELD)
-      ledDriver->setPixel(j+1,i+1,colorArray[BLUE],game->abcBrightness/5);
+      if (game->board[i][j] == LEERES_FELD) {
+        CRGB c = CRGB::Blue;
+        c.nscale8(ledDriver->getBrightness()/5);
+        ledDriver->setPixelRGB(j+1, i+1, c);
+      }
       if (game->board[i][j] == SPIELER_A)
-      ledDriver->setPixel(j+1,i+1,colorArray[RED],game->abcBrightness);
+      ledDriver->setPixelRGB(j+1, i+1, colorArray[RED]);
       if (game->board[i][j] == SPIELER_B)
-      ledDriver->setPixel(j+1,i+1,colorArray[YELLOW],game->abcBrightness);
+      ledDriver->setPixelRGB(j+1, i+1, colorArray[YELLOW]);
     }
   }  
   ledDriver->show();
