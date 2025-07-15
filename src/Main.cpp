@@ -26,7 +26,15 @@
 #include "SecondHand.h"
 #endif
 
-//#define myDEBUG
+#if defined(LILYGO_T_HMI)
+#include "MyTFT.h"
+#include "MyButtons.h"
+#include "MyWidgets.h"
+#include "MyTouch.h"
+#include "OneButton.h"
+#endif
+
+#define myDEBUG
 #include "MyDebug.h"
 
 s_taskParams taskParams;
@@ -48,27 +56,76 @@ static Global *glb = Global::getInstance();
 static OpenWeather *ow = OpenWeather::getInstance();
 static DisplayModes *dm = DisplayModes::getInstance();
 static AnimationFS *anifs = AnimationFS::getInstance();
+static MyWifi *myWifi = MyWifi::getInstance();
+static MyTime *mt = MyTime::getInstance();
 
-void displayWeekday(void) {
+#if defined(LILYGO_T_HMI)
+
+  static MyTFT *tft = MyTFT::getInstance();
+  static MyButtons *btns = MyButtons::getInstance();
+  static MyWidgets *widgets = MyWidgets::getInstance();
+  static MyTouch *touch = MyTouch::getInstance();
+  
+  static void handleTFTScreen(BTNType btnType)
+  {
+    DEBUG_PRINTF("handleTFTScreen: %d\n", btnType);
+    mt->getTime();
+
+    if (btnType != BTN_UPDATE)
+    {
+      btns->aktBtnType = btnType;
+      widgets->setDrawState(true);
+    }
+    switch (btns->aktBtnType)
+    {
+    case BTN_WEATHER:
+      ow->drawWeather();
+      break;
+    case BTN_TIME:
+      widgets->drawTime(mt->second(), mt->minute(), mt->hour());
+      break;
+    case BTN_INFO:
+      widgets->drawInfo();
+    }
+  }
+
+  static void btn_action(BTNType btnType)
+  {
+    DEBUG_PRINTF("btn_action called, btnNr=%d\n", btnType);
+    handleTFTScreen(btnType);
+  }
+
+  OneButton buttonWifiReset(WIFI_RESET, false, false);
+
+
+#endif
+
+static void displayWeekday(void) {
     dm->displayWeekday();
 }
-void displayDate(void) {
+static void displayDate(void) {
     dm->displayDate();
 }
-void displayMoonphase(void) {
+static void displayMoonphase(void) {
     dm->displayMoonphase();
 }
-void displayWeather(void) {
+static void displayWeather(void) {
     dm->displayWeather();
 }
-void displayExtTemp(void) {
+static void displayExtTemp(void) {
     dm->displayExtTemp();
 }
 void displayExtHumidity(void) {
     dm->displayExtHumidity();
 }
-void displaySeconds(void) {
+static void displaySeconds(void) {
     dm->displaySeconds();
+}
+
+static void wifiReset(void) {
+  DEBUG_PRINTLN(F("WifiReset........."));
+  delay(100);
+  myWifi->doReset();
 }
 
 DPMODE dpm[] = {
@@ -111,10 +168,8 @@ void onOTAEnd(bool success) {
 void queueScheduler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
   Settings *settings    = Settings::getInstance();
-  MyTime *mt            = MyTime::getInstance();
   OpenWeather *ow       = OpenWeather::getInstance();
   LedDriver *ledDriver  = LedDriver::getInstance();
-  MyWifi *myWifi        = MyWifi::getInstance();
   Events *evt            = Events::getInstance();
 
   int lastHour=0;
@@ -146,6 +201,13 @@ void queueScheduler(void *p) {
     aktMinute = mt->mytm.tm_min;
     aktSecond = mt->mytm.tm_sec;
     
+#if defined(LILYGO_T_HMI)
+  uint16_t x, y;
+  if (touch->pressed(&x, &y))
+    btns->callAction(x, y);
+  buttonWifiReset.tick();
+#endif
+
     isNightOff=false;
 
     String animation = "Z";
@@ -173,7 +235,7 @@ void queueScheduler(void *p) {
               vTaskDelay(pdMS_TO_TICKS(10));
           }
           vTaskDelay(pdMS_TO_TICKS(500));
-          tp->updateSceen = true;
+          tp->updateScreen = true;
         }     
       }
     }
@@ -181,17 +243,24 @@ void queueScheduler(void *p) {
     if (aktSecond != lastSecond)
     {
       lastSecond = aktSecond;
-#ifdef LDR
+#if defined(LDR)
       // Set brightness from LDR
       if (settings->mySettings.useAbc)
         ledDriver->setBrightnessFromLdr();
+#endif
+#if defined(LILYGO_T_HMI)
+      if (btns->aktBtnType == BTN_TIME)
+        widgets->drawTime(aktSecond, aktMinute, aktHour);
 #endif
     }
 
     if(aktMinute != lastMinute) {
       lastMinute = aktMinute;
 
-      
+#if defined(LILYGO_T_HMI)
+      handleTFTScreen(BTN_UPDATE);
+#endif
+
       isNightOff=false;
       aktts = aktHour * 60 + aktMinute;
       if (nightOffTime <= dayOnTime)
@@ -217,7 +286,7 @@ void queueScheduler(void *p) {
 
       if (xEventGroupSetBits(xEvent, MODE_TIME)) {
         glb->stackSize = tp->taskInfo[TASK_SCHEDULER].stackSize;
-        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->setHighWaterMark(TASK_SCHEDULER);
         glb->codeline = __LINE__;
         glb->codetab = __NAME__;
         DEBUG_PRINTF("Gesendet: MODE_TIME, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", aktMinute, aktSecond, glb->highWaterMark);
@@ -243,7 +312,7 @@ void queueScheduler(void *p) {
         
         if (dpm[autoMode].event_automode && xEventGroupSetBits(xEvent, dpm[autoMode].event_type)) {
           glb->stackSize = tp->taskInfo[TASK_SCHEDULER].stackSize;
-          glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+          glb->setHighWaterMark(TASK_SCHEDULER);
           glb->codeline = __LINE__;
           glb->codetab = __NAME__;
           DEBUG_PRINTF("Gesendet: %s, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", dpm[autoMode].event_name.c_str(), aktMinute, aktSecond, glb->highWaterMark);
@@ -264,7 +333,6 @@ void ModesQueueHandler(void *p) {
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
-  MyTime *mt=MyTime::getInstance();
   OpenWeather *outdoorWeather = OpenWeather::getInstance();
   DEBUG_PRINTF("temp: Core=%d\n", xPortGetCoreID());
   while(true) {
@@ -276,7 +344,7 @@ void ModesQueueHandler(void *p) {
           if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
 
           glb->stackSize = tp->taskInfo[TASK_MODES].stackSize;
-          glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+          glb->setHighWaterMark(TASK_MODES);
           glb->codeline = __LINE__;
           glb->codetab = __NAME__;
           DEBUG_PRINTF("Erhalten: %s, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", dpm[mode].event_name.c_str(), mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
@@ -302,7 +370,6 @@ void showTextHandler(void *p) {
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
-  MyTime *mt=MyTime::getInstance();
                                                                                                           ;
   DEBUG_PRINTF("showText: Core=%d\n", xPortGetCoreID());
   while(true) {
@@ -311,7 +378,7 @@ void showTextHandler(void *p) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
 
         glb->stackSize = tp->taskInfo[TASK_TEXT].stackSize;
-        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->setHighWaterMark(TASK_TEXT);
         glb->codeline = __LINE__;
         glb->codetab = __NAME__;
         DEBUG_PRINTF("Erhalten: MODE_FEED, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->highWaterMark);
@@ -370,7 +437,6 @@ void animationQueueHandler(void *p) {
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
   Settings *settings=Settings::getInstance();
-  MyTime *mt=MyTime::getInstance();
 
   DEBUG_PRINTF("animation: Core=%d\n", xPortGetCoreID());
   while(true) {
@@ -379,7 +445,7 @@ void animationQueueHandler(void *p) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
 
         glb->stackSize = tp->taskInfo[TASK_ANIMATION].stackSize;
-        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->setHighWaterMark(TASK_ANIMATION);
         glb->codeline = __LINE__;
         glb->codetab = __NAME__;
         DEBUG_PRINTF("Erhalten: MODE_SHOWANIMATION, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
@@ -411,7 +477,6 @@ void animationQueueHandler(void *p) {
 void eventQueueHandler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
   Settings *settings    = Settings::getInstance();
-  MyTime *mt            = MyTime::getInstance();
   LedDriver *ledDriver  = LedDriver::getInstance();
   Events *evt           = Events::getInstance();
 
@@ -469,7 +534,6 @@ void eventQueueHandler(void *p) {
 
 #ifdef WITH_SECOND_BELL
 void displaySecondBell(void *) {
-  MyTime *mt=MyTime::getInstance();
   SecondBell *secondBell=SecondBell::getInstance();
   LedDriver *ledDriver=LedDriver::getInstance();
 
@@ -490,7 +554,6 @@ void displaySecondBell(void *) {
 
 #ifdef WITH_SECOND_HAND
 void displaySecondHand(void *) {
-  MyTime *mt=MyTime::getInstance();
   SecondHand *secondHand=SecondHand::getInstance();
   LedDriver *ledDriver=LedDriver::getInstance();
 
@@ -512,7 +575,6 @@ void displaySecondHand(void *) {
 void displayTime(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
   Settings *settings=Settings::getInstance();
-  MyTime *mt=MyTime::getInstance();
   LedDriver *ledDriver=LedDriver::getInstance();
   Renderer *renderer=Renderer::getInstance();
 
@@ -543,7 +605,7 @@ void displayTime(void *p) {
         }
 
         glb->stackSize = tp->taskInfo[TASK_TIME].stackSize;
-        glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
+        glb->setHighWaterMark(TASK_TIME);
         glb->codeline = __LINE__;
         glb->codetab = __NAME__;
         DEBUG_PRINTF("Erhalten: MODE_TIME, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
@@ -586,8 +648,9 @@ void displayTime(void *p) {
 #endif
         }
 
-        if (aktMinute % 5 != 0 || tp->updateSceen)
+        if (aktMinute % 5 != 0 || tp->updateScreen)
         {
+          //Serial.printf("displayTime: 1 aktMinute=%d, updateScreen=%d\n",aktMinute, tp->updateScreen);
           ledDriver->writeScreenBufferFade(matrix, settings->mySettings.ledcol);
         }
         else
@@ -652,7 +715,7 @@ void displayTime(void *p) {
           vTaskDelay(pdMS_TO_TICKS(500));
         } // else aktMinute % 5 != 0
         
-        tp->updateSceen = false;
+        tp->updateScreen = false;
         xEventGroupClearBits(xEvent, MODE_TIME);
         ledDriver->lastMode = MODE_TIME;
         xSemaphoreGive(xMutex);
@@ -662,6 +725,7 @@ void displayTime(void *p) {
     vTaskDelay(pdMS_TO_TICKS(10));
   } // while(true)
 }
+
 
 
 void startup(void *) {
@@ -679,16 +743,27 @@ void startup(void *) {
 
   ledDriver->setBrightness(settings->mySettings.brightness);
 
-  // LDR Setup
-  adc1_config_width(WIDTH_LDR);
-  adc1_config_channel_atten(PIN_LDR, ADC_ATTEN_DB_12);  // GPIO1 (A0)
+  //mz LDR Setup
+  //adc1_config_width(WIDTH_LDR);
+  //adc1_config_channel_atten(PIN_LDR, ADC_ATTEN_DB_12);  // GPIO1 (A0)
 
 #ifdef LDR
-      // Set brightness from LDR
-      if (settings->mySettings.useAbc)
-        ledDriver->setBrightnessFromLdr();
+  // Set brightness from LDR
+  if (settings->mySettings.useAbc)
+    ledDriver->setBrightnessFromLdr();
 #endif
 
+#if defined(LILYGO_T_HMI)
+  tft->init();
+  touch->init();
+  buttonWifiReset.attachLongPressStop(wifiReset);
+  btns->init();
+  widgets->init();
+
+  btns->newButton("weather", BTN_WEATHER, 0, btn_action);
+  btns->newButton("clock", BTN_TIME, 51, btn_action);
+  btns->newButton("info", BTN_INFO, 102, btn_action);
+#endif
 
   renderer->language = settings->mySettings.language;
   renderer->itIs = settings->mySettings.itIs;
@@ -704,11 +779,21 @@ void startup(void *) {
   icor->renderAndDisplay("/ico/setup.ico",0,1);
   myWifi->init();
   DEBUG_PRINTLN(F("vor setup WiFi"));
+#if defined(LILYGO_T_HMI)
+  tft->printStateLine("Start WIFI...", 0, true);
+#endif
   if(!myWifi->myBegin(settings->mySettings.ssid, settings->mySettings.passwd))
   {
     DEBUG_PRINTLN(F("WiFi failed"));
+#if defined(LILYGO_T_HMI)
+    tft->printStateLine("WIFI nicht verbunden", 0, true);
+#endif
   } else {
     Serial.println(myWifi->IP().toString());
+#if defined(LILYGO_T_HMI)
+    tft->printStateLine(settings->mySettings.systemname, 0, true);
+    tft->printStateLine(myWifi->IP().toString(), 160, false);
+#endif
     webHandler->webRequests();
 
     // ElegantOTA
@@ -726,7 +811,7 @@ void startup(void *) {
   ledDriver->saveMatrix(matrix);
 
   // Define a random time
-  randomSeed(adc1_get_raw(ANALOG_PIN));
+ //mz randomSeed(adc1_get_raw(ANALOG_PIN));
   glb->randomHour = random(9, 16);
   for (uint8_t i = 0; i <= 20; i++)
   {
@@ -796,7 +881,7 @@ void startup(void *) {
   );
 #endif
 
-  taskParams.taskInfo[TASK_MODES].stackSize=3000;
+  taskParams.taskInfo[TASK_MODES].stackSize=4096;
   xTaskCreatePinnedToCore(
     &ModesQueueHandler,   // Function name of the task
     "ModesQueueHandler",  // Name of the task (e.g. for debugging)
@@ -807,7 +892,7 @@ void startup(void *) {
     0
   );
 
-  taskParams.taskInfo[TASK_TEXT].stackSize=1800;
+  taskParams.taskInfo[TASK_TEXT].stackSize=2048;
   xTaskCreatePinnedToCore(
     &showTextHandler,   // Function name of the task
     "showTextHandler",  // Name of the task (e.g. for debugging)

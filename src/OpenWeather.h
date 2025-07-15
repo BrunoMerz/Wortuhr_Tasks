@@ -23,7 +23,7 @@
 #include <SunRise.h>
 #endif
 
-#if defined(LILYGO_T_HMI)
+#if defined(_X)
 #include "MyTFT.h"
 #include "MyFileAccess.h"
 #endif
@@ -77,6 +77,10 @@ public:
     int getMoonphase(int y, int m, int d);
     void sunriseset(void);
     String  urlEncode(String str);
+    
+#if defined(LILYGO_T_HMI)
+    void drawWeather(void);
+#endif
 
 private:
   OpenWeather();

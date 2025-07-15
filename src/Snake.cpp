@@ -6,7 +6,8 @@
 #include "LedDriver_FastLED.h"
 #include "Settings.h"
 
-#define DEBUG_GAME
+
+//#define DEBUG_GAME
 
 
 int curLength;               //Aktuelle Länge der Schlange
@@ -26,6 +27,7 @@ uint32_t acolor = colorArray[RED];
 
 uint16_t debugtmp = 0;
 
+
 void setDirection();
 boolean collide(int x1, int x2, int y1, int y2, int w1, int w2, int h1, int h2);
 void die();
@@ -36,6 +38,12 @@ static  LedDriver *ledDriver = LedDriver::getInstance();
 static  Game *game = Game::getInstance();
 static  Settings *settings = Settings::getInstance();
 
+#if defined(SENSOR_BME280)
+#include "MyBME.h"
+#include "MyTime.h"
+static MyBME *myBME = MyBME::getInstance();
+static MyTime *mt = MyTime::getInstance();
+#endif
 
 //################################################
 //Schlange Start-Position and Richtung
@@ -190,14 +198,14 @@ void runSnake(void *p) {
         }
       }
 #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
-      if ( lastMinute != minute() ) {
-        lastMinute = minute();
-        if ( (minute()%20) - 1  == 0 || ( minute()%20 == 0 ) )
+      if ( myBME->lastMinute != mt->minute() ) {
+        myBME->lastMinute = mt->minute();
+        if ( (mt->minute()%20) - 1  == 0 || ( mt->minute()%20 == 0 ) )
         {
 #ifdef DEBUG_GAME
           Serial.println(F("aktuallisiere Temp- und Luftfeuchtigkeitswerte"));
 #endif 
-          getRoomConditions(); // alle 20 Min. aktuallisieren/historisieren der Temp. und Luftfeuchtigkeitswerte Werte (00,01,20,21,40,41)
+          myBME->getRoomConditions(); // alle 20 Min. aktuallisieren/historisieren der Temp. und Luftfeuchtigkeitswerte Werte (00,01,20,21,40,41)
 
         }
       }

@@ -8,6 +8,8 @@
 #include "WebHandler.h"
 #include "Html_content.h"
 #include "OpenWeather.h"
+#include "Global.h"
+#include "TaskStructs.h"
 
 //#define myDEBUG
 #include "MyDebug.h"
@@ -21,7 +23,12 @@ static MyWifi *myWifi = MyWifi::getInstance();
 static AsyncWebServer *webServer = myWifi->getServer();
 static OpenWeather *outdoorWeather = OpenWeather::getInstance();
 static Renderer *renderer = Renderer::getInstance();
+static Global *glb = Global::getInstance();
 
+#if defined(SENSOR_BME280)
+#include "MyBME.h"
+static MyBME *myBME = MyBME::getInstance();
+#endif
 
 #ifdef APIKEY
 String getWeatherIcon(String weathericonnummer)
@@ -34,7 +41,7 @@ String getWeatherIcon(String weathericonnummer)
   wnummer = weathericonnummer.substring(0, weathericonnummer.length() - 1);
   winummer = wnummer.toInt();
 
-  if ( mt->local() > outdoorWeather->sunrise && mt->local() < outdoorWeather->sunset ) tagnacht = "d";
+  if ( mt->localTm() > outdoorWeather->sunrise && mt->localTm() < outdoorWeather->sunset ) tagnacht = "d";
   else tagnacht = "n";
 
   if ( winummer == 1 || winummer == 2 || winummer == 10 )
@@ -68,7 +75,7 @@ String getWeatherIcon(String weathericonnummer)
 
 void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, uint8_t web_moonphase, time_t upTime, uint8_t sunriseMinute, uint8_t sunriseHour, uint8_t sunsetMinute, uint8_t sunsetHour)
 {
-    AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
+    //AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
     String message;
     message = F("<!doctype html>");
     message += F("<html><head>");
@@ -199,11 +206,11 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
   #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
     message += F("<br><span title=\"" LANG_INDOOR "\" style=\"font-size:30px;\">&#127968;</span>");  //Haus
     message += F("<br><br><span style=\"font-size:24px;\">&#127777;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modetemp()\">");
-    message += String(roomTemperature,1);
+    message += String(myBME->roomTemperature,1);
     message += F("&deg;C");
   #ifdef FRONTCOVER_EN  
     message += F("/ "); 
-    message += String(roomTemperature * 1.8 + 32.0,1);
+    message += String(myBME->roomTemperature * 1.8 + 32.0,1);
     message += F("&deg;F");
   #endif
     message +=F("</span>");
@@ -212,27 +219,27 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     // ################### sende html Teil 1
     //webServer.sendHeader("Cache-Control", "no-cache");
     //webServer.send(200, TEXT_HTML, message);
-    response->print(message);
-    message = "";
+    //response->print(message);
+    //message = "";
 
   #ifdef SENSOR_BME280
-    message += "<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modehum()\">" + String(roomHumidity,0) + "%RH</span>"
+    message += "<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modehum()\">" + String(myBME->roomHumidity,0) + "%RH</span>"
                 "<br><span style=\"font-size:24px;\">";
-    if (roomHumidity < 30) message += F("<span style=\"color:Red;\">&#9751;</span>");
+    if (myBME->roomHumidity < 30) message += F("<span style=\"color:Red;\">&#9751;</span>");
     else message += F("<span style=\"color:Red;\">&#9750;</span>");
-    if ((roomHumidity >= 30) && (roomHumidity < 40)) message += F("<span style=\"color:Orange;\">&#9751;</span>");
+    if ((myBME->roomHumidity >= 30) && (myBME->roomHumidity < 40)) message += F("<span style=\"color:Orange;\">&#9751;</span>");
     else message += F("<span style=\"color:Orange;\">&#9750;</span>");
-    if ((roomHumidity >= 40) && (roomHumidity <= 50)) message += F("<span style=\"color:MediumSeaGreen;\">&#9751;</span>");
+    if ((myBME->roomHumidity >= 40) && (myBME->roomHumidity <= 50)) message += F("<span style=\"color:MediumSeaGreen;\">&#9751;</span>");
     else message += F("<span style=\"color:MediumSeaGreen;\">&#9750;</span>");
-    if ((roomHumidity > 50) && (roomHumidity < 60)) message += F("<span style=\"color:Lightblue;\">&#9751;</span>");
+    if ((myBME->roomHumidity > 50) && (myBME->roomHumidity < 60)) message += F("<span style=\"color:Lightblue;\">&#9751;</span>");
     else message += F("<span style=\"color:Lightblue;\">&#9750;</span>");
-    if (roomHumidity >= 60) message += F("<span style=\"color:Blue;\">&#9751;</span>");
+    if (myBME->roomHumidity >= 60) message += F("<span style=\"color:Blue;\">&#9751;</span>");
     else message += F("<span style=\"color:Blue;\">&#9750;</span>");
     message += F("</span>");
     message += F("<br><br><span style=\"font-size:20px;\">&#128168;</span><span style=\"font-size:20px;\">rel. ");
-    message += String(Pressure_red,0);
+    message += String(myBME->Pressure_red,0);
     message += F(" hPa <br>(abs. "); 
-    message += String(Pressure,0); 
+    message += String(myBME->Pressure,0); 
     message += F(" hPa) </span>");
 
     //#####################
@@ -243,11 +250,11 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F(LANG_AIRPRESSUREHIST);
     message += F("  </span>");
     message += F("<span style=\"font-size:24px;\">");
-    if ( luftdrucktendenz_web == 1 ) message += F(" &#8595;");
-    if ( luftdrucktendenz_web == 2 ) message += F(" &#8600;");
-    if ( luftdrucktendenz_web == 3 ) message += F(" &#8594;");
-    if ( luftdrucktendenz_web == 4 ) message += F(" &#8599;");
-    if ( luftdrucktendenz_web == 5 ) message += F(" &#8593;");
+    if ( myBME->luftdrucktendenz_web == 1 ) message += F(" &#8595;");
+    if ( myBME->luftdrucktendenz_web == 2 ) message += F(" &#8600;");
+    if ( myBME->luftdrucktendenz_web == 3 ) message += F(" &#8594;");
+    if ( myBME->luftdrucktendenz_web == 4 ) message += F(" &#8599;");
+    if ( myBME->luftdrucktendenz_web == 5 ) message += F(" &#8593;");
     message += F("</span><span style=\"font-size:14px;\"> )</span>\n");
     message += F("<div>\n");
     message += F("<canvas id=\"canvas_druckdiagramm\" width=\"300\" height=\"270\" style=\"border:2px solid #d3d3d3;cursor:pointer\" onclick=\"luftdruck()\">");
@@ -269,9 +276,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
       message += F("hPa\",C:\"#000000\"},{Y:\" \",C:\"#000000\"},\n");
     }
     // ################### sende html Teil 2
-    webServer.sendContent(message);
-    message = "";
-    delay(0);
+    // webServer.sendContent(message);
+    // message = "";
+    //delay(0);
     message += F("]};\n");
     message += F("var graphxoffset = 42;\n");
     message += F("var graphyoffset = 15;\n");
@@ -295,37 +302,37 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     //Data Graph
     message += F("var data = { values:[");
     message += F("{A:\"-30h\",B:");
-    message += String(luftdruck_hist[0]);
+    message += String(myBME->luftdruck_hist[0]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\"-27h\",B:");
-    message += String(luftdruck_hist[1]);
+    message += String(myBME->luftdruck_hist[1]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\"-24h\",B:");
-    message += String(luftdruck_hist[2]);
+    message += String(myBME->luftdruck_hist[2]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\"-21h\",B:");
-    message += String(luftdruck_hist[3]);
+    message += String(myBME->luftdruck_hist[3]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\"-18h\",B:");
-    message += String(luftdruck_hist[4]);
+    message += String(myBME->luftdruck_hist[4]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\"-15h\",B:");
-    message += String(luftdruck_hist[5]);
+    message += String(myBME->luftdruck_hist[5]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\"-12h\",B:");
-    message += String(luftdruck_hist[6]);
+    message += String(myBME->luftdruck_hist[6]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\" -9h\",B:");
-    message += String(luftdruck_hist[7]);
+    message += String(myBME->luftdruck_hist[7]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\" -6h\",B:");
-    message += String(luftdruck_hist[8]);
+    message += String(myBME->luftdruck_hist[8]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\" -3h\",B:");
-    message += String(luftdruck_hist[9]);
+    message += String(myBME->luftdruck_hist[9]);
     message += F(",C:\"#353746\"},\n");
     message += F("{A:\" akt\",B:");
-    message += String(luftdruck_hist[10]);
+    message += String(myBME->luftdruck_hist[10]);
     message += F(",C:\"#353746\"}\n");
     message += F("]};\n");
 
@@ -354,9 +361,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("</div>\n");
     message += F("<hr>\n");
     //##################### sende Luftdruck Diagramm html Teil 3
-    webServer.sendContent(message);
-    message = "";
-    delay(0);
+    //webServer.sendContent(message);
+    //message = "";
+    //delay(0);
   #else
     message += F("<br>\n");
   #endif
@@ -406,9 +413,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
 
       message += F("<br><br><hr>\n");
       //##################### sende Außentemperatur + Luftfeuchtigkeit html Teil 4
-      response->print(message);
-      message = "";
-      delay(0);
+      //response->print(message);
+      //message = "";
+      //delay(0);
     }
   #endif
 
@@ -469,34 +476,34 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("cv.fillText(yAchse.values[i].Y,0,canvasHeight - graphGridSize*i-graphyoffset+3,graphxoffset);\n");
     message += F("}\n");
   //##################### sende Außentemperatur + Luftfeuchtigkeit html Teil 4.1
-    webServer.sendContent(message);
-    message = "";
-    delay(0);
+    //webServer.sendContent(message);
+    //message = "";
+    //delay(0);
     //Data Graph:
     message += "var data = { values:[\n";
     for ( int i = 0; i <= 71; i++)
     {
       message += F("{T:\"");
-      message += temperatur_hist[i].stundeminute;
+      message += myBME->temperatur_hist[i].stundeminute;
       message += F("\",GA:");
-      message += String(temperatur_hist[i].aussentemp);
+      message += String(myBME->temperatur_hist[i].aussentemp);
       message += F(",GB:");
-      message += String(temperatur_hist[i].innentemp);
+      message += String(myBME->temperatur_hist[i].innentemp);
       message += F("},\n");
     }
     message += F("{T:\"");
-    message += temperatur_hist[72].stundeminute;
+    message += myBME->temperatur_hist[72].stundeminute;
     message += F("\",GA:");
-    message += String(temperatur_hist[72].aussentemp);
+    message += String(myBME->temperatur_hist[72].aussentemp);
     message += F(",GB:");
-    message += String(temperatur_hist[72].innentemp);
+    message += String(myBME->temperatur_hist[72].innentemp);
     message += F("}\n");
     message += F("]};\n");
 
     //##################### sende Temp Diagramm html Teil 4.2
-    webServer.sendContent(message);
-    message = "";
-    delay(0);
+    //webServer.sendContent(message);
+    //message = "";
+    //delay(0);
     //Options Graph
 
     message += F("var graphMinValue = -20;\n"                         // Value der Nulllinie
@@ -553,9 +560,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("}\n");
     message += F("</script></div><hr>\n");
     //##################### sende Temp Diagramm html Teil 4.3
-    webServer.sendContent(message);
-    message = "";
-    delay(0);
+    //webServer.sendContent(message);
+    //message = "";
+    //delay(0);
   #endif
 
     // Abschnitt Wortuhr und Uptime
@@ -589,9 +596,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("<button id=\"Infobutton\" title=\"Info\" name=\"Info\" onclick=\"window.location.href='/debugClock'\">Info</button>");
     message += F("</span>");
     //##################### sende Temp Diagramm html Teil 5
-    response->print(message);
-    message = "";
-    delay(0);
+    //response->print(message);
+    //message = "";
+    //delay(0);
     message += F("\n<script>\n"
                   "$(\"#button_zeit\").click(function() {"
                   "$.post(\"/handleButtonTime\");"
@@ -637,7 +644,8 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     // Ende Webserver
     message += F("</body></html>");
     //##################### sende letzen html Teil 6
-    response->print(message);
-    request->send(response);
-
+    //response->print(message);
+    request->send(200, "text/html", message);
+  glb->setHighWaterMark(TASK_MAX);
+  //Serial.printf("handleRoot: HighWater=%d\n", uxTaskGetStackHighWaterMark(NULL));
 }

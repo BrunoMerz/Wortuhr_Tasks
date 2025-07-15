@@ -133,10 +133,10 @@ int MyTime::year(time_t t) {
   return lt->tm_year+1900;
 }
 
-time_t MyTime::local() {
+time_t MyTime::localTm(void) {
   return mytm.tm_loc;
 }
- 
+
 char *MyTime::monthStr(uint8_t month) {
   const char *p = monthNames[month];
   strcpy_P(buffer, (PGM_P)p);

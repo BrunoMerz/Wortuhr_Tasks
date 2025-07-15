@@ -4,15 +4,15 @@
 
 typedef enum eTask : uint8_t
 {
-    TASK_STARTUP=0,
-    TASK_SCHEDULER,
-    TASK_TIME,
-    TASK_SECOND_BELL,
-    TASK_SECOND_HAND,
-    TASK_MODES,
-    TASK_TEXT,
-    TASK_ANIMATION,
-    TASK_EVENT,
+    TASK_STARTUP=0,     // 0
+    TASK_SCHEDULER,     // 1
+    TASK_TIME,          // 2
+    TASK_SECOND_BELL,   // 3
+    TASK_SECOND_HAND,   // 4
+    TASK_MODES,         // 5
+    TASK_TEXT,          // 6
+    TASK_ANIMATION,     // 7
+    TASK_EVENT,         // 8
     TASK_MAX
 } Task;
 
@@ -37,7 +37,7 @@ typedef struct {
     uint8_t feedPosition;
     uint8_t feedBuzzer;
     uint32_t feedColor;
-    bool updateSceen;
+    bool updateScreen;
     String feedText;
     String animation;
     bool endless_loop;

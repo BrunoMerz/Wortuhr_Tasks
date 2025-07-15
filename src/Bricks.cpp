@@ -22,6 +22,14 @@ extern bool checkBlockCollision();
 static Game *game = Game::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
 
+
+#if defined(SENSOR_BME280)
+#include "MyBME.h"
+#include "MyTime.h"
+static MyBME *myBME = MyBME::getInstance();
+static MyTime *mt = MyTime::getInstance();
+#endif
+
 void bricksInit(){
 #ifdef DEBUG_GAME
   Serial.println(F("Start Bricks"));
@@ -147,14 +155,14 @@ void runBricks(void *p) {
       }
       
 #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
-      if ( lastMinute != minute() ) {
-        lastMinute = minute();
-        if ( (minute()%20) - 1  == 0 || ( minute()%20 == 0 ) )
+      if ( myBME->lastMinute != mt->minute() ) {
+        myBME->lastMinute = mt->minute();
+        if ( (mt->minute()%20) - 1  == 0 || ( mt->minute()%20 == 0 ) )
         {
 #ifdef DEBUG_GAME
           Serial.println(F("aktuallisiere Temp- und Luftfeuchtigkeitswerte"));
 #endif  
-          getRoomConditions(); // alle 20 Min. aktuallisieren/historisieren der Temp. und Luftfeuchtigkeitswerte Werte (00,01,20,21,40,41)
+          myBME->getRoomConditions(); // alle 20 Min. aktuallisieren/historisieren der Temp. und Luftfeuchtigkeitswerte Werte (00,01,20,21,40,41)
         }
       }
 #endif
@@ -170,6 +178,8 @@ void runBricks(void *p) {
     if ( debugval == 0 ) debugval = 9999;
 #endif
   }
+  // terminate task
+  vTaskDelete(NULL);
 }
 //  ############### Ende runBricks() ########################
 

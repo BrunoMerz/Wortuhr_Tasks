@@ -347,7 +347,6 @@ void LedDriver::moveScreenBufferUp(uint16_t screenBufferNew[], uint32_t color)
       }
     }
     show();
-    //handle_Webserver(__LINE__);
     vTaskDelay(pdMS_TO_TICKS(TRANSITION_SPEED));
   }
   writeScreenBuffer(screenBufferNew, color);
@@ -381,7 +380,6 @@ void LedDriver::moveScreenBufferDown(uint16_t screenBufferNew[], uint32_t color)
       }
     }
     show();
-    //handle_Webserver(__LINE__);
     vTaskDelay(pdMS_TO_TICKS(TRANSITION_SPEED));
   }
   writeScreenBuffer(screenBufferNew, color);
@@ -418,8 +416,7 @@ void LedDriver::moveScreenBufferLeft(uint16_t screenBufferNew[], uint32_t color)
       }
     }
     show();
-    //handle_Webserver(__LINE__);
-    vTaskDelay(pdMS_TO_TICKS(TRANSITION_SPEED));
+     vTaskDelay(pdMS_TO_TICKS(TRANSITION_SPEED));
   }
   writeScreenBuffer(screenBufferNew, color);
 }
@@ -681,7 +678,7 @@ void LedDriver::matrix_regen(uint16_t screenBufferNew[], uint32_t color)
           if ( brightnessBuffer[y][x] > 0 )
           {
             CRGB c(CRGB::Green);
-            setPixelRGB(x, y, c.nscale8(brightnessBuffer[y][x]));
+            setPixelRGB(x, y, c.nscale8(scale8(brightnessBuffer[y][x],brightness)));
           }
         } // x
       }  // y
@@ -689,7 +686,6 @@ void LedDriver::matrix_regen(uint16_t screenBufferNew[], uint32_t color)
       delay (int(TRANSITION_SPEED / 9));
       delay (1);
     }
-    //handle_Webserver(__LINE__);
     if ( i > 100 && mleer == 0x7FF) break;
   }
 
@@ -864,7 +860,6 @@ void LedDriver::regenbogen(uint16_t screenBufferNew[], uint32_t color)
       }
     }
     show();
-    //handle_Webserver(__LINE__);
     vTaskDelay(pdMS_TO_TICKS(TRANSITION_SPEED * 15 / 10));
   }
   writeScreenBuffer(screenBufferNew, color);
@@ -1000,7 +995,6 @@ void LedDriver::kreise(uint16_t screenBufferNew[], uint32_t color)
     m_old[ze] = screenBufferOld[ze];
     m_new[ze] = screenBufferNew[ze];
   }
-  //handle_Webserver(__LINE__);
   while (work1 || work2 || work3)
   {
     clear();
@@ -1037,12 +1031,10 @@ void LedDriver::kreise(uint16_t screenBufferNew[], uint32_t color)
     if ( r2 == 0 && r1 > abs(mp1x - mp2x) + 1 && r1 > abs(mp1y - mp2y) + 1)
     {
       work2 = true;
-      //handle_Webserver(__LINE__);
-    }
+     }
     if ( r3 == 0 && r2 > abs(mp2x - mp3x) + 1 && r2 > abs(mp2y - mp3y) + 1)
     {
       work3 = true;
-      //handle_Webserver(__LINE__);
     }
     show();
     vTaskDelay(pdMS_TO_TICKS(TRANSITION_SPEED + 10));
@@ -1163,10 +1155,9 @@ void LedDriver::quadrate(uint16_t screenBufferNew[], uint32_t color)
 
 void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color)
 {
-  CRGB oldPattern[NUMPIXELS-1];  // Speichert das alte Muster
-  CRGB newPattern[NUMPIXELS-1];  // Speichert das neue Muster
-  uint16_t blendProgress = 0;  // 0-255 (Fortschritt der Überblendung)
 
+  uint16_t blendProgress = 0;  // 0-255 (Fortschritt der Überblendung)
+  unsigned long st = millis();
   transitionInProgress = true;
 
   for(uint16_t i=0; i<NUMPIXELS-1; i++) {
@@ -1218,6 +1209,8 @@ void LedDriver::writeScreenBufferFade(uint16_t screenBufferNew[], uint32_t color
   {
     lastMode = MODE_TIME;
   }
+  
+  //Serial.printf("zeit(ms)=%ld, HighWater=%d, mode=%d\n",millis()-st, uxTaskGetStackHighWaterMark(NULL), mode);
 }
 
 
@@ -1258,7 +1251,7 @@ void LedDriver::setBrightnessFromLdr(void)
 #ifdef LDR_IS_INVERSE
   ldrValue = 1024 - adc1_get_raw(ADC1_CHANNEL_1);
 #else
-  ldrValue = adc1_get_raw(PIN_LDR);
+  //mz ldrValue = adc1_get_raw(PIN_LDR);
 #endif
   if (ldrValue < minLdrValue)
     minLdrValue = ldrValue;
@@ -1305,10 +1298,10 @@ void LedDriver::setOnOff(void) {
 #endif
     writeScreenBufferFade(matrix, settings->mySettings.ledcol);
     mode = MODE_BLANK;
-    taskParams.updateSceen=false;
+    taskParams.updateScreen=false;
   } else {
     mode = MODE_TIME;
-    taskParams.updateSceen=true;
+    taskParams.updateScreen=true;
 #ifdef WITH_SECOND_BELL
     secondBell->setStatus(true);
 #endif

@@ -137,8 +137,7 @@ void handlebacktoMODE_TIME(AsyncWebServerRequest *request)
   //mz  setMode(MODE_TIME);
   taskParams.animation = "";
   taskParams.endless_loop = false;
-  taskParams.updateSceen = true;
-  Serial.println("handlebacktoMODE_TIME");
+  taskParams.updateScreen = true;
   callRoot(request);
 }
 

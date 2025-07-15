@@ -33,6 +33,10 @@ static Events *evt = Events::getInstance();
 static Game *game = Game::getInstance();
 static MyWifi *myWifi = MyWifi::getInstance();
 
+#if defined(SENSOR_BME280)
+#include "MyBME.h"
+static MyBME *myBME = MyBME::getInstance();
+#endif
 
 //debugClock
 void debugClock(AsyncWebServerRequest *request)
@@ -132,7 +136,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += String(settings->mySettings.timezone);
   message += F("</li>\n");
  
-  time_t tempEspTime = mt->local();
+  time_t tempEspTime = mt->localTm();
   message += F("<li>" LANG_TIME ": ");
   message += String(mt->hour(tempEspTime)) + ":";
   if (mt->minute(tempEspTime) < 10) message += "0";
@@ -193,12 +197,9 @@ void debugClock(AsyncWebServerRequest *request)
   message += String(glb->stackSize);
   message += F(" bytes</li>\n");
   message += F("<li>HighWaterMark: ");
-  message += String(glb->highWaterMark);
-  message += F("<small> bytes Codeline: <br>");
-  message += glb->codetab;
-  message += ":";
-  message += String(glb->codeline);
-  message += F("</small></li>\n");
+  for(uint8_t t=1; t<TASK_MAX+1; t++) {
+    message += String(t) +"=" + String(glb->highWaterMark[t]) + ", ";
+  }
   message += F("<li>HeapFragmentation: ");
   message += str_heapfragmentation;
   message += F(" %</li>\n");
@@ -292,19 +293,19 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li><b>BME280</b>\n"
                "<ul>\n");
   message += F("<li>Error (BME): ");
-  message += String(errorCounterBME);
+  message += String(myBME->errorCounterBME);
   message += F("</li>\n");
   message += F("<li>" LANG_TEMPERATURE ": ");
-  message += String(bme.readTemperature());
+  message += String(myBME->bme.readTemperature());
   message += F("</li>\n");
   message += F("<li>" LANG_HUMIDITY ": ");
-  message += String(bme.readHumidity());
+  message += String(myBME->bme.readHumidity());
   message += F("</li>\n");
   message += F("<li>" LANG_AIRPRESSURE ": ");
-  message += String(bme.readPressure() / 100.0F);
+  message += String(myBME->bme.readPressure() / 100.0F);
   message += F("</li>\n");
   message += F("<li>" LANG_AIRPRESSUREDIFF ": ");
-  message += String(info_luftdruckdiff);
+  message += String(myBME->info_luftdruckdiff);
   message += F("</li>\n");
   message += F("<li>" LANG_AIRPRESSURETHRES ": <small>(A: ");
   message += String(LUFTDRUCK_DIFF_LEICHTFALLEND);
@@ -487,7 +488,5 @@ void debugClock(AsyncWebServerRequest *request)
 
   message += F("</body></html>");
   request->send(200,TEXT_HTML,message);
-  Serial.println(message);
   message = "";
-
 }

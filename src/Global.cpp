@@ -25,3 +25,10 @@ Global *Global::getInstance() {
 Global::Global() {
 
 }
+
+void Global::setHighWaterMark(uint8_t t) {
+  UBaseType_t hwm = uxTaskGetStackHighWaterMark(NULL);
+  if(!highWaterMark[t] || hwm < highWaterMark[t])
+    highWaterMark[t] = hwm;
+  //Serial.printf("setHighWaterMark: t=%d, hwm=%d\n",t,hwm);
+}

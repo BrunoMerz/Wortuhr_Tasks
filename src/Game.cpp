@@ -7,7 +7,7 @@
 #include "Settings.h"
 #include "Animation.h"
 
-#define DEBUG_GAME
+//#define DEBUG_GAME
 
 //#define myDEBUG
 #include "MyDebug.h"

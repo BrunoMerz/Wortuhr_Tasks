@@ -15,11 +15,13 @@
 #include "Configuration.h"
 //#include "esp_task_wdt.h"
 
-//#define myDEBUG
+#define myDEBUG
 #include "MyDebug.h"
 
-//#include "MyTFT.h"
-//#include "TFTImageRenderer.h"
+
+#include "MyTFT.h"
+#include "TFTImageRenderer.h"
+
 #include "IconRenderer.h"
 #include "Settings.h"
 

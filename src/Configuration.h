@@ -9,7 +9,6 @@
 //******************************************************************************
 // Software settings
 //******************************************************************************
-//die mit "//*" gekennzeichneten Zeilen nicht verändern!
 
 #define WIFIHOSTNAME LANG_HOSTNAME             // Das ist der default Hostname/Systemname. Der eigentliche Systemname wird in Settings eingestellt.
 #define WIFI_SETUP_TIMEOUT 300                 // So lange ist der AP (AccessPoint) zum eingeben der WiFi Parameter an
@@ -104,51 +103,10 @@ typedef enum eFrontcover : uint16_t
 } FRONTCOVER; 
 
 //******************************************************************************
-// Timezone
-//******************************************************************************
-
-//#define TIMEZONE_IDLW  // IDLW  International Date Line West UTC-12
-//#define TIMEZONE_SST   // SST   Samoa Standard Time UTC-11
-//#define TIMEZONE_HST   // HST   Hawaiian Standard Time UTC-10
-//#define TIMEZONE_AKST  // AKST  Alaska Standard Time UTC-9
-//#define TIMEZONE_USPST // USPST Pacific Standard Time (USA) UTC-8
-//#define TIMEZONE_USMST // USMST Mountain Standard Time (USA) UTC-7
-//#define TIMEZONE_USAZ  // USAZ  Mountain Standard Time (USA) UTC-7 (no DST)
-//#define TIMEZONE_USCST // USCST Central Standard Time (USA) UTC-6
-//#define TIMEZONE_USEST // USEST Eastern Standard Time (USA) UTC-5
-//#define TIMEZONE_AST   // AST   Atlantic Standard Time UTC-4
-//#define TIMEZONE_BST   // BST   Eastern Brazil Standard Time UTC-3
-//#define TIMEZONE_VTZ   // VTZ   Greenland Eastern Standard Time UTC-2
-//#define TIMEZONE_AZOT  // AZOT  Azores Time UTC-1
-//#define TIMEZONE_GMT   // GMT   Greenwich Mean Time UTC
-#define TIMEZONE_CET     // CET   Central Europe Time UTC+1
-//#define TIMEZONE_EST   // EST   Eastern Europe Time UTC+2
-//#define TIMEZONE_MSK   // MSK   Moscow Time UTC+3 (no DST)
-//#define TIMEZONE_GST   // GST   Gulf Standard Time UTC+4
-//#define TIMEZONE_PKT   // PKT   Pakistan Time UTC+5
-//#define TIMEZONE_BDT   // BDT   Bangladesh Time UTC+6
-//#define TIMEZONE_JT    // JT    Java Time UTC+7
-//#define TIMEZONE_CNST  // CNST  China Standard Time UTC+8
-//#define TIMEZONE_HKT   // HKT   Hong Kong Time UTC+8
-//#define TIMEZONE_PYT   // PYT   Pyongyang Time (North Korea) UTC+8.5
-//#define TIMEZONE_CWT   // CWT   Central West Time (Australia) UTC+8.75
-//#define TIMEZONE_JST   // JST   Japan Standard Time UTC+9
-//#define TIMEZONE_ACST  // ACST  Australian Central Standard Time UTC+9.5
-//#define TIMEZONE_AEST  // AEST  Australian Eastern Standard Time UTC+10
-//#define TIMEZONE_LHST  // LHST  Lord Howe Standard Time UTC+10.5
-//#define TIMEZONE_SBT   // SBT   Solomon Islands Time UTC+11
-//#define TIMEZONE_NZST  // NZST  New Zealand Standard Time UTC+12
-
-//******************************************************************************
 // Hardware settings
 //******************************************************************************
 
 #define SERIAL_SPEED 115200
-
-//#define ONOFF_BUTTON
-//#define MODE_BUTTON
-//#define SHOW_TIME_BUTTON
-
 
 // Einstellen der min/max Helligkeiten
 #define MIN_BRIGHTNESS 20                            // Minimale Helligkeit
@@ -157,7 +115,7 @@ typedef enum eFrontcover : uint16_t
 
 // Ist ein BME280 an Board
 #if defined(LILYGO_T_HMI)
-#define SENSOR_BME280
+//#define SENSOR_BME280
 #endif
 #define SEALEVELPRESSURE_HPA (1013.25)               //* Luftdruck auf Meereshöhe
 #define BME_TEMPERATURE_OFFSET -0.1                  // Temperaturkorrektur
@@ -276,49 +234,34 @@ typedef enum eFrontcover : uint16_t
 // ESP8266 / WeMos Anschlüsse:
 //******************************************************************************
 
-#define WIFI_RESET       D8
 #define ANALOG_PIN       A0
-#define PIN_MODE_BUTTON  D7     // D7      D3,mode/flash
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
 #define PIN_AUDIO_RX     D5     // D5      D5,14
 #define PIN_AUDIO_TX     D7     // D3      D7,13
 #define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
-//#define PIN_BUZZER       D4     //
-//#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    D4     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_SECONDS_DATA D3     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_LDR          A0     // A0      A0,LDR             ADC
-#define PIN_SHOW_TIME_BUTTON RX //         RX,time
-#define PIN_ONOFF_BUTTON TX     //         TX,on/off
-// GPIO 06 to GPIO 11 are
-// used for flash memory databus
+#define WIFI_RESET       D8
 #endif
 
-#if defined(WEMOS_D1_MINI32)
+#if defined(ARDUINO_D1_MINI32)
 //******************************************************************************
-// WEMOS_D1_MINI32 / WeMos Anschlüsse:
+// ARDUINO_D1_MINI32 / WeMos Anschlüsse:
 //******************************************************************************
 
-//                                 V1      KELLY
-//#define PIN_IR_RECEIVER  D6     //                          wird für IR-Receiver benötigt
-#define WIFI_RESET      (05)
-#define ANALOG_PIN      (34)
+#define ANALOG_PIN      (ADC1_CHANNEL_6)
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
-#define PIN_MODE_BUTTON  D7     // D7      D3,mode/flash
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
 #define PIN_AUDIO_RX     D5     // D5      D5,14
 #define PIN_AUDIO_TX     D7     // D3      D7,13
 #define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
-//#define PIN_BUZZER       D4     //
-//#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    D4     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_SECONDS_DATA D3     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          A0     // A0      A0,LDR             ADC
-#define PIN_SHOW_TIME_BUTTON RX //         RX,time
-#define PIN_ONOFF_BUTTON TX     //         TX,on/off
-// GPIO 06 to GPIO 11 are
-// used for flash memory databus
+#define PIN_LDR          ADC1_CHANNEL_6     // A0      A0,LDR             ADC
+#define WIDTH_LDR        ADC_WIDTH_BIT_12
+#define WIFI_RESET      (05)
 #endif
 
 #if defined(ARDUINO_LOLIN_S2_MINI)
@@ -330,21 +273,16 @@ typedef enum eFrontcover : uint16_t
 #define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
-#define PIN_MODE_BUTTON  D7     // D7      D3,mode/flash
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
 #define PIN_AUDIO_RX     D5     // D5      D5,14
 #define PIN_AUDIO_TX     D7     // D3      D7,13
 #define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
-//#define PIN_BUZZER       D4     //
-//#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    16     //
 #if defined(WITH_SECOND_HAND)
 #define PIN_SECONDS_DATA 17     //
 #endif
 #define PIN_LDR          ADC1_CHANNEL_1     // ADC1_1
 #define WIDTH_LDR        ADC_WIDTH_BIT_13
-#define PIN_SHOW_TIME_BUTTON RX //         RX,time
-#define PIN_ONOFF_BUTTON TX     //         TX,on/off
 #define WIFI_RESET       (14)
 #endif
 
@@ -353,24 +291,17 @@ typedef enum eFrontcover : uint16_t
 // ARDUINO_LOLIN_S3_MINI / WeMos Anschlüsse:
 //******************************************************************************
 
-//                                 V1      KELLY
-//#define PIN_IR_RECEIVER  D6     //                          wird für IR-Receiver benötigt
 #define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
-#define PIN_MODE_BUTTON  D7     // D7      D3,mode/flash
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
 #define PIN_AUDIO_RX     D5     // D5      D5,14
 #define PIN_AUDIO_TX     D7     // D3      D7,13
 #define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
-//#define PIN_BUZZER       D4     //
-//#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    16     //
 #define PIN_SECONDS_DATA 18     //
 #define PIN_LDR          ADC1_CHANNEL_1     // ADC1_0
 #define WIDTH_LDR        ADC_WIDTH_BIT_12
-#define PIN_SHOW_TIME_BUTTON RX //         RX,time
-#define PIN_ONOFF_BUTTON TX     //         TX,on/off
 #define WIFI_RESET       (14)
 #endif
 
@@ -379,28 +310,19 @@ typedef enum eFrontcover : uint16_t
 // LILYGO_T_HMI / WeMos Anschlüsse:
 //******************************************************************************
 
-//                                 V1      KELLY
-//#define PIN_IR_RECEIVER  D6     //                          wird für IR-Receiver benötigt
-#define ANALOG_PIN      (13)     // IO15
-
+#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
 #define PIN_WIRE_SCL     15    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     16    // D2,SDA  D2,SDA             SDA
-//#define PIN_MODE_BUTTON  15     // D7      D3,mode/flash
 #define PIN_LED          LED_BUILTIN     // D4      D4,LED Data        LED_BUILTIN
 #define PIN_AUDIO_RX     RX     // IO44 RX
 #define PIN_AUDIO_TX     TX     // IO43 TX
 #define PIN_AUDIO_BUSY   11     // IO18 Busy
-//#define PIN_BUZZER       D4     //
-//#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    17     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_SECONDS_DATA 18     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          ANALOG_PIN     // A0      A0,LDR             ADC
-//#define PIN_SHOW_TIME_BUTTON RX //         RX,time
-//#define PIN_ONOFF_BUTTON TX     //         TX,on/off
-// GPIO 06 to GPIO 11 are
-// used for flash memory databus
-#define PWR_EN_PIN       (10)
+#define PIN_LDR          ADC1_CHANNEL_6     // A0      A0,LDR             ADC
+#define WIDTH_LDR        ADC_WIDTH_BIT_12
 #define WIFI_RESET       (21)
+#define PWR_EN_PIN       (10)
 
 // touch screen
 #define TOUCHSCREEN_SCLK_PIN (1)
@@ -417,24 +339,16 @@ typedef enum eFrontcover : uint16_t
 // LILYGO_T7_S3 / WeMos Anschlüsse:
 //******************************************************************************
 
-//                                 V1      KELLY
-//#define PIN_IR_RECEIVER  D6     //                          wird für IR-Receiver benötigt
-#define WIFI_RESET      (05)
-#define ANALOG_PIN      (01)
+#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
-#define PIN_MODE_BUTTON  15     // D7      D3,mode/flash
 #define PIN_LED          12     // D4      D4,LED Data        LED_BUILTIN
 #define PIN_AUDIO_RX     16     // D5      D5,14
 #define PIN_AUDIO_TX     17     // D3      D7,13
 #define PIN_AUDIO_BUSY   18     // D0      D0,16              kein Interrupt!
-//#define PIN_BUZZER       D4     //
-//#define PIN_LEDS_CLOCK   D6     //       D6,12              wird für LPD8806RGBW benötigt D6
 #define PIN_LEDS_DATA    44     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_SECONDS_DATA 43     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          A0     // A0      A0,LDR             ADC
-#define PIN_SHOW_TIME_BUTTON RX //         RX,time
-#define PIN_ONOFF_BUTTON TX     //         TX,on/off
-// GPIO 06 to GPIO 11 are
-// used for flash memory databus
+#define PIN_LDR          ADC1_CHANNEL_6     // A0      A0,LDR             ADC
+#define WIDTH_LDR        ADC_WIDTH_BIT_12
+#define WIFI_RESET      (05)
 #endif

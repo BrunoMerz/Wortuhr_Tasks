@@ -76,6 +76,8 @@ private:
     static LedDriver *instance;
 
     CRGB strip[NUMPIXELS];
+    CRGB oldPattern[NUMPIXELS-1];  // Speichert das alte Muster
+    CRGB newPattern[NUMPIXELS-1];  // Speichert das neue Muster
  
     uint16_t _offset;
     uint16_t screenBufferOld[10];

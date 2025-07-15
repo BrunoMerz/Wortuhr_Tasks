@@ -69,7 +69,7 @@ class MyTime {
     int month(time_t t);
     int year(void);
     int year(time_t t);
-    time_t local(void);
+    time_t localTm(void);
     char *monthStr(uint8_t month);
     char *dayStr(uint8_t day);
     time_t toLocal(time_t utc);
