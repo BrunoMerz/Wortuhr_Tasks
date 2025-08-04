@@ -12,6 +12,8 @@ typedef enum eBTNType : uint8_t
   BTN_WEATHER,
 	BTN_TIME,
   BTN_INFO,
+  BTN_ON,
+  BTN_OFF,
   BTN_LAST
 } BTNType;
 #endif

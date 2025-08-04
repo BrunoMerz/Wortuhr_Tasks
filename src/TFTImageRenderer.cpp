@@ -286,7 +286,7 @@ int16_t ypos = 0;
 
 File myfile;
 
-void TFTImageRenderer::pngDraw(PNGDRAW *pDraw) {
+int TFTImageRenderer::pngDraw(PNGDRAW *pDraw) {
   uint16_t lineBuffer[MAX_IMAGE_WIDTH];
   uint8_t  maskBuffer[1 + MAX_IMAGE_WIDTH / 8];  // Mask buffer
   png->getLineAsRGB565(pDraw, lineBuffer, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
@@ -295,6 +295,7 @@ void TFTImageRenderer::pngDraw(PNGDRAW *pDraw) {
     // Note: pushMaskedImage is for pushing to the TFT and will not work pushing into a sprite
   //  tft->pushMaskedImage(xpos, ypos + pDraw->y, pDraw->iWidth, 1, lineBuffer, maskBuffer);
   //}
+  return 1;
 }
 
 

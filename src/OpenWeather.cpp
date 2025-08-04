@@ -7,7 +7,7 @@
 #include "MyTime.h"
 #include "Settings.h"
 
-//#define DEBUG_OW
+#define DEBUG_OW
 
 OpenWeather* OpenWeather::instance = 0;
 
@@ -452,88 +452,3 @@ void OpenWeather::sunriseset(void)
 #endif
 
 }
-
-#if defined(LILYGO_T_HMI)
-#define XOFFSET 40
-#define YOFFSET 0
-
-#define PIC1_X 0
-#define PIC1_Y 0
-
-#define PIC2_X 90
-#define PIC2_Y 0
-
-#define PIC3_X 180
-#define PIC3_Y 0
-
-#define PIC4_X 0
-#define PIC4_Y 106
-
-#define TXT1_X 30
-#define TXT1_Y 90
-
-#define TXT2_X 120
-#define TXT2_Y 90
-
-#define TXT3_X 190
-#define TXT3_Y 90
-
-#define TXT4_X 0
-#define TXT4_Y 196
-
-#define TXT5_X 120
-#define TXT5_Y 196
-
-void OpenWeather::drawWeather(void) {
-  char tstr[34];
-  MyTFT *tft = MyTFT::getInstance();
-  MyFileAccess *mfa = MyFileAccess::getInstance();
-#ifdef DEBUG_OW
-  Serial.println("drawWeather");
-#endif
-  tft->clearMainCanvas();
-   // sunrise
-  tft->ir->renderAndDisplayPNG((char *)("/tft/sunrise.png"), 0, 0, PIC1_X, PIC1_Y);
-  
-  strftime(tstr,sizeof(tstr),"%H:%M", localtime(&sunrise));
-  tft->drawString(tstr,TXT1_X,TXT1_Y,STD_FONT);
-  // sunset
-  tft->ir->renderAndDisplayPNG((char *)("/tft/sunset.png"), 0, 0, PIC2_X, PIC2_Y);
-  strftime(tstr,sizeof(tstr),"%H:%M", localtime(&sunset));
-  tft->drawString(tstr,TXT2_X,TXT2_Y,STD_FONT);
-
-  // act weather
-  sprintf(tstr,"/tft/web_%s.png", weathericon1.c_str());
-  if(mfa->exists(tstr))
-    tft->ir->renderAndDisplayPNG(tstr, 0, 0, PIC4_X, PIC4_Y);
-  else
-    tft->drawString(tstr,PIC4_X,PIC4_Y,2);
-  tft->drawString(description,TXT4_X,TXT4_Y,STD_FONT);
-  // temperature
-  tft->drawString("Temp: "+String(temperature,1),TXT5_X,TXT5_Y,STD_FONT);
-  // moonphase
-  //  0         Neumond
-  //  > 0 < 11  zunehmend
-  //  11        Vollmond
-  //  > 11 < 22 abnehmend
-  sprintf(tstr,"/tft/web_moon%d.png", moonphase);
-  if(mfa->exists(tstr))
-    tft->ir->renderAndDisplayPNG(tstr, 0, 0, PIC3_X, PIC3_Y);
-  else
-    tft->drawString(tstr,PIC3_X,PIC3_Y,2);
-  if(!moonphase)
-    tft->drawString(LANG_NEWMOON,TXT3_X,TXT3_Y,STD_FONT);
-  else if(moonphase > 0 && moonphase < 11)
-    tft->drawString(LANG_INCREASINGMOON,TXT3_X,TXT3_Y,STD_FONT);
-  else if(moonphase == 11)
-    tft->drawString(LANG_FULLMOON,TXT3_X,TXT3_Y,STD_FONT);
-  else if(moonphase > 11 && moonphase < 22)
-    tft->drawString(LANG_WANINGMOON,TXT3_X,TXT3_Y,STD_FONT);
-
-  // draw lines
-  tft->drawLine(PIC2_X,PIC1_Y,PIC2_X,PIC4_Y,TFT_WHITE);
-  tft->drawLine(PIC3_X,PIC1_Y,PIC3_X,PIC4_Y,TFT_WHITE);
-  //tft->drawLine(tft->getMainCanvasWidth(),PIC1_Y,tft->getMainCanvasWidth(),PIC4_Y,TFT_WHITE);
-  //drawLine(PIC1_X,PIC4_Y,_mainCanvasWidth,PIC4_Y,TFT_WHITE);
-}
-#endif

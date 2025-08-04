@@ -845,7 +845,7 @@ void LedDriver::regenbogen(uint16_t screenBufferNew[], uint32_t color)
         if (bitRead(screenBufferOld[y], 15 - x)) setPixel(x, y, colorold);
         if ( y >= startbogen && bogenidx >= 0 && bogenidx <= 9)                                                                // Regenbogenbereich
         {
-          if ( bogen[bogenidx][x] != 0 && bogen[bogenidx][x] != 99 ) setPixel(x, y, bogen[bogenidx][x]); // Farbe aus Regenbogen
+          if ( bogen[bogenidx][x] != 0 && bogen[bogenidx][x] != 99 ) setPixel(x, y, colorArray[bogen[bogenidx][x]]); // Farbe aus Regenbogen
           if ( bogen[bogenidx][x] == 99 )                                                                                      // Prüfen ob hier kein Regenbogen ist
           {
             if (bitRead(screenBufferNew[y], 15 - x)) setPixel(x, y, color);                              // Farbe aus color (neue Farbe)
@@ -1298,9 +1298,15 @@ void LedDriver::setOnOff(void) {
 #endif
     writeScreenBufferFade(matrix, settings->mySettings.ledcol);
     mode = MODE_BLANK;
+#if defined(LILYGO_T_HMI)
+    analogWrite(TFT_BL,0);
+#endif
     taskParams.updateScreen=false;
   } else {
     mode = MODE_TIME;
+#if defined(LILYGO_T_HMI)
+    analogWrite(TFT_BL,255);
+#endif
     taskParams.updateScreen=true;
 #ifdef WITH_SECOND_BELL
     secondBell->setStatus(true);

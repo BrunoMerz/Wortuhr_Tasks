@@ -18,6 +18,7 @@
 #include <SPI.h>
 #include "TFTImageRenderer.h"
 #include "OpenWeather.h"
+#include "Modes.h"
 
 class TFTIconRenderer;
 
@@ -32,8 +33,7 @@ class MyTFT: public TFT_eSPI {
     void drawStateLine(String text, int x_pos=0);
     void clearMainCanvas(void);
     void clearStateCanvas(uint16_t _width=0);
-    void drawClock(void);
-    void drawTime(void);
+
     uint16_t getMainCanvasWidth(void) {return _mainCanvasWidth;};
     uint16_t getMainCanvasHeight(void) {return _mainCanvasHeight;};
     TFTImageRenderer *ir;

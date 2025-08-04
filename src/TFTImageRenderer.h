@@ -31,7 +31,7 @@ class TFTImageRenderer {
     //          1 - clear display before displaying icon
     //          2 - clear display after displaying icon and delay
     //          3 - 1 + 2
-    static void pngDraw(PNGDRAW *pDraw);
+    static int pngDraw(PNGDRAW *pDraw);
 
   private:
     TFTImageRenderer(void);

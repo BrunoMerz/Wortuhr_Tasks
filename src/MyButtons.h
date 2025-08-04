@@ -33,6 +33,7 @@ class MyButtons {
     static MyButtons* getInstance();
     void init(void);
     uint8_t newButton(String fn, BTNType btnType, uint16_t y, actionCallback action);
+    void deleteButton(BTNType btnType);
     void callAction(uint16_t x, uint16_t y);
     BTNType aktBtnType;
 

@@ -66,28 +66,7 @@ static MyTime *mt = MyTime::getInstance();
   static MyWidgets *widgets = MyWidgets::getInstance();
   static MyTouch *touch = MyTouch::getInstance();
   
-  static void handleTFTScreen(BTNType btnType)
-  {
-    DEBUG_PRINTF("handleTFTScreen: %d\n", btnType);
-    mt->getTime();
-
-    if (btnType != BTN_UPDATE)
-    {
-      btns->aktBtnType = btnType;
-      widgets->setDrawState(true);
-    }
-    switch (btns->aktBtnType)
-    {
-    case BTN_WEATHER:
-      ow->drawWeather();
-      break;
-    case BTN_TIME:
-      widgets->drawTime(mt->second(), mt->minute(), mt->hour());
-      break;
-    case BTN_INFO:
-      widgets->drawInfo();
-    }
-  }
+  static void handleTFTScreen(BTNType btnType);
 
   static void btn_action(BTNType btnType)
   {
@@ -95,8 +74,45 @@ static MyTime *mt = MyTime::getInstance();
     handleTFTScreen(btnType);
   }
 
-  OneButton buttonWifiReset(WIFI_RESET, false, false);
 
+  static void handleTFTScreen(BTNType btnType)
+  {
+    DEBUG_PRINTF("handleTFTScreen: %d\n", btnType);
+    BTNType oldBtnType = btns->aktBtnType;
+    mt->getTime();
+
+    if (btnType != BTN_UPDATE)
+    {
+      btns->aktBtnType = btnType;
+    }
+    switch (btns->aktBtnType)
+    {
+    case BTN_WEATHER:
+      widgets->drawWidget(MODE_WETTER);
+      break;
+    case BTN_TIME:
+      widgets->drawWidget(MODE_TIME);
+      break;
+    case BTN_INFO:
+      widgets->drawInfo();
+      break;
+    case BTN_OFF:
+      analogWrite(TFT_BL,40);
+      btns->deleteButton(BTN_OFF);
+      btns->newButton("on", BTN_ON, 153, btn_action);
+      btns->aktBtnType = oldBtnType;
+      break;
+    case BTN_ON:
+      analogWrite(TFT_BL,255);
+      btns->deleteButton(BTN_ON);
+      btns->newButton("off", BTN_OFF, 153, btn_action);
+      btns->aktBtnType = oldBtnType;
+      break;
+    }
+  }
+
+
+  OneButton buttonWifiReset(WIFI_RESET, false, false);
 
 #endif
 
@@ -190,6 +206,7 @@ void queueScheduler(void *p) {
  
 
   DEBUG_PRINTF("queueScheduler: Core=%d\n", xPortGetCoreID());
+  ow->getOutdoorConditions(String(settings->mySettings.openweatherlocation), String(settings->mySettings.openweatherapikey));
 
   while(true) {
     while(!tp->taskInfo[TASK_SCHEDULER].handleEvent)
@@ -249,8 +266,7 @@ void queueScheduler(void *p) {
         ledDriver->setBrightnessFromLdr();
 #endif
 #if defined(LILYGO_T_HMI)
-      if (btns->aktBtnType == BTN_TIME)
-        widgets->drawTime(aktSecond, aktMinute, aktHour);
+      widgets->drawClockHands(aktSecond, aktMinute, aktHour);
 #endif
     }
 
@@ -258,7 +274,7 @@ void queueScheduler(void *p) {
       lastMinute = aktMinute;
 
 #if defined(LILYGO_T_HMI)
-      handleTFTScreen(BTN_UPDATE);
+      widgets->drawClockHands(aktSecond,aktMinute,aktHour);
 #endif
 
       isNightOff=false;
@@ -350,6 +366,9 @@ void ModesQueueHandler(void *p) {
           DEBUG_PRINTF("Erhalten: %s, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", dpm[mode].event_name.c_str(), mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
 
           dpm[mode].event_fct();
+#if defined(LILYGO_T_HMI)
+          widgets->drawWidget(dpm[mode].event_type);
+#endif
           vTaskDelay(pdMS_TO_TICKS(dpm[mode].event_delay));
 
           xEventGroupClearBits(xEvent, dpm[mode].event_type);
@@ -714,7 +733,7 @@ void displayTime(void *p) {
           }
           vTaskDelay(pdMS_TO_TICKS(500));
         } // else aktMinute % 5 != 0
-        
+
         tp->updateScreen = false;
         xEventGroupClearBits(xEvent, MODE_TIME);
         ledDriver->lastMode = MODE_TIME;
@@ -763,6 +782,7 @@ void startup(void *) {
   btns->newButton("weather", BTN_WEATHER, 0, btn_action);
   btns->newButton("clock", BTN_TIME, 51, btn_action);
   btns->newButton("info", BTN_INFO, 102, btn_action);
+  btns->newButton("off", BTN_OFF, 153, btn_action);
 #endif
 
   renderer->language = settings->mySettings.language;

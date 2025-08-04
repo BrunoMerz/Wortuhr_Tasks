@@ -15,6 +15,7 @@
 #include "MyTFT.h"
 #include "Languages.h"
 #include "MyFileAccess.h"
+#include "Modes.h"
 
 static MyFileAccess *mfa = MyFileAccess::getInstance();
 
@@ -31,8 +32,12 @@ MyTFT *MyTFT::getInstance() {
 
 void MyTFT::init(void) {
   pinMode(PWR_EN_PIN, OUTPUT);
+  pinMode(TFT_BL,  OUTPUT);
+  //ledcSetup(0, 5000, 8);
+  //ledcAttachPin(TFT_BL, 0);
   digitalWrite(PWR_EN_PIN, HIGH);
   TFT_eSPI::init();
+  
   setRotation(1);
   setSwapBytes(true);
   fillScreen(TFT_BLACK);
@@ -62,5 +67,8 @@ void MyTFT::printStateLine(String txt, int x_pos, uint16_t clear) {
     clearStateCanvas(160);
  drawStateLine(txt, x_pos);
 }
+
+
+
 
 #endif

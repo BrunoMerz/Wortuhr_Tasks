@@ -61,6 +61,11 @@ uint8_t MyButtons::newButton(String fn, BTNType btnType, uint16_t y, actionCallb
   return buttonCount++;
 }
 
+void MyButtons::deleteButton(BTNType btnType) {
+  DEBUG_PRINTLN("MyButtons::deleteButton");
+  delete btn[buttonCount];
+  buttonCount--;
+}
 
 void MyButtons::callAction(uint16_t x, uint16_t y) {
   for(uint8_t btnNr=0; btnNr<NUMBERBUTTONS; btnNr++) {

@@ -77,10 +77,6 @@ public:
     int getMoonphase(int y, int m, int d);
     void sunriseset(void);
     String  urlEncode(String str);
-    
-#if defined(LILYGO_T_HMI)
-    void drawWeather(void);
-#endif
 
 private:
   OpenWeather();
