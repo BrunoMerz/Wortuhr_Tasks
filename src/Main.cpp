@@ -266,7 +266,10 @@ void queueScheduler(void *p) {
         ledDriver->setBrightnessFromLdr();
 #endif
 #if defined(LILYGO_T_HMI)
-      widgets->drawClockHands(aktSecond, aktMinute, aktHour);
+      if(!aktSecond && !(aktMinute % 2))
+        widgets->drawWidget(MODE_TIME);
+      else
+        widgets->drawClockHands(aktSecond, aktMinute, aktHour);
 #endif
     }
 

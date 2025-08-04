@@ -25,7 +25,7 @@
 
 
 // Meter boarder colour
-#define TFT_GREY 0x5AEB
+//#define TFT_GREY 0xA944
 #define MAXTEXTLENGTH 20
 
 #define XOFFSET 40

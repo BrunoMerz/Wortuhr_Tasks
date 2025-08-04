@@ -96,11 +96,11 @@ void MyWidgets::computeClockHands(uint8_t hour, uint8_t minute, uint8_t second, 
 
     // Minutenzeiger (berücksichtigt auch Sekunden für Zwischenposition)
     float minuteAngle = (minute + second / 60.0) * 6;
-    minuteHand = computeHand(ccx, ccy, R * 0.75, minuteAngle);
+    minuteHand = computeHand(ccx, ccy, R * 0.77, minuteAngle);
 
     // Stundenzeiger (berücksichtigt Minuten)
     float hourAngle = ((hour % 12) + minute / 60.0) * 30; // 360° / 12
-    hourHand = computeHand(ccx, ccy, R * 0.5, hourAngle);
+    hourHand = computeHand(ccx, ccy, R * 0.60, hourAngle);
 }
 
 
@@ -221,6 +221,7 @@ void MyWidgets::drawClockFace(void) {
   tft->ir->renderAndDisplayPNG((char *)("/tft/Uhr_klein.png"), 0, 0, PIC1_X, PIC1_Y);
 }
 
+#define DREIECK 3.0
 void MyWidgets::drawClockHands(uint8_t ss, uint8_t mm, uint8_t hh) {
   if(currentMode == MODE_TIME) {
 
@@ -228,23 +229,32 @@ void MyWidgets::drawClockHands(uint8_t ss, uint8_t mm, uint8_t hh) {
     tft->ir->renderAndDisplayPNG((char *)("/tft/Uhr_klein.png"), 0, 0, PIC1_X, PIC1_Y);
     uint32_t ccx=112;
     uint32_t ccy=112;
-    uint32_t radius=80;
+    uint32_t radius=65;
     Line h, m, s;
+  
     computeClockHands(hh, mm, ss, ccx, ccy, radius, h, m, s);
     
-    tft->drawLine(s.start.x-1, s.start.y-1, s.end.x, s.end.y, TFT_RED);
-    tft->drawLine(s.start.x, s.start.y, s.end.x, s.end.y, TFT_RED);
-    tft->drawLine(s.start.x+1, s.start.y+1, s.end.x, s.end.y, TFT_RED);
+    // Second
+    float winkelInBogenmass = ss * 6 * (PI / 180);
+    float ankathete = DREIECK * cos(winkelInBogenmass);
+    float gegenkathete = DREIECK * sin(winkelInBogenmass);
+    tft->fillTriangle(s.start.x+ankathete, s.start.y+gegenkathete, s.end.x, s.end.y, s.start.x-ankathete, s.start.y-gegenkathete, TFT_GOLD);
 
-    tft->drawLine(h.start.x-1, h.start.y-1, h.end.x, h.end.y, TFT_BLUE);
-    tft->drawLine(h.start.x, h.start.y, h.end.x, h.end.y, TFT_BLUE);
-    tft->drawLine(h.start.x+1, h.start.y, h.end.x+1, h.end.y, TFT_BLUE);
+    // Minute
+    winkelInBogenmass = (mm + ss / 60.0) * 6 * (PI / 180);
+    ankathete = DREIECK * cos(winkelInBogenmass);
+    gegenkathete = DREIECK * sin(winkelInBogenmass);
+    tft->fillTriangle(m.start.x+ankathete, m.start.y+gegenkathete, m.end.x, m.end.y, m.start.x-ankathete, m.start.y-gegenkathete, TFT_VIOLET);
 
-    tft->drawLine(m.start.x-1, m.start.y-1, m.end.x, m.end.y, TFT_GREEN);
-    tft->drawLine(m.start.x, m.start.y, m.end.x, m.end.y, TFT_GREEN);
-    tft->drawLine(m.start.x+1, m.start.y+1, m.end.x, m.end.y, TFT_GREEN);
-        
-    tft->fillCircle(ccx, ccy, 4, TFT_RED);
+    // Hour
+    winkelInBogenmass = ((hh % 12) + mm / 60.0) * 30 * (PI / 180);
+    ankathete = DREIECK * cos(winkelInBogenmass);
+    gegenkathete = DREIECK * sin(winkelInBogenmass);
+    tft->fillTriangle(h.start.x+ankathete, h.start.y+gegenkathete, h.end.x, h.end.y, h.start.x-ankathete, h.start.y-gegenkathete, TFT_VIOLET);
+
+    tft->drawCircle(ccx, ccy, 7, TFT_WHITE);
+    tft->fillCircle(ccx, ccy, 6, TFT_DARKGREY);
+    tft->fillCircle(ccx, ccy, 4, TFT_GREY);
     DEBUG_PRINTLN("drawClockHands end");
   }
 }
