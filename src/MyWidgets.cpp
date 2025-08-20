@@ -31,7 +31,7 @@ MyWidgets *MyWidgets::getInstance() {
 
 
 MyWidgets::MyWidgets(void) {
-  currentMode = (Mode)0;
+  currentMode = WIDGET_UNKNOWN;
 }
 
 
@@ -52,22 +52,19 @@ void MyWidgets::init(void) {
 }
 
 
-void MyWidgets::drawWidget(Mode mode) {
+void MyWidgets::drawWidget(WidgetMode mode) {
   DEBUG_PRINTF("drawWidget mode=%d\n",mode);
   switch(mode) {
-    case MODE_TIME:
+    case WIDGET_TIME:
       drawTime();
       break;
-    case MODE_DATE:
-    case MODE_WEEKDAY:
+    case WIDGET_DAY:
       drawDate();
       break;
-    case MODE_MOONPHASE:
-    case MODE_WETTER:
+    case WIDGET_WEATHER:
       drawWeather();
       break;
-    case MODE_EXT_HUMIDITY:
-    case MODE_EXT_TEMP:
+    case WIDGET_EXT_TEMP:
       drawExtTempHumidity();
       break;
   }
@@ -174,12 +171,12 @@ void MyWidgets::drawDate(void) {
   mt->getTime();
 
   // Day
-  tft->setTextColor(TFT_GREEN);
+  tft->setTextColor(TFT_GOLD);
   int16_t ypos = (H-(fh*3))/2;
   tft->drawCentreString(days[mt->mytm.tm_wday-1], W/2, ypos, GFXFF);
 
   // Date
-  tft->setTextColor(TFT_SKYBLUE);
+  tft->setTextColor(TFT_GOLD);
   char txt[20];
   sprintf(txt,"%.2d.%.2d.%4d", mt->mytm.tm_mday, mt->mytm.tm_mon, mt->mytm.tm_year);
   ypos += fh;
@@ -223,7 +220,7 @@ void MyWidgets::drawClockFace(void) {
 
 #define DREIECK 3.0
 void MyWidgets::drawClockHands(uint8_t ss, uint8_t mm, uint8_t hh) {
-  if(currentMode == MODE_TIME) {
+  if(currentMode == WIDGET_TIME) {
 
     DEBUG_PRINTLN("drawClockHands start");
     tft->ir->renderAndDisplayPNG((char *)("/tft/Uhr_klein.png"), 0, 0, PIC1_X, PIC1_Y);
@@ -261,7 +258,7 @@ void MyWidgets::drawClockHands(uint8_t ss, uint8_t mm, uint8_t hh) {
 
 void MyWidgets::drawTime(void) {
   DEBUG_PRINTF("drawTime start");
-  if(currentMode != MODE_TIME)
+  if(currentMode != WIDGET_TIME)
     drawClockFace();
 
   DEBUG_PRINTLN("drawTime done");

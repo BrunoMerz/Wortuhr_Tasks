@@ -409,7 +409,7 @@ const char sWeekday[][2] PROGMEM =
 #define LANG_TIMEHOST "Zeitserver"
 #define LANG_SYSTEMNAME "Systemname"
 
-#define LANG_LOCATION "Location"
+#define LANG_LOCATION "Standort"
 #define LANG_ALTITUDE "H&ouml;he Standort"
 #define LANG_LATITUDE "Breitengrad"
 #define LANG_LONGITUDE "L&auml;ngengrad"

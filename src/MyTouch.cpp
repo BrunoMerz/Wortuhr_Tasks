@@ -42,7 +42,7 @@ void MyTouch::init(void) {
     //mt.setCal(285, 1788, 311, 1877, 240, 320);
     Serial.println("Use default calibration data");
 
-    mt.setRotation(1);    
+    mt.setRotation(3);    
 }
 //#define DEBUG_TOUCH
 bool MyTouch::pressed(uint16_t *x, uint16_t *y) {

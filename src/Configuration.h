@@ -310,18 +310,18 @@ typedef enum eFrontcover : uint16_t
 // LILYGO_T_HMI / WeMos Anschlüsse:
 //******************************************************************************
 
-#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
-#define PIN_WIRE_SCL     15    // D1,SCL  D1,SCL             SCL
-#define PIN_WIRE_SDA     16    // D2,SDA  D2,SDA             SDA
+#define ANALOG_PIN       ADC1_CHANNEL_4     // GPIO 15
+//#define PIN_WIRE_SCL     15    // D1,SCL  D1,SCL             SCL
+//#define PIN_WIRE_SDA     16    // D2,SDA  D2,SDA             SDA
 #define PIN_LED          LED_BUILTIN     // D4      D4,LED Data        LED_BUILTIN
-#define PIN_AUDIO_RX     RX     // IO44 RX
-#define PIN_AUDIO_TX     TX     // IO43 TX
-#define PIN_AUDIO_BUSY   11     // IO18 Busy
-#define PIN_LEDS_DATA    17     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_SECONDS_DATA 18     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          ADC1_CHANNEL_6     // A0      A0,LDR             ADC
+//#define PIN_AUDIO_RX     RX     // IO44 RX
+//#define PIN_AUDIO_TX     TX     // IO43 TX
+//#define PIN_AUDIO_BUSY   11     // IO18 Busy
+#define PIN_LEDS_DATA    18     // D8      D8,Data            (z.B. WS2812B)
+#define PIN_SECONDS_DATA 17     // D8      D8,Data            (z.B. WS2812B)
+#define PIN_LDR          ADC1_CHANNEL_4     // GPIO 15
 #define WIDTH_LDR        ADC_WIDTH_BIT_12
-#define WIFI_RESET       (21)
+#define WIFI_RESET       (16)
 #define PWR_EN_PIN       (10)
 
 // touch screen

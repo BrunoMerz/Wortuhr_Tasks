@@ -73,7 +73,7 @@ class MyWidgets {
   public:
     static MyWidgets* getInstance();
     void init();
-    void drawWidget(Mode mode);
+    void drawWidget(WidgetMode mode);
     void drawExtTempHumidity(void);
     void drawWeather(void);
     void drawClockFace(void);
@@ -98,7 +98,7 @@ class MyWidgets {
     uint16_t W,H;
     
     // Current Widget on TFT
-    Mode currentMode;
+    WidgetMode currentMode;
 };
 
 

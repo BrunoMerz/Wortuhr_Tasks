@@ -1251,7 +1251,7 @@ void LedDriver::setBrightnessFromLdr(void)
 #ifdef LDR_IS_INVERSE
   ldrValue = 1024 - adc1_get_raw(ADC1_CHANNEL_1);
 #else
-  //mz ldrValue = adc1_get_raw(PIN_LDR);
+  ldrValue = adc1_get_raw(PIN_LDR);
 #endif
   if (ldrValue < minLdrValue)
     minLdrValue = ldrValue;

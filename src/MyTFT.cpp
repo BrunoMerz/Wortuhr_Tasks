@@ -38,7 +38,7 @@ void MyTFT::init(void) {
   digitalWrite(PWR_EN_PIN, HIGH);
   TFT_eSPI::init();
   
-  setRotation(1);
+  setRotation(3);
   setSwapBytes(true);
   fillScreen(TFT_BLACK);
   ir = TFTImageRenderer::getInstance();

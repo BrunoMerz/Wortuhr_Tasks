@@ -26,13 +26,7 @@
 #include "SecondHand.h"
 #endif
 
-#if defined(LILYGO_T_HMI)
-#include "MyTFT.h"
-#include "MyButtons.h"
-#include "MyWidgets.h"
-#include "MyTouch.h"
-#include "OneButton.h"
-#endif
+
 
 #define myDEBUG
 #include "MyDebug.h"
@@ -59,62 +53,7 @@ static AnimationFS *anifs = AnimationFS::getInstance();
 static MyWifi *myWifi = MyWifi::getInstance();
 static MyTime *mt = MyTime::getInstance();
 
-#if defined(LILYGO_T_HMI)
 
-  static MyTFT *tft = MyTFT::getInstance();
-  static MyButtons *btns = MyButtons::getInstance();
-  static MyWidgets *widgets = MyWidgets::getInstance();
-  static MyTouch *touch = MyTouch::getInstance();
-  
-  static void handleTFTScreen(BTNType btnType);
-
-  static void btn_action(BTNType btnType)
-  {
-    DEBUG_PRINTF("btn_action called, btnNr=%d\n", btnType);
-    handleTFTScreen(btnType);
-  }
-
-
-  static void handleTFTScreen(BTNType btnType)
-  {
-    DEBUG_PRINTF("handleTFTScreen: %d\n", btnType);
-    BTNType oldBtnType = btns->aktBtnType;
-    mt->getTime();
-
-    if (btnType != BTN_UPDATE)
-    {
-      btns->aktBtnType = btnType;
-    }
-    switch (btns->aktBtnType)
-    {
-    case BTN_WEATHER:
-      widgets->drawWidget(MODE_WETTER);
-      break;
-    case BTN_TIME:
-      widgets->drawWidget(MODE_TIME);
-      break;
-    case BTN_INFO:
-      widgets->drawInfo();
-      break;
-    case BTN_OFF:
-      analogWrite(TFT_BL,40);
-      btns->deleteButton(BTN_OFF);
-      btns->newButton("on", BTN_ON, 153, btn_action);
-      btns->aktBtnType = oldBtnType;
-      break;
-    case BTN_ON:
-      analogWrite(TFT_BL,255);
-      btns->deleteButton(BTN_ON);
-      btns->newButton("off", BTN_OFF, 153, btn_action);
-      btns->aktBtnType = oldBtnType;
-      break;
-    }
-  }
-
-
-  OneButton buttonWifiReset(WIFI_RESET, false, false);
-
-#endif
 
 static void displayWeekday(void) {
     dm->displayWeekday();
@@ -218,13 +157,6 @@ void queueScheduler(void *p) {
     aktMinute = mt->mytm.tm_min;
     aktSecond = mt->mytm.tm_sec;
     
-#if defined(LILYGO_T_HMI)
-  uint16_t x, y;
-  if (touch->pressed(&x, &y))
-    btns->callAction(x, y);
-  buttonWifiReset.tick();
-#endif
-
     isNightOff=false;
 
     String animation = "Z";
@@ -265,21 +197,10 @@ void queueScheduler(void *p) {
       if (settings->mySettings.useAbc)
         ledDriver->setBrightnessFromLdr();
 #endif
-#if defined(LILYGO_T_HMI)
-      if(!aktSecond && !(aktMinute % 2))
-        widgets->drawWidget(MODE_TIME);
-      else
-        widgets->drawClockHands(aktSecond, aktMinute, aktHour);
-#endif
     }
 
     if(aktMinute != lastMinute) {
       lastMinute = aktMinute;
-
-#if defined(LILYGO_T_HMI)
-      widgets->drawClockHands(aktSecond,aktMinute,aktHour);
-#endif
-
       isNightOff=false;
       aktts = aktHour * 60 + aktMinute;
       if (nightOffTime <= dayOnTime)
@@ -342,7 +263,7 @@ void queueScheduler(void *p) {
     }
 
     ElegantOTA.loop();
-    vTaskDelay(pdMS_TO_TICKS(500)); // 1 Sekunde warten
+    vTaskDelay(pdMS_TO_TICKS(500)); // 500 ms warten
   }
 }
 
@@ -369,9 +290,7 @@ void ModesQueueHandler(void *p) {
           DEBUG_PRINTF("Erhalten: %s, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", dpm[mode].event_name.c_str(), mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
 
           dpm[mode].event_fct();
-#if defined(LILYGO_T_HMI)
-          widgets->drawWidget(dpm[mode].event_type);
-#endif
+
           vTaskDelay(pdMS_TO_TICKS(dpm[mode].event_delay));
 
           xEventGroupClearBits(xEvent, dpm[mode].event_type);
@@ -594,6 +513,119 @@ void displaySecondHand(void *) {
 }
 #endif
 
+
+#if defined(LILYGO_T_HMI)
+
+#include "MyTFT.h"
+#include "MyButtons.h"
+#include "MyWidgets.h"
+#include "MyTouch.h"
+#include "OneButton.h"
+
+static void handleTFTScreen(BTNType btnType);
+
+static void btn_action(BTNType btnType)
+{
+  DEBUG_PRINTF("btn_action called, btnNr=%d\n", btnType);
+  handleTFTScreen(btnType);
+}
+
+
+static void handleTFTScreen(BTNType btnType)
+{
+  MyButtons *btns = MyButtons::getInstance();
+  MyWidgets *widgets = MyWidgets::getInstance();
+
+  DEBUG_PRINTF("handleTFTScreen: %d\n", btnType);
+  BTNType oldBtnType = btns->aktBtnType;
+  mt->getTime();
+
+  if (btnType != BTN_UPDATE)
+  {
+    btns->aktBtnType = btnType;
+  }
+  switch (btns->aktBtnType)
+  {
+  case BTN_WEATHER:
+    widgets->drawWidget(WIDGET_WEATHER);
+    break;
+  case BTN_TIME:
+    widgets->drawWidget(WIDGET_TIME);
+    break;
+  case BTN_INFO:
+    widgets->drawInfo();
+    break;
+  case BTN_OFF:
+    analogWrite(TFT_BL,40);
+    btns->deleteButton(BTN_OFF);
+    btns->newButton("on", BTN_ON, 153, btn_action);
+    btns->aktBtnType = oldBtnType;
+    break;
+  case BTN_ON:
+    analogWrite(TFT_BL,255);
+    btns->deleteButton(BTN_ON);
+    btns->newButton("off", BTN_OFF, 153, btn_action);
+    btns->aktBtnType = oldBtnType;
+    break;
+  }
+}
+
+void t_hmiHandler(void *) {
+  uint16_t x, y;
+  uint8_t aktHour;
+  uint8_t aktMinute;
+  uint8_t aktSecond;
+  uint8_t lastSecond=100;
+  WidgetMode aktMode = WIDGET_UNKNOWN;
+
+  DEBUG_PRINTF("t_hmiHandler: Core=%d\n", xPortGetCoreID());
+
+  MyTouch *touch = MyTouch::getInstance();
+  MyButtons *btns = MyButtons::getInstance();
+  MyWidgets *widgets = MyWidgets::getInstance();
+  MyTime *mt = MyTime::getInstance();
+
+  OneButton buttonWifiReset(WIFI_RESET, false, false);
+  
+  // Init Touch, Widgets and Buttons
+  touch->init();
+  buttonWifiReset.attachLongPressStop(wifiReset);
+  btns->init();
+  widgets->init();
+
+  // Create Buttons
+  btns->newButton("weather", BTN_WEATHER, 0, btn_action);
+  btns->newButton("clock", BTN_TIME, 51, btn_action);
+  btns->newButton("info", BTN_INFO, 102, btn_action);
+  btns->newButton("off", BTN_OFF, 153, btn_action);
+
+  while(true) {
+
+    aktHour = mt->mytm.tm_hour;
+    aktMinute = mt->mytm.tm_min;
+    aktSecond = mt->mytm.tm_sec;
+
+    if(!aktSecond) { // && !(aktMinute % 2)) {
+      if(++(*reinterpret_cast<uint8_t*>(&aktMode))==WIDGET_LAST)
+        aktMode=WIDGET_TIME;
+      widgets->drawWidget(aktMode);
+      vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    
+    if(aktMode==WIDGET_TIME && aktSecond != lastSecond) {
+       widgets->drawClockHands(aktSecond, aktMinute, aktHour);
+       lastSecond = aktSecond;
+    }
+
+    if (touch->pressed(&x, &y))
+      btns->callAction(x, y);
+    buttonWifiReset.tick();
+
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
+}
+#endif
+
 void displayTime(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
   Settings *settings=Settings::getInstance();
@@ -759,15 +791,21 @@ void startup(void *) {
   WebHandler *webHandler = WebHandler::getInstance();
   Global *glb = Global::getInstance();
 
-  DEBUG_PRINTLN("startup called");
+#if defined(LILYGO_T_HMI)
+  #include "MyTFT.h"
+  MyTFT *tft = MyTFT::getInstance();
+  tft->init();
+#endif
+
+DEBUG_PRINTLN("startup called");
   DEBUG_PRINTF("startup: Core=%d\n", xPortGetCoreID());
   settings->init();
 
   ledDriver->setBrightness(settings->mySettings.brightness);
 
   //mz LDR Setup
-  //adc1_config_width(WIDTH_LDR);
-  //adc1_config_channel_atten(PIN_LDR, ADC_ATTEN_DB_12);  // GPIO1 (A0)
+  adc1_config_width(WIDTH_LDR);
+  adc1_config_channel_atten(PIN_LDR, ADC_ATTEN_DB_12);  // GPIO1 (A0)
 
 #ifdef LDR
   // Set brightness from LDR
@@ -775,18 +813,7 @@ void startup(void *) {
     ledDriver->setBrightnessFromLdr();
 #endif
 
-#if defined(LILYGO_T_HMI)
-  tft->init();
-  touch->init();
-  buttonWifiReset.attachLongPressStop(wifiReset);
-  btns->init();
-  widgets->init();
 
-  btns->newButton("weather", BTN_WEATHER, 0, btn_action);
-  btns->newButton("clock", BTN_TIME, 51, btn_action);
-  btns->newButton("info", BTN_INFO, 102, btn_action);
-  btns->newButton("off", BTN_OFF, 153, btn_action);
-#endif
 
   renderer->language = settings->mySettings.language;
   renderer->itIs = settings->mySettings.itIs;
@@ -947,6 +974,21 @@ void startup(void *) {
     &taskParams.taskInfo[TASK_EVENT].taskHandle,// Task handle
     0
   );
+
+
+#if defined(LILYGO_T_HMI)
+  taskParams.taskInfo[TASK_T_HMI].stackSize=4096;
+  xTaskCreatePinnedToCore(
+    &t_hmiHandler,   // Function name of the task
+    "t_hmiHandler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_T_HMI].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
+    1,          // Task priority
+    &taskParams.taskInfo[TASK_T_HMI].taskHandle,// Task handle
+    0
+  );
+#endif
+
 
   DEBUG_PRINTLN("Task beendet sich selbst...");
   vTaskDelay(pdMS_TO_TICKS(1000));

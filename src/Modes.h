@@ -16,6 +16,17 @@ typedef enum eBTNType : uint8_t
   BTN_OFF,
   BTN_LAST
 } BTNType;
+
+typedef enum eWidgetMode: uint8_t
+{
+  WIDGET_UNKNOWN=0,
+  WIDGET_TIME,
+  WIDGET_DAY,
+  WIDGET_WEATHER,
+  WIDGET_EXT_TEMP,
+  WIDGET_LAST
+} WidgetMode;
+
 #endif
 
 typedef enum eMode : uint32_t

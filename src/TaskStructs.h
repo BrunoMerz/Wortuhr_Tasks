@@ -13,6 +13,9 @@ typedef enum eTask : uint8_t
     TASK_TEXT,          // 6
     TASK_ANIMATION,     // 7
     TASK_EVENT,         // 8
+#if defined(LILYGO_T_HMI)
+    TASK_T_HMI,
+#endif
     TASK_MAX
 } Task;
 
