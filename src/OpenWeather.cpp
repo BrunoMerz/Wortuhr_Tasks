@@ -7,7 +7,7 @@
 #include "MyTime.h"
 #include "Settings.h"
 
-#define DEBUG_OW
+//#define DEBUG_OW
 
 OpenWeather* OpenWeather::instance = 0;
 

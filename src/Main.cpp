@@ -28,7 +28,7 @@
 
 
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 s_taskParams taskParams;
@@ -580,6 +580,7 @@ void t_hmiHandler(void *) {
 
   DEBUG_PRINTF("t_hmiHandler: Core=%d\n", xPortGetCoreID());
 
+  MyTFT *tft = MyTFT::getInstance();
   MyTouch *touch = MyTouch::getInstance();
   MyButtons *btns = MyButtons::getInstance();
   MyWidgets *widgets = MyWidgets::getInstance();
@@ -599,22 +600,36 @@ void t_hmiHandler(void *) {
   btns->newButton("info", BTN_INFO, 102, btn_action);
   btns->newButton("off", BTN_OFF, 153, btn_action);
 
+  vTaskDelay(pdMS_TO_TICKS(5000));
   while(true) {
 
     aktHour = mt->mytm.tm_hour;
     aktMinute = mt->mytm.tm_min;
     aktSecond = mt->mytm.tm_sec;
 
-    if(!aktSecond) { // && !(aktMinute % 2)) {
+    if(!aktSecond || aktMode == WIDGET_UNKNOWN) {
+      if(taskParams.taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
+        taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSED;
+        while(taskParams.taskInfo[TASK_DRAW].state == STATE_PROCESSED)
+          vTaskDelay(pdMS_TO_TICKS(10));
+      }
       if(++(*reinterpret_cast<uint8_t*>(&aktMode))==WIDGET_LAST)
         aktMode=WIDGET_TIME;
       widgets->drawWidget(aktMode);
+      tft->clearStateCanvas(0);
+      lastSecond = aktSecond;
       vTaskDelay(pdMS_TO_TICKS(1000));
     }
     
-    if(aktMode==WIDGET_TIME && aktSecond != lastSecond) {
-       widgets->drawClockHands(aktSecond, aktMinute, aktHour);
-       lastSecond = aktSecond;
+    if(aktSecond != lastSecond) {
+      if(aktMode==WIDGET_TIME)
+        widgets->drawClockHands(aktSecond, aktMinute, aktHour);
+        int x_pos = tft->getMainCanvasWidth()/59*aktSecond;
+      tft->fillRect(0, tft->getMainCanvasHeight()+2, x_pos, tft->fontHeight(STD_FONT), TFT_YELLOW);
+      tft->setTextColor(TFT_BLACK);
+      tft->setTextFont(2);
+      tft->drawNumber(aktSecond, x_pos/2, tft->getMainCanvasHeight()+2);
+      lastSecond = aktSecond;
     }
 
     if (touch->pressed(&x, &y))

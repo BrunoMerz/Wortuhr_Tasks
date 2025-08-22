@@ -9,7 +9,7 @@
 
 #if defined(LILYGO_T_HMI)
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 #include "Configuration.h"
 #include "MyButtons.h"

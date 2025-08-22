@@ -12,7 +12,7 @@
 
 #include "Arduino.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 

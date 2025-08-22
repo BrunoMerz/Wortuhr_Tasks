@@ -9,7 +9,7 @@
 
 #if defined(LILYGO_T_HMI)
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 #include "Configuration.h"
 #include "MyWidgets.h"
@@ -17,7 +17,13 @@
 #include "TFTImageRenderer.h"
 #include "TFT_eWidget.h"
 #include "Free_Fonts.h"
+#include "TaskStructs.h"
 
+extern s_taskParams taskParams;
+extern void drawBalls(void *p);
+extern void drawPlasma(void *p);
+extern void drawSpiral(void *p);
+extern void drawTree(void *p);
 
 MyWidgets* MyWidgets::instance = 0;
 
@@ -66,6 +72,22 @@ void MyWidgets::drawWidget(WidgetMode mode) {
       break;
     case WIDGET_EXT_TEMP:
       drawExtTempHumidity();
+      break;
+    case WIDGET_DRAW_BALLS:
+      taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
+      xTaskCreatePinnedToCore(drawBalls, "drawTaskBalls", 2048, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
+      break;
+    case WIDGET_DRAW_PLASMA:
+      taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
+      xTaskCreatePinnedToCore(drawPlasma, "drawTaskPlasma", 2048, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
+      break;
+    case WIDGET_DRAW_SPIRAL:
+      taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
+      xTaskCreatePinnedToCore(drawSpiral, "drawTaskSpiral", 2048, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
+      break;
+    case WIDGET_DRAW_TREE:
+      taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
+      xTaskCreatePinnedToCore(drawTree, "drawTaskTree", 2048, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
       break;
   }
   currentMode = mode;
@@ -328,6 +350,195 @@ void MyWidgets::drawDiagram(void) {
 
   // Start a new trace with using white
   tr.startTrace(TFT_WHITE);
+}
+
+// --------------------------------------------------
+// Plasma-Effekt
+void drawPlasma(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
+  MyTFT *tft = MyTFT::getInstance();
+  uint16_t W=tft->getMainCanvasWidth();
+  uint16_t H=tft->getMainCanvasHeight();
+  int plasma_t = 0;
+
+  while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
+    for (int y = 0; y < H; y++) {
+      for (int x = 0; x < W; x++) {
+        int color = 128 + 127 * sin(x/20.0 + plasma_t*0.1) + 
+                    128 + 127 * sin(y/20.0 + plasma_t*0.13);
+        uint16_t c = tft->color565(color % 255, (color*2) % 255, (255-color) % 255);
+        tft->drawPixel(x, y, c);
+      }
+    }
+    plasma_t++;
+    vTaskDelay(pdMS_TO_TICKS(30));
+  }
+  tp->taskInfo[TASK_DRAW].state = STATE_INIT;
+  // terminate task
+  vTaskDelete(NULL);
+}
+
+// --------------------------------------------------
+// Spirale
+void drawSpiral(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
+  MyTFT *tft = MyTFT::getInstance();
+
+  int cx = tft->getMainCanvasWidth()/2;
+  int cy = tft->getMainCanvasHeight()/2;
+
+  float spiral_angle = 0;
+  tft->clearMainCanvas();
+
+  while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
+    
+    for (int r = 10; r < min(cx,cy); r+=6) {
+      int x = cx + cos(spiral_angle + r*0.1) * r;
+      int y = cy + sin(spiral_angle + r*0.1) * r;
+      uint16_t c = tft->color565((r*3) % 255, (r*5) % 255, (255-r*2) % 255);
+      tft->drawCircle(x, y, 5, c);
+    }
+
+    spiral_angle += 0.1;
+    if(spiral_angle > 2.0) {
+      tft->clearMainCanvas();
+      spiral_angle = 0;
+    }
+    vTaskDelay(pdMS_TO_TICKS(30));
+  }
+  tp->taskInfo[TASK_DRAW].state = STATE_INIT;
+  // terminate task
+  vTaskDelete(NULL);
+}
+
+// --------------------------------------------------
+// Bouncing Balls
+void drawBalls(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
+  MyTFT *tft = MyTFT::getInstance();
+
+  #define BALLS 6
+  struct Ball {
+    int x, y;
+    int dx, dy;
+    uint16_t color;
+  };
+  Ball balls[BALLS];
+
+  uint16_t W=tft->getMainCanvasWidth()-4;
+  uint16_t H=tft->getMainCanvasHeight()-4;
+
+  // Bälle initialisieren
+  for (int i=0; i<BALLS; i++) {
+    balls[i].x = random(20, W-20);
+    balls[i].y = random(20, H-20);
+    balls[i].dx = random(2,5) * (random(2)?1:-1);
+    balls[i].dy = random(2,5) * (random(2)?1:-1);
+    balls[i].color = tft->color565(random(255), random(255), random(255));
+  }
+
+  tft->clearMainCanvas();
+
+  while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
+    for (int i=0; i<BALLS; i++) {
+      balls[i].x += balls[i].dx;
+      balls[i].y += balls[i].dy;
+
+      if (balls[i].x < 10 || balls[i].x > W-10) balls[i].dx *= -1;
+      if (balls[i].y < 10 || balls[i].y > H-10) balls[i].dy *= -1;
+
+      tft->fillCircle(balls[i].x, balls[i].y, 10, balls[i].color);
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(20));
+  }
+  tp->taskInfo[TASK_DRAW].state = STATE_INIT;
+  // terminate task
+  vTaskDelete(NULL);
+}
+
+
+
+#define MAX_ITER 100
+#define BAILOUT 16.0
+
+// Optimierte Farbberechnung
+uint16_t getColor(int iterations) {
+  if (iterations == MAX_ITER) return TFT_BLACK;
+  MyTFT *tft = MyTFT::getInstance();
+  uint8_t r = (iterations * 9) % 255;
+  uint8_t g = (iterations * 7) % 255;
+  uint8_t b = (iterations * 11) % 255;
+  
+  return tft->color565(r, g, b);
+}
+
+
+void drawTree(void *p) {
+  s_taskParams *tp = (s_taskParams*)p;
+  MyTFT *tft = MyTFT::getInstance();
+
+  // Baum zeichnen: Start unten mittig
+  int W = tft->getMainCanvasWidth();
+  int H = tft->getMainCanvasHeight();
+  uint16_t c;
+  uint8_t r = 7;
+  uint8_t g = 5;
+  uint8_t b = 13;
+  
+  double xmin = -2.0;
+  double xmax = 1.0;
+  double ymin = -1.2;
+  double ymax = 1.2;
+    
+  double dx = (xmax - xmin) / W;
+  double dy = (ymax - ymin) / H;
+
+  while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
+    tft->clearMainCanvas();
+
+    for (int py = 0; py < H; py++) {
+      double y0 = ymin + py * dy;
+      
+      for (int px = 0; px < W; px++) {
+        double x0 = xmin + px * dx;
+        
+        double x = 0.0;
+        double y = 0.0;
+        int iter = 0;
+        
+        while (iter < MAX_ITER && (x*x + y*y) < BAILOUT) {
+          double xtemp = x*x - y*y + x0;
+          y = 2*x*y + y0;
+          x = xtemp;
+          iter++;
+        }
+        
+        if (iter == MAX_ITER) 
+          c = TFT_BLACK;
+        else {
+          c = tft->color565((iter * r) % 255, (iter * g) % 255, (iter * b) % 255);
+        }
+        tft->drawPixel(px, py, c);
+      }
+      if(taskParams.taskInfo[TASK_DRAW].state == STATE_PROCESSED)
+        break;
+      vTaskDelay(pdMS_TO_TICKS(1));
+      if (py % 40 == 0) {
+        Serial.print((py * 100) / H);
+        Serial.println("% fertig");
+      }
+    }
+    
+    Serial.println("Mandelbrot-Baum komplett!");
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    r+=2;
+    g+=3;
+    b-=2;
+  }
+  tp->taskInfo[TASK_DRAW].state = STATE_INIT;
+  // terminate task
+  vTaskDelete(NULL);
 }
 
 
