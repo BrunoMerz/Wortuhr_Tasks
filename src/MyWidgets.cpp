@@ -21,7 +21,7 @@
 
 extern s_taskParams taskParams;
 extern void drawBalls(void *p);
-extern void drawPlasma(void *p);
+extern void drawStars(void *p);
 extern void drawSpiral(void *p);
 extern void drawTree(void *p);
 
@@ -60,6 +60,7 @@ void MyWidgets::init(void) {
 
 void MyWidgets::drawWidget(WidgetMode mode) {
   DEBUG_PRINTF("drawWidget mode=%d\n",mode);
+  //mode = WIDGET_DIAGRAM;
   switch(mode) {
     case WIDGET_TIME:
       drawTime();
@@ -73,13 +74,16 @@ void MyWidgets::drawWidget(WidgetMode mode) {
     case WIDGET_EXT_TEMP:
       drawExtTempHumidity();
       break;
+    case WIDGET_DIAGRAM:
+      drawDiagram();
+      break;
     case WIDGET_DRAW_BALLS:
       taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
       xTaskCreatePinnedToCore(drawBalls, "drawTaskBalls", 2048, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
       break;
-    case WIDGET_DRAW_PLASMA:
+    case WIDGET_DRAW_STARS:
       taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
-      xTaskCreatePinnedToCore(drawPlasma, "drawTaskPlasma", 2048, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
+      xTaskCreatePinnedToCore(drawStars, "drawTaskStars", 4096, &taskParams, 1, &taskParams.taskInfo[TASK_DRAW].taskHandle, 0);
       break;
     case WIDGET_DRAW_SPIRAL:
       taskParams.taskInfo[TASK_DRAW].state = STATE_PROCESSING;
@@ -128,6 +132,7 @@ void MyWidgets::drawWeather(void) {
   DEBUG_PRINTLN("drawWeather start");
   tft->clearMainCanvas();
   tft->setFreeFont(FS9);
+  tft->setTextColor(TFT_WHITE);
   // sunrise
   tft->ir->renderAndDisplayPNG((char *)("/tft/sunrise.png"), 0, 0, PIC1_X, PIC1_Y);
   
@@ -318,60 +323,128 @@ void MyWidgets::drawInfo(void) {
   tft->setFreeFont(NULL);
 }
 
+void MyWidgets::drawThermometerLevel(int x, int value, int minVal, int maxVal, const char* unit, uint16_t color) {
+  int levelHeight = map(value, minVal, maxVal, 0, tubeHeight - 10);
 
-void MyWidgets::drawDiagram(void) {
-  GraphWidget gr = GraphWidget(tft); // Diagramm-Widget
-  TraceWidget tr = TraceWidget(&gr);     // Graph trace tr with pointer to gr
-  const float gxLow  = 0.0;
-  const float gxHigh = 100.0;
-  const float gyLow  = -512.0;
-  const float gyHigh = 512.0;
-  // Graph area is 200 pixels wide, 150 pixels high, dark grey background
-  gr.createGraph(200, 150, tft->color565(5, 5, 5));
+  // Bereich leeren
+  tft->fillRect(x - tubeWidth / 2 + 2, centerY - tubeHeight / 2 + 2, tubeWidth - 4, tubeHeight - 4, TFT_BLACK);
 
-  // x scale units is from 0 to 100, y scale units is -512 to 512
-  gr.setGraphScale(gxLow, gxHigh, gyLow, gyHigh);
+  // Balken zeichnen
+  tft->fillRect(x - tubeWidth / 2 + 2, centerY + tubeHeight / 2 - levelHeight - 2, tubeWidth - 4, levelHeight, color);
 
-  // X grid starts at 0 with lines every 20 x-scale units
-  // Y grid starts at -512 with lines every 64 y-scale units
-  // blue grid
-  gr.setGraphGrid(gxLow, 20.0, gyLow, 64.0, TFT_BLUE);
+  // Kugel füllen
+  tft->fillCircle(x, centerY + tubeHeight / 2, 16, color);
 
-  // Draw empty graph, top left corner at pixel coordinate 40,10 on TFT
-  gr.drawGraph(40, 10);
-
-  // Start a trace with using red, trace points are in x and y scale units
-  // In this example a horizontal line is drawn
-  tr.startTrace(TFT_RED);
-  // Add a trace point at 0.0,0.0 on graph
-  tr.addPoint(0.0, 0.0);
-  // Add another point at 100.0, 0.0 this will be joined via line to the last point added
-  tr.addPoint(100.0, 0.0);
-
-  // Start a new trace with using white
-  tr.startTrace(TFT_WHITE);
+  // Wert anzeigen
+  tft->setTextColor(TFT_WHITE, TFT_BLACK);
+  tft->setTextDatum(MC_DATUM);
+  tft->drawString(String(value) + unit, x, centerY, 2);
 }
 
+// Einfaches Thermometer-Icon
+void MyWidgets::drawThermometerIcon(int x, int y) {
+  tft->drawRoundRect(x - 6, y - 12, 12, 30, 6, TFT_RED);    // Tube
+  tft->fillCircle(x, y + 20, 6, TFT_RED);                   // Kugel
+  tft->fillCircle(x, y + 20, 4, TFT_BLACK);                 // Innen schwarz
+}
+
+// Einfaches Tropfen-Icon (Feuchtigkeit)
+void MyWidgets::drawHumidityIcon(int x, int y) {
+  tft->fillTriangle(x, y, x - 8, y + 12, x + 8, y + 12, TFT_BLUE); // Tropfen unten
+  tft->fillCircle(x, y + 6, 6, TFT_BLUE);                          // Tropfen oben
+}
+
+void MyWidgets::drawThermometerFrame(int x, const char* label, bool isTemperature) {
+  tubeHeight = 130;
+  tubeWidth = 20;
+  centerY = tft->getMainCanvasHeight()/2;
+  // Rahmen und Kugel
+  tft->drawRoundRect(x - tubeWidth / 2, centerY - tubeHeight / 2, tubeWidth, tubeHeight, 10, TFT_WHITE);
+  tft->fillCircle(x, centerY + tubeHeight / 2, 20, TFT_WHITE);
+  tft->fillCircle(x, centerY + tubeHeight / 2, 18, TFT_BLACK);
+
+  // Textlabel
+  tft->setTextColor(TFT_WHITE, TFT_BLACK);
+  tft->setTextDatum(TC_DATUM);
+  tft->drawString(label, x, centerY - tubeHeight / 2 - 20, 2);
+
+  // Icon darüber zeichnen
+  //if (isTemperature) {
+  //  drawThermometerIcon(x, centerY - tubeHeight / 2 - 35);
+  //} else {
+  //  drawHumidityIcon(x, centerY - tubeHeight / 2 - 35);
+  //}
+}
+
+void MyWidgets::drawDiagram(void) {
+  // Anzeige-Positionen
+  int centerX_temp = tft->getMainCanvasWidth()/3;
+  int centerX_hum = centerX_temp*2;
+  centerX_temp -= 20;
+  centerX_hum += 20;
+  tft->clearMainCanvas();
+  //tft->setFreeFont(FSS24);
+  drawThermometerFrame(centerX_temp, "Temperatur°", true);
+  drawThermometerFrame(centerX_hum, "Luftfeuchtigkeit", false);
+  // Anzeigen aktualisieren
+  drawThermometerLevel(centerX_temp, ow->temperature, 0, 35, "°C", TFT_RED);
+  drawThermometerLevel(centerX_hum, ow->humidity, 10, 100, "%", TFT_BLUE);
+  tft->setFreeFont(NULL);
+}
+
+
 // --------------------------------------------------
-// Plasma-Effekt
-void drawPlasma(void *p) {
+// Stars
+
+#define NUM_STARS 100
+struct Star {
+  float x, y, z;
+};
+
+void resetStar(int i, Star stars[], int16_t W, int16_t H) {
+  stars[i].x = random(-W, W);
+  stars[i].y = random(-H, H);
+  stars[i].z = random(50, W);  // Abstand, nicht null!
+}
+
+
+void drawStars(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
   MyTFT *tft = MyTFT::getInstance();
-  uint16_t W=tft->getMainCanvasWidth();
-  uint16_t H=tft->getMainCanvasHeight();
-  int plasma_t = 0;
+
+  int16_t W=tft->getMainCanvasWidth()-3;
+  int16_t H=tft->getMainCanvasHeight()-3;
+
+  Star stars[NUM_STARS];
+
+  for (int i = 0; i < NUM_STARS; i++) {
+    resetStar(i, stars, W, H);
+  }
 
   while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
-    for (int y = 0; y < H; y++) {
-      for (int x = 0; x < W; x++) {
-        int color = 128 + 127 * sin(x/20.0 + plasma_t*0.1) + 
-                    128 + 127 * sin(y/20.0 + plasma_t*0.13);
-        uint16_t c = tft->color565(color % 255, (color*2) % 255, (255-color) % 255);
-        tft->drawPixel(x, y, c);
+    tft->clearMainCanvas();
+
+    for (int i = 0; i < NUM_STARS; i++) {
+      float k = 128.0 / stars[i].z;
+      int x = W/2 + stars[i].x * k;
+      int y = H/2 + stars[i].y * k;
+
+      if (x >= 0 && x < W && y >= 0 && y < H) {
+        // Helligkeit abhängig von "z"
+        uint8_t brightness = map(stars[i].z, 0, W, 255, 50);
+        uint16_t color = tft->color565(random(255), random(255), random(255));
+        tft->fillCircle(x, y, 3, color);
+        vTaskDelay(pdMS_TO_TICKS(0));
+      }
+
+      // Bewegung in Z-Richtung (auf den Betrachter zu)
+      stars[i].z -= 2;
+
+      if (stars[i].z <= 1) {
+        resetStar(i, stars, W, H);
       }
     }
-    plasma_t++;
-    vTaskDelay(pdMS_TO_TICKS(30));
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
   tp->taskInfo[TASK_DRAW].state = STATE_INIT;
   // terminate task
@@ -390,19 +463,26 @@ void drawSpiral(void *p) {
   float spiral_angle = 0;
   tft->clearMainCanvas();
 
+  uint16_t co=3;
   while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
-    
+    int x,y;
     for (int r = 10; r < min(cx,cy); r+=6) {
-      int x = cx + cos(spiral_angle + r*0.1) * r;
-      int y = cy + sin(spiral_angle + r*0.1) * r;
-      uint16_t c = tft->color565((r*3) % 255, (r*5) % 255, (255-r*2) % 255);
+      if(co%2) {
+        x = cx + cos(spiral_angle + r*0.1) * r;
+        y = cy + sin(spiral_angle + r*0.1) * r;
+      } else {
+        x = cx + sin(spiral_angle + r*0.1) * r;
+        y = cy + cos(spiral_angle + r*0.1) * r;
+      }
+      uint16_t c = tft->color565((r*co) % 255, (r*(co+2)) % 255, (255-r*(co-1)) % 255);
       tft->drawCircle(x, y, 5, c);
     }
 
     spiral_angle += 0.1;
-    if(spiral_angle > 2.0) {
+    if(spiral_angle > 8.0) {
       tft->clearMainCanvas();
       spiral_angle = 0;
+      co++;
     }
     vTaskDelay(pdMS_TO_TICKS(30));
   }
@@ -425,32 +505,31 @@ void drawBalls(void *p) {
   };
   Ball balls[BALLS];
 
-  uint16_t W=tft->getMainCanvasWidth()-4;
-  uint16_t H=tft->getMainCanvasHeight()-4;
-
-  // Bälle initialisieren
-  for (int i=0; i<BALLS; i++) {
-    balls[i].x = random(20, W-20);
-    balls[i].y = random(20, H-20);
-    balls[i].dx = random(2,5) * (random(2)?1:-1);
-    balls[i].dy = random(2,5) * (random(2)?1:-1);
-    balls[i].color = tft->color565(random(255), random(255), random(255));
-  }
-
-  tft->clearMainCanvas();
+  uint16_t W=tft->getMainCanvasWidth()-6;
+  uint16_t H=tft->getMainCanvasHeight()-6;
 
   while(tp->taskInfo[TASK_DRAW].state == STATE_PROCESSING) {
+    // Bälle initialisieren
     for (int i=0; i<BALLS; i++) {
-      balls[i].x += balls[i].dx;
-      balls[i].y += balls[i].dy;
-
-      if (balls[i].x < 10 || balls[i].x > W-10) balls[i].dx *= -1;
-      if (balls[i].y < 10 || balls[i].y > H-10) balls[i].dy *= -1;
-
-      tft->fillCircle(balls[i].x, balls[i].y, 10, balls[i].color);
+      balls[i].x = random(20, W-20);
+      balls[i].y = random(20, H-20);
+      balls[i].dx = random(2,5) * (random(2)?1:-1);
+      balls[i].dy = random(2,5) * (random(2)?1:-1);
+      balls[i].color = tft->color565(random(255), random(255), random(255));
     }
+    tft->clearMainCanvas();
+    for(int l=0; l<400; l++) {
+      for (int i=0; i<BALLS; i++) {
+        balls[i].x += balls[i].dx;
+        balls[i].y += balls[i].dy;
 
-    vTaskDelay(pdMS_TO_TICKS(20));
+        if (balls[i].x < 10 || balls[i].x > W-10) balls[i].dx *= -1;
+        if (balls[i].y < 10 || balls[i].y > H-10) balls[i].dy *= -1;
+
+        tft->fillCircle(balls[i].x, balls[i].y, 5, balls[i].color);
+      }
+      vTaskDelay(pdMS_TO_TICKS(20));
+    }
   }
   tp->taskInfo[TASK_DRAW].state = STATE_INIT;
   // terminate task
@@ -524,13 +603,8 @@ void drawTree(void *p) {
       if(taskParams.taskInfo[TASK_DRAW].state == STATE_PROCESSED)
         break;
       vTaskDelay(pdMS_TO_TICKS(1));
-      if (py % 40 == 0) {
-        Serial.print((py * 100) / H);
-        Serial.println("% fertig");
-      }
     }
-    
-    Serial.println("Mandelbrot-Baum komplett!");
+
     vTaskDelay(pdMS_TO_TICKS(3000));
     r+=2;
     g+=3;

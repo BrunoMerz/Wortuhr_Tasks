@@ -40,7 +40,7 @@ void MyTouch::init(void) {
 
     mt.setCal(180, 1841, 135, 1788, 240, 320); // Raw xmin, xmax, ymin, ymax, width, height
     //mt.setCal(285, 1788, 311, 1877, 240, 320);
-    Serial.println("Use default calibration data");
+    DEBUG_PRINTLN("Use default calibration data");
 
     mt.setRotation(3);    
 }

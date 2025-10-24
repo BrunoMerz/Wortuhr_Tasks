@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+<title>Spiele</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="192x192"  href="/web/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/web/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/web/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/web/favicon-16x16.png">
+<link rel="stylesheet" href="/web/main.css" >
+</head>
+<body>
+<h1>Spiele</h1>
+<br>
+<br>
+<button id="g1" title="Snake" onclick="window.location.href='/StartGame?game=1'">Snake</button>
+<br>
+<button id="g2" title="Tetris" onclick="window.location.href='/StartGame?game=2'">Tetris</button>
+<br>
+<button id="g3" title="Bricks" onclick="window.location.href='/StartGame?game=3'">Bricks</button>
+<br>
+<button id="g4" title="4 gewinnt" onclick="window.location.href='/StartGame?game=4'">4 gewinnt</button>
+<br>
+<button id="g5" title="Tier Memory" onclick="window.location.href='/StartGame?game=5'">Tier Memory</button>
+<br>
+<button id="g6" title="Musik Memory" onclick="window.location.href='/StartGame?game=6'">Musik Memory</button>
+<br>
+<button id="g7" title="ABBA Memory" onclick="window.location.href='/StartGame?game=7'">ABBA Memory</button>
+
+<br><br>
+
+<script>
+	document.addEventListener("DOMContentLoaded", () => {
+	  fetch("/gameButtons")
+		.then(response => response.json())
+		.then(data => {
+		  for (const id in data) {
+			const btn = document.getElementById(id);
+			if (btn) btn.hidden = !data[id];
+		  }
+		})
+		.catch(err => console.error("Fehler beim Laden der Buttons:", err));
+});
+</script
+
+</body>
+</html>

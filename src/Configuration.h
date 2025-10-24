@@ -250,7 +250,7 @@ typedef enum eFrontcover : uint16_t
 // ARDUINO_D1_MINI32 / WeMos Anschlüsse:
 //******************************************************************************
 
-#define ANALOG_PIN      (ADC1_CHANNEL_6)
+#define ANALOG_PIN       A0
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
@@ -259,8 +259,7 @@ typedef enum eFrontcover : uint16_t
 #define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
 #define PIN_LEDS_DATA    D4     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_SECONDS_DATA D3     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          ADC1_CHANNEL_6     // A0      A0,LDR             ADC
-#define WIDTH_LDR        ADC_WIDTH_BIT_12
+#define PIN_LDR          ANALOG_PIN
 #define WIFI_RESET      (05)
 #endif
 
@@ -270,7 +269,7 @@ typedef enum eFrontcover : uint16_t
 //******************************************************************************
 
 //
-#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
+#define ANALOG_PIN       A1      // A1
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
@@ -281,8 +280,7 @@ typedef enum eFrontcover : uint16_t
 #if defined(WITH_SECOND_HAND)
 #define PIN_SECONDS_DATA 17     //
 #endif
-#define PIN_LDR          ADC1_CHANNEL_1     // ADC1_1
-#define WIDTH_LDR        ADC_WIDTH_BIT_13
+#define PIN_LDR          ANALOG_PIN
 #define WIFI_RESET       (14)
 #endif
 
@@ -291,7 +289,7 @@ typedef enum eFrontcover : uint16_t
 // ARDUINO_LOLIN_S3_MINI / WeMos Anschlüsse:
 //******************************************************************************
 
-#define ANALOG_PIN       ADC1_CHANNEL_1     // ADC1_0
+#define ANALOG_PIN       A2
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
@@ -300,8 +298,7 @@ typedef enum eFrontcover : uint16_t
 #define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
 #define PIN_LEDS_DATA    16     //
 #define PIN_SECONDS_DATA 18     //
-#define PIN_LDR          ADC1_CHANNEL_1     // ADC1_0
-#define WIDTH_LDR        ADC_WIDTH_BIT_12
+#define PIN_LDR          ANALOG_PIN
 #define WIFI_RESET       (14)
 #endif
 
@@ -310,7 +307,7 @@ typedef enum eFrontcover : uint16_t
 // LILYGO_T_HMI / WeMos Anschlüsse:
 //******************************************************************************
 
-#define ANALOG_PIN       ADC1_CHANNEL_4     // GPIO 15
+#define ANALOG_PIN         15    // GPIO 15
 //#define PIN_WIRE_SCL     15    // D1,SCL  D1,SCL             SCL
 //#define PIN_WIRE_SDA     16    // D2,SDA  D2,SDA             SDA
 #define PIN_LED          LED_BUILTIN     // D4      D4,LED Data        LED_BUILTIN
@@ -319,8 +316,7 @@ typedef enum eFrontcover : uint16_t
 //#define PIN_AUDIO_BUSY   11     // IO18 Busy
 #define PIN_LEDS_DATA    18     // D8      D8,Data            (z.B. WS2812B)
 #define PIN_SECONDS_DATA 17     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          ADC1_CHANNEL_4     // GPIO 15
-#define WIDTH_LDR        ADC_WIDTH_BIT_12
+#define PIN_LDR          ANALOG_PIN     // GPIO 15
 #define WIFI_RESET       (16)
 #define PWR_EN_PIN       (10)
 
@@ -347,9 +343,8 @@ typedef enum eFrontcover : uint16_t
 #define PIN_AUDIO_RX     16     // D5      D5,14
 #define PIN_AUDIO_TX     17     // D3      D7,13
 #define PIN_AUDIO_BUSY   18     // D0      D0,16              kein Interrupt!
-#define PIN_LEDS_DATA    44     // D8      D8,Data            (z.B. WS2812B)
+#define PIN_LEDS_DATA    44     // D8      D8,Data            s2(z.B. WS2812B)
 #define PIN_SECONDS_DATA 43     // D8      D8,Data            (z.B. WS2812B)
-#define PIN_LDR          ADC1_CHANNEL_6     // A0      A0,LDR             ADC
-#define WIDTH_LDR        ADC_WIDTH_BIT_12
+#define PIN_LDR          ANALOG_PIN     // A0      A0,LDR             ADC
 #define WIFI_RESET      (05)
 #endif

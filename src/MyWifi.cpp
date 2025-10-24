@@ -8,14 +8,14 @@
 
 #include "ESPAsyncWebServer.h"
 #include <ESPAsyncDNSServer.h>
-#include <ElegantOTA.h>
+#include <MzOTA.h>
 
 
 #include "MyWifi.h"
 #include "Configuration.h"
 //#include "esp_task_wdt.h"
 
-#define myDEBUG
+//#define myDEBUG
 #include "MyDebug.h"
 
 

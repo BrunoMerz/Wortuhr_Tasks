@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+<title>Message</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" sizes="32x32" href="/web/favicon-32x32.png">
+<link rel="stylesheet" href="/web/events.css" >
+<style>body{background-color:#aaaaaa;text-align:left;color:#333333;font-family:Sans-serif;font-size:16px;}
+button{background-color:#1FA3EC;text-align:center;color:#FFFFFF;width:200px;padding:5px;border:2px solid #FFFFFF;font-size:14px;border-radius:15px;cursor: pointer;}
+span {color: Black;}
+h1,h2 {color: #FFFFFF;text-shadow: 2px 2px 2px Black;
+}
+</style>
+</head>
+<body>
+<h2>Message</h2>
+<hr>
+<br>
+<form action="/showText" method="get" >
+  <label for="text">Texte:</label>
+  <input type="text" size="78" id="text" name="text">
+  <br><br><br>
+    <label>Couleur:&nbsp;
+      <input type="color" name="color" value="#ffffff" size="1">
+   </label>
+   <br><br><br>Tonalité de pré-annonce:<br><br>
+   <label>
+    <input type="radio" id="1" name="buzzer" value="1" >
+    <label for="1"> 1 fois</label> 
+    <input type="radio" id="2" name="buzzer" value="2">
+    <label for="2"> 2 fois</label>
+    <input type="radio" id="3" name="buzzer" value="3" checked>
+    <label for="3"> 3 fois</label> 
+	<br>
+	<br>
+	<input type="radio" id="4" name="buzzer" value="4">
+    <label for="4"> 4 fois</label> 
+    <input type="radio" id="5" name="buzzer" value="5">
+    <label for="5"> 5 fois</label> 
+	<input type="radio" id="6" name="buzzer" value="6">
+    <label for="6"> 6 fois</label> 
+  </label>
+  <br><br>
+  <hr>
+  <button class="buttons black" style="width:200px" type="submit">&#127915; Envoyer du texte</button>
+</form>
+
+
+</body>
+</html>

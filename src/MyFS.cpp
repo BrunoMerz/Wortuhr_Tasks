@@ -20,10 +20,6 @@
 #include "Configuration.h"
 #include "Languages.h"
 
-#if defined(WITH_ALEXA)
-#include "MyAlexa.h"
-static MyAlexa *alexa = MyAlexa::getInstance();
-#endif
 
 void initFS();
 

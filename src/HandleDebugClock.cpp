@@ -11,6 +11,9 @@
 #include "LedDriver_FastLED.h"
 #include "Events.h"
 #include "MyWifi.h"
+#include "taskStructs.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 //#include myDEBUG
 #include "MyDebug.h"
@@ -18,9 +21,10 @@
 #include "ESPAsyncWebServer.h"
 #include <LittleFS.h>
 
-const char compile_date[] = __DATE__ " " __TIME__;
+const char compile_date[] = __DATE__ ":" __TIME__; 
 
 extern float getHeapFragmentation();
+extern s_taskParams taskParams;
 
 static MyTime *mt = MyTime::getInstance();
 static Settings *settings = Settings::getInstance();
@@ -196,10 +200,27 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<li>StackSize: ");
   message += String(glb->stackSize);
   message += F(" bytes</li>\n");
-  message += F("<li>HighWaterMark: ");
-  for(uint8_t t=1; t<TASK_MAX+1; t++) {
-    message += String(t) +"=" + String(glb->highWaterMark[t]) + ", ";
+  message += F("<li>Memory:<br>");
+  
+  for(uint8_t t=1; t<TASK_MAX; t++) {
+    message += taskParams.taskInfo[t].name;
+    message += ": ";
+    //message += "<br>";
+    uint32_t ss = taskParams.taskInfo[t].stackSize;
+    message += "&nbsp;&nbsp;stackSize: ";
+    message += ss;
+    message += ",";
+    UBaseType_t hwm = uxTaskGetStackHighWaterMark(taskParams.taskInfo[t].taskHandle);
+    message += "&nbsp;&nbsp;highWaterMark: ";
+    message += hwm;
+    message += ",  ";
+    float percent = ((float) (ss - hwm) / ss) * 100;
+    //message += "&nbsp;&nbsp;percent: ";
+    message += percent;
+    message += " %<br>";
   }
+   
+  message += F("</li>\n");
   message += F("<li>HeapFragmentation: ");
   message += str_heapfragmentation;
   message += F(" %</li>\n");

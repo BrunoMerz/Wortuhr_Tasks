@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <driver/adc.h>
 #include "Configuration.h"
 #include "Settings.h"
 #include "Renderer.h"
@@ -12,11 +11,16 @@
 #include "OpenWeather.h"
 #include "Animation.h"
 #include "Global.h"
-#include "ElegantOTA.h"
+#include "MzOTA.h"
 #include "TaskStructs.h"
 #include "DisplayModes.h"
 #include "Events.h"
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
 
+#if defined(WITH_ALEXA)
+  #include "MyAlexa.h"
+#endif
 
 #ifdef WITH_SECOND_BELL
 #include "SecondBell.h"
@@ -31,7 +35,34 @@
 //#define myDEBUG
 #include "MyDebug.h"
 
-s_taskParams taskParams;
+s_taskParams taskParams = {
+    .feedPosition = 0,
+    .feedBuzzer = 0,
+    .feedColor = 0x000000,
+    .updateScreen = false,
+    .endless_loop = false,
+    .feedText = "",
+    .animation = "",
+    .taskInfo = {
+        [TASK_STARTUP]     = {NULL, 4096, true, STATE_INIT, "Startup"},
+        [TASK_SCHEDULER]   = {NULL, 4096, true, STATE_INIT, "queueScheduler"},
+        [TASK_TIME]        = {NULL, 3072, true, STATE_INIT, "DisplayTime"},
+        [TASK_MODES]       = {NULL, 6144, true, STATE_INIT, "ModesQueueHandler"},
+        [TASK_TEXT]        = {NULL, 2048, true, STATE_INIT, "showTextHandler"},
+        [TASK_ANIMATION]   = {NULL, 5120, true, STATE_INIT, "animationQueueHandler"},
+        [TASK_EVENT]       = {NULL, 5120, true, STATE_INIT, "eventQueueHandler"},
+#if defined(WITH_SECOND_BELL)
+        [TASK_SECOND_BELL] = {NULL, 2048, true, STATE_INIT, "DisplaySecondBell"},
+#endif
+#if defined(WITH_SECOND_HAND)
+        [TASK_SECOND_HAND] = {NULL, 2048, true, STATE_INIT, "displaySecondHand"},
+#endif
+#if defined(LILYGO_T_HMI)
+        [TASK_T_HMI]       = {NULL, 4096, true, STATE_INIT, "hmiHandler"},
+        [TASK_DRAW]        = {NULL, 4096, true, STATE_INIT, "drawTask"},
+#endif
+    }
+};
 
 unsigned long ota_progress_millis = 0;
 
@@ -126,6 +157,11 @@ void queueScheduler(void *p) {
   OpenWeather *ow       = OpenWeather::getInstance();
   LedDriver *ledDriver  = LedDriver::getInstance();
   Events *evt            = Events::getInstance();
+
+#if defined(WITH_ALEXA)
+  MyAlexa *alexa = MyAlexa::getInstance();
+  alexa->init(settings->mySettings.systemname, &ledDriver->mode, myWifi->getServer());
+#endif
 
   int lastHour=0;
   int lastMinute=0;
@@ -262,7 +298,11 @@ void queueScheduler(void *p) {
       }
     }
 
-    ElegantOTA.loop();
+    MzOTA.loop();
+
+#if defined(WITH_ALEXA)
+    alexa->handle();
+#endif
     vTaskDelay(pdMS_TO_TICKS(500)); // 500 ms warten
   }
 }
@@ -600,6 +640,8 @@ void t_hmiHandler(void *) {
   btns->newButton("info", BTN_INFO, 102, btn_action);
   btns->newButton("off", BTN_OFF, 153, btn_action);
 
+  uint16_t secWidth = tft->getMainCanvasWidth()/59;
+
   vTaskDelay(pdMS_TO_TICKS(5000));
   while(true) {
 
@@ -624,11 +666,17 @@ void t_hmiHandler(void *) {
     if(aktSecond != lastSecond) {
       if(aktMode==WIDGET_TIME)
         widgets->drawClockHands(aktSecond, aktMinute, aktHour);
-        int x_pos = tft->getMainCanvasWidth()/59*aktSecond;
-      tft->fillRect(0, tft->getMainCanvasHeight()+2, x_pos, tft->fontHeight(STD_FONT), TFT_YELLOW);
+      int16_t w = secWidth*aktSecond;
+      if(aktSecond < 10)
+        tft->fillRect(0, tft->getMainCanvasHeight()+2, w, tft->fontHeight(STD_FONT), TFT_YELLOW);
+      else {
+        tft->fillRect(w, tft->getMainCanvasHeight()+2, secWidth, tft->fontHeight(STD_FONT), TFT_YELLOW);
+        tft->fillRect(secWidth*(aktSecond-1)/2, tft->getMainCanvasHeight()+2, 40, tft->fontHeight(STD_FONT), TFT_YELLOW);
+      }
       tft->setTextColor(TFT_BLACK);
+      tft->setTextDatum(TL_DATUM);
       tft->setTextFont(2);
-      tft->drawNumber(aktSecond, x_pos/2, tft->getMainCanvasHeight()+2);
+      tft->drawNumber(aktSecond, w/2, tft->getMainCanvasHeight()+2);
       lastSecond = aktSecond;
     }
 
@@ -812,15 +860,11 @@ void startup(void *) {
   tft->init();
 #endif
 
-DEBUG_PRINTLN("startup called");
+  DEBUG_PRINTLN("startup called");
   DEBUG_PRINTF("startup: Core=%d\n", xPortGetCoreID());
   settings->init();
 
   ledDriver->setBrightness(settings->mySettings.brightness);
-
-  //mz LDR Setup
-  adc1_config_width(WIDTH_LDR);
-  adc1_config_channel_atten(PIN_LDR, ADC_ATTEN_DB_12);  // GPIO1 (A0)
 
 #ifdef LDR
   // Set brightness from LDR
@@ -861,13 +905,13 @@ DEBUG_PRINTLN("startup called");
 #endif
     webHandler->webRequests();
 
-    // ElegantOTA
-    ElegantOTA.begin(myWifi->getServer());
+    // MzOTA
+    MzOTA.begin(myWifi->getServer());
 
-    // ElegantOTA callbacks
-    ElegantOTA.onStart(onOTAStart);
-    ElegantOTA.onProgress(onOTAProgress);
-    ElegantOTA.onEnd(onOTAEnd);
+    // MzOTA callbacks
+    MzOTA.onStart(onOTAStart);
+    MzOTA.onProgress(onOTAProgress);
+    MzOTA.onEnd(onOTAEnd);
   }
 
   for(uint16_t i=0;i<10;i++)
@@ -876,7 +920,7 @@ DEBUG_PRINTLN("startup called");
   ledDriver->saveMatrix(matrix);
 
   // Define a random time
- //mz randomSeed(adc1_get_raw(ANALOG_PIN));
+  randomSeed(analogRead(ANALOG_PIN));
   glb->randomHour = random(9, 16);
   for (uint8_t i = 0; i <= 20; i++)
   {
@@ -895,13 +939,10 @@ DEBUG_PRINTLN("startup called");
     return;
   }
 
-  for(uint8_t i=0;i<TASK_MAX;i++)
-    taskParams.taskInfo[i].handleEvent=true;
 
-  taskParams.taskInfo[TASK_SCHEDULER].stackSize=4096;
   xTaskCreatePinnedToCore(
     &queueScheduler,   // Function name of the task
-    "queueScheduler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_SCHEDULER].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_SCHEDULER].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -909,10 +950,9 @@ DEBUG_PRINTLN("startup called");
     0
   );
 
-  taskParams.taskInfo[TASK_TIME].stackSize=3072;
   xTaskCreatePinnedToCore(
     &displayTime,   // Function name of the task
-    "DisplayTime",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_TIME].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_TIME].stackSize,           // Stack size (bytes)
     &taskParams,    // Parameter to pass
     1,              // Task priority
@@ -921,10 +961,9 @@ DEBUG_PRINTLN("startup called");
   );
 
 #ifdef WITH_SECOND_BELL
-  taskParams.taskInfo[TASK_SECOND_BELL].stackSize=2048;
   xTaskCreatePinnedToCore(
     &displaySecondBell,   // Function name of the task
-    "DisplaySecondBell",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_SECOND_BELL].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_SECOND_BELL].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -934,10 +973,9 @@ DEBUG_PRINTLN("startup called");
 #endif
 
 #ifdef WITH_SECOND_HAND
-  taskParams.taskInfo[TASK_SECOND_HAND].stackSize=2048;
   xTaskCreatePinnedToCore(
     &displaySecondHand,   // Function name of the task
-    "displaySecondHand",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_SECOND_HAND].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_SECOND_HAND].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -946,10 +984,9 @@ DEBUG_PRINTLN("startup called");
   );
 #endif
 
-  taskParams.taskInfo[TASK_MODES].stackSize=4096;
   xTaskCreatePinnedToCore(
     &ModesQueueHandler,   // Function name of the task
-    "ModesQueueHandler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_MODES].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_MODES].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -957,10 +994,9 @@ DEBUG_PRINTLN("startup called");
     0
   );
 
-  taskParams.taskInfo[TASK_TEXT].stackSize=2048;
   xTaskCreatePinnedToCore(
     &showTextHandler,   // Function name of the task
-    "showTextHandler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_TEXT].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_TEXT].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -968,10 +1004,9 @@ DEBUG_PRINTLN("startup called");
     0
   );
 
-  taskParams.taskInfo[TASK_ANIMATION].stackSize=3072;
   xTaskCreatePinnedToCore(
     &animationQueueHandler,   // Function name of the task
-    "animationQueueHandler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_ANIMATION].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_ANIMATION].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -979,10 +1014,9 @@ DEBUG_PRINTLN("startup called");
     0
   );
 
-  taskParams.taskInfo[TASK_EVENT].stackSize=4096;
   xTaskCreatePinnedToCore(
     &eventQueueHandler,   // Function name of the task
-    "eventQueueHandler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_EVENT].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_EVENT].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -992,10 +1026,9 @@ DEBUG_PRINTLN("startup called");
 
 
 #if defined(LILYGO_T_HMI)
-  taskParams.taskInfo[TASK_T_HMI].stackSize=4096;
   xTaskCreatePinnedToCore(
     &t_hmiHandler,   // Function name of the task
-    "t_hmiHandler",  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_T_HMI].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_T_HMI].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
     1,          // Task priority
@@ -1004,6 +1037,13 @@ DEBUG_PRINTLN("startup called");
   );
 #endif
 
+  taskParams.feedText = "  " + String(settings->mySettings.systemname) + ":" + myWifi->IP().toString();
+  taskParams.feedPosition = 0;
+  taskParams.feedColor = colorArray[WHITE];
+  taskParams.taskInfo[TASK_TEXT].state = STATE_INIT;
+  xEventGroupSetBits(xEvent, MODE_FEED);
+  while(!(taskParams.taskInfo[TASK_TEXT].state==STATE_PROCESSED))
+    vTaskDelay(pdMS_TO_TICKS(100));
 
   DEBUG_PRINTLN("Task beendet sich selbst...");
   vTaskDelay(pdMS_TO_TICKS(1000));
@@ -1022,17 +1062,26 @@ void setup() {
   Serial.println("\n\nStarting....");
   Serial.flush();
 
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+/*
+  if(esp_reset_reason() != ESP_RST_PANIC) {
+    Serial.println("erzeuge Panic nach 5 Sekunden");
+    Serial.flush();
+    delay(5000);
+    *((int *)0) = 42;
+  }
+*/
   //--------------------------------------------------
   initFS();
   //--------------------------------------------------
   
   xTaskCreatePinnedToCore(
       &startup,   // Function name of the task
-      "Startup",  // Name of the task (e.g. for debugging)
-      4096,       // Stack size (bytes)
+      taskParams.taskInfo[TASK_STARTUP].name,  // Name of the task (e.g. for debugging)
+      taskParams.taskInfo[TASK_STARTUP].stackSize,       // Stack size (bytes)
       &taskParams,       // Parameter to pass
       1,          // Task priority
-      NULL,       // Task handle
+      &taskParams.taskInfo[TASK_STARTUP].taskHandle,       // Task handle
       1
   );
 }

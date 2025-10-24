@@ -7,12 +7,16 @@ typedef enum eTask : uint8_t
     TASK_STARTUP=0,     // 0
     TASK_SCHEDULER,     // 1
     TASK_TIME,          // 2
-    TASK_SECOND_BELL,   // 3
-    TASK_SECOND_HAND,   // 4
-    TASK_MODES,         // 5
-    TASK_TEXT,          // 6
-    TASK_ANIMATION,     // 7
-    TASK_EVENT,         // 8
+    TASK_MODES,         // 3
+    TASK_TEXT,          // 4
+    TASK_ANIMATION,     // 5
+    TASK_EVENT,         // 6
+#if defined(WITH_SECOND_BELL)
+    TASK_SECOND_BELL,   // 7
+#endif
+#if defined(WITH_SECOND_HAND)
+    TASK_SECOND_HAND,   // 8
+#endif
 #if defined(LILYGO_T_HMI)
     TASK_T_HMI,
     TASK_DRAW,
@@ -34,6 +38,7 @@ typedef struct {
     uint32_t     stackSize;
     bool         handleEvent;
     eState       state;
+    char         name[24];
 } s_taskInfo;
 
 
@@ -42,9 +47,9 @@ typedef struct {
     uint8_t feedBuzzer;
     uint32_t feedColor;
     bool updateScreen;
+    bool endless_loop;
     String feedText;
     String animation;
-    bool endless_loop;
     s_taskInfo taskInfo[TASK_MAX];
 } s_taskParams;
   

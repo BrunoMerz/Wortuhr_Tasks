@@ -23,7 +23,8 @@ Global *Global::getInstance() {
 }
 
 Global::Global() {
-
+  for(uint16_t i=0; i<TASK_MAX+1;i++)
+    highWaterMark[i]=0;
 }
 
 void Global::setHighWaterMark(uint8_t t) {

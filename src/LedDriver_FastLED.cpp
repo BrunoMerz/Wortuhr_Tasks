@@ -16,6 +16,7 @@
 #include "MyDebug.h"
 
 extern s_taskParams taskParams;
+SemaphoreHandle_t xLEDMutex;
 
 #ifdef LED_LAYOUT_HORIZONTAL_1
     const uint8_t ledMap[] PROGMEM = {
@@ -161,6 +162,9 @@ LedDriver::LedDriver()
     lastLdrValue=0;
     mode = MODE_TIME;
     lastMode = MODE_TIME;
+    xLEDMutex = xSemaphoreCreateBinary();
+    xSemaphoreGive(xLEDMutex);  // Anfangszustand: freigegeben
+    FastLED.setMaxPowerInVoltsAndMilliamps(5, 2000);  // 5V, max. 2000 mA
 }
 
 uint16_t LedDriver::getDegree(uint16_t sec) {
@@ -232,7 +236,10 @@ void LedDriver::clear()
 void LedDriver::show()
 {
   if(mode != MODE_BLANK) {
-    FastLED.show();
+    if(xSemaphoreTake(xLEDMutex, portMAX_DELAY) == pdTRUE) {
+      FastLED.show();
+      xSemaphoreGive(xLEDMutex);
+    }
   }
 }
 
@@ -1249,9 +1256,9 @@ uint8_t LedDriver::getBrightness(void)
 void LedDriver::setBrightnessFromLdr(void)
 {
 #ifdef LDR_IS_INVERSE
-  ldrValue = 1024 - adc1_get_raw(ADC1_CHANNEL_1);
+  ldrValue = 1024 - analogRead(PIN_LDR);
 #else
-  ldrValue = adc1_get_raw(PIN_LDR);
+  ldrValue = analogRead(PIN_LDR);
 #endif
   if (ldrValue < minLdrValue)
     minLdrValue = ldrValue;

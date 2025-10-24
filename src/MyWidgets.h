@@ -88,6 +88,15 @@ class MyWidgets {
 
   private:
     MyWidgets(void);
+    void drawThermometerLevel(int x, int value, int minVal, int maxVal, const char* unit, uint16_t color);
+
+    void drawThermometerFrame(int x, const char* label, bool isTemperature);
+    void drawHumidityIcon(int x, int y);
+    void drawThermometerIcon(int x, int y);
+
+    int tubeHeight;
+    int tubeWidth;
+    int centerY;
     static MyWidgets *instance;
     MyTFT *tft;
     MyTime *mt;

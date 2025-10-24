@@ -22,6 +22,11 @@
 //#define myDEBUG
 #include "MyDebug.h"
 
+#if defined(WITH_ALEXA)
+#include "MyAlexa.h"
+static MyAlexa *alexa = MyAlexa::getInstance();
+#endif
+
 extern s_taskParams taskParams;
 extern EventGroupHandle_t xEvent;
 
@@ -304,6 +309,49 @@ void WebHandler::webRequests()
     game->handleGameControl(request);
   });
 
+  
+  webServer->on("/gameButtons", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String msg="{";
+  #if defined(WITH_SNAKE)
+    msg += "\"g1\": true,";
+  #else
+    msg += "\"g1\": false,";
+  #endif
+  #if defined(WITH_TETRIS)
+    msg += "\"g2\": true,";
+  #else
+    msg += "\"g2\": false,";
+  #endif
+  #if defined(WITH_BRICKS)
+    msg += "\"g3\": true,";
+  #else
+    msg += "\"g3\": false,";
+  #endif
+    #if defined(WITH_4GEWINNT)
+    msg += "\"g4\": true,";
+  #else
+    msg += "\"g4\": false,";
+  #endif
+    #if defined(WITH_TIER)
+    msg += "\"g5\": true,";
+  #else
+    msg += "\"g5\": false,";
+  #endif
+    #if defined(WITH_MUSIK)
+    msg += "\"g6\": true,";
+  #else
+    msg += "\"g6\": false,";
+  #endif
+    #if defined(WITH_ABBA)
+    msg += "\"g7\": true";
+  #else
+    msg += "\"g7\": false";
+  #endif
+    msg += "}";
+
+    request->send(200, "application/json", msg);
+  });
+
 
   webServer->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
     request->redirect("/fs");
@@ -330,8 +378,15 @@ void WebHandler::webRequests()
 
 
   webServer->onNotFound([](AsyncWebServerRequest *request) {
+  #if defined(WITH_ALEXA)
+    if (!alexa->espalexa.handleAlexaApiCall(request)) {
+  #endif
     if (!handleFile(request))
       request->send(404, TEXT_PLAIN, F("FileNotFound"));
+  #if defined(WITH_ALEXA)
+    }
+  #endif
+
   });
 
   

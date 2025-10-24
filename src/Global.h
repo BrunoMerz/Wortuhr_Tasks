@@ -19,7 +19,7 @@ class Global {
         void setHighWaterMark(uint8_t t);
         int Modecount = 0;
         uint32_t stackSize;
-        UBaseType_t highWaterMark[TASK_MAX+1]={0,0,0,0,0,0,0,0,0,0};
+        UBaseType_t highWaterMark[TASK_MAX+1];
         uint16_t codeline = 0;
         String codetab;
         uint32_t autoModeChangeTimer;
