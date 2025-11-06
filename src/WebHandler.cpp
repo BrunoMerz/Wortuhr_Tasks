@@ -232,17 +232,17 @@ void WebHandler::webRequests()
 
   // sunrise Image
   webServer->on("/sunrise", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, IMAGE_PNG, p_sunrise, sizeof(p_sunrise));
+    request->send(200, IMAGE_PNG, p_sunrise, sizeof(p_sunrise));
   });
   
   // sunset Image
   webServer->on("/sunset", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, IMAGE_PNG, p_sunset, sizeof(p_sunset));
+    request->send(200, IMAGE_PNG, p_sunset, sizeof(p_sunset));
   });
   
   // sanduhr Image
   webServer->on("/sanduhr", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, IMAGE_PNG, p_hourglass, sizeof(p_hourglass));
+    request->send(200, IMAGE_PNG, p_hourglass, sizeof(p_hourglass));
   });
  
   webServer->on("/handleButtonTime", [](AsyncWebServerRequest *request) {

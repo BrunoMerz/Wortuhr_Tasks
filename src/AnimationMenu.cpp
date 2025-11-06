@@ -78,8 +78,8 @@ void makeAnimationmenue(AsyncWebServerRequest *request)
   {
     message += F("<input class=\"checkbox-tools\" type=\"radio\" name=\"myselect\" id=\"" LANG_NEW "\" ");
     message += checked;
-    message += F(" value=\""LANG_NEW"\">\n");
-    message += F("<label class=\"for-checkbox-tools\" for=\"" LANG_NEW "\">"LANG_NEW"</label>\n");
+    message += F(" value=\"" LANG_NEW "\">\n");
+    message += F("<label class=\"for-checkbox-tools\" for=\"" LANG_NEW "\">" LANG_NEW "</label>\n");
   }
   message += F("</div>"
     "</div>\n"

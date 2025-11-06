@@ -269,7 +269,7 @@ typedef enum eFrontcover : uint16_t
 //******************************************************************************
 
 //
-#define ANALOG_PIN       A1      // A1
+#define ANALOG_PIN       (2)      // A1
 #define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
 #define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
 #define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN

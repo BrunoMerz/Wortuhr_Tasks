@@ -21,8 +21,6 @@
 #include "ESPAsyncWebServer.h"
 #include <LittleFS.h>
 
-const char compile_date[] = __DATE__ ":" __TIME__; 
-
 extern float getHeapFragmentation();
 extern s_taskParams taskParams;
 
@@ -86,9 +84,9 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("<hr>\n");
   
   message += F("<b>&bull;  Firmware: ");
-  message += String(FIRMWARE_VERSION);
+  message += FIRMWARE_VERSION;
   message += " ";
-  message += __DATE__;
+  message += BUILD_DATE;
   message += F("</b>\n");
 #if defined(FRONTCOVER_DE_DE) || defined(FRONTCOVER_DE_SW) || defined(FRONTCOVER_DE_BA) || defined(FRONTCOVER_DE_SA) || defined(FRONTCOVER_D3) || defined(FRONTCOVER_DE_MKF_DE) || defined(FRONTCOVER_DE_MKF_SW) || defined(FRONTCOVER_DE_MKF_BA) || defined(FRONTCOVER_DE_MKF_SA) || defined(FRONTCOVER_CH) || defined(FRONTCOVER_CH_AG) || defined(FRONTCOVER_CH_AL)
   message += F("<a href=\"https://merz-aktuell.de/Wordclock/Doku/WortuhrBeschreibung10.x.pdf\" target=\"_blank\" style=\"font-size:30px;\">&#128214;</a>\n");
@@ -202,7 +200,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += F(" bytes</li>\n");
   message += F("<li>Memory:<br>");
   
-  for(uint8_t t=1; t<TASK_MAX; t++) {
+  for(uint8_t t=0; t<TASK_MAX; t++) {
     message += taskParams.taskInfo[t].name;
     message += ": ";
     //message += "<br>";
@@ -263,7 +261,7 @@ void debugClock(AsyncWebServerRequest *request)
   message += F(" Bytes</li>\n");
 
   message += F("<li>Compiled: ");
-  message += compile_date;
+  message += BUILD_DATE " " BUILD_TIME;
   message += F("</li>\n");
   message += F("</ul>\n</li>\n");
 

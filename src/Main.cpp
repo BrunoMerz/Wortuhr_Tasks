@@ -44,10 +44,10 @@ s_taskParams taskParams = {
     .feedText = "",
     .animation = "",
     .taskInfo = {
-        [TASK_STARTUP]     = {NULL, 4096, true, STATE_INIT, "Startup"},
+        [TASK_STARTUP]     = {NULL, 6144, true, STATE_INIT, "Startup"},
         [TASK_SCHEDULER]   = {NULL, 4096, true, STATE_INIT, "queueScheduler"},
         [TASK_TIME]        = {NULL, 3072, true, STATE_INIT, "DisplayTime"},
-        [TASK_MODES]       = {NULL, 6144, true, STATE_INIT, "ModesQueueHandler"},
+        [TASK_MODES]       = {NULL, 4096, true, STATE_INIT, "ModesQueueHandler"},
         [TASK_TEXT]        = {NULL, 2048, true, STATE_INIT, "showTextHandler"},
         [TASK_ANIMATION]   = {NULL, 5120, true, STATE_INIT, "animationQueueHandler"},
         [TASK_EVENT]       = {NULL, 5120, true, STATE_INIT, "eventQueueHandler"},
@@ -1045,9 +1045,15 @@ void startup(void *) {
   while(!(taskParams.taskInfo[TASK_TEXT].state==STATE_PROCESSED))
     vTaskDelay(pdMS_TO_TICKS(100));
 
-  DEBUG_PRINTLN("Task beendet sich selbst...");
+  /*DEBUG_PRINTLN("Task beendet sich selbst...");
   vTaskDelay(pdMS_TO_TICKS(1000));
   vTaskDelete(NULL); // Löscht die eigene Task
+  */
+  for(;;) {
+    vTaskDelay(pdMS_TO_TICKS(10000)); // Immer aktiv bleiben
+    // Optional: Periodische Health-Checks
+    // Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
+  }
 }
 
 

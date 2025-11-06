@@ -1,41 +1,24 @@
+setlocal enabledelayedexpansion
+
 call espenv.bat ESP32S3
 
 @echo on
 
-set LANG=DE_DE
-set FSFN=%BASEDIR%\bin-tar\wordclock%VERS%.%TYPE%.%FS%.%LANG%.bin
-del %BASEDIR%\data\*.json
-copy %BASEDIR%\data%LANG%\*.html %BASEDIR%\data\web
-copy %BASEDIR%\data%LANG%\*.json %BASEDIR%\data
-%MKSP% --create %BASEDIR%\data -b 4096 -p 256 -s %SPIFFS_SIZE% "%FSFN%"
+set LANGS=EN FR IT ES DE_DE
+for %%L in (%LANGS%) do (
+	echo Bearbeite Sprache %%L
+	set FSFN=.\wordclock%VERS%.%TYPE%.%FS%.%%L.bin
 
-set LANG=EN
-set FSFN=%BASEDIR%\bin-tar\wordclock%VERS%.%TYPE%.%FS%.%LANG%.bin
-del %BASEDIR%\data\*.json
-copy %BASEDIR%\data%LANG%\*.html %BASEDIR%\data\web
-copy %BASEDIR%\data%LANG%\*.json %BASEDIR%\data
-%MKSP% --create %BASEDIR%\data -b 4096 -p 256 -s %SPIFFS_SIZE% "%FSFN%"
+	del /q %BASEDIR%\data\*.*
+	del /q %BASEDIR%\data\web\*.*
+	del /q %BASEDIR%\data\ico\*.*
+	copy %BASEDIR%\data%%L\*.html %BASEDIR%\data\web
+	copy %BASEDIR%\data%%L\*.json %BASEDIR%\data
+	copy %BASEDIR%\dataGLB\*.* %BASEDIR%\data\web
+	copy %BASEDIR%\dataICO\*.* %BASEDIR%\data\ico
 
-set LANG=FR
-set FSFN=%BASEDIR%\bin-tar\wordclock%VERS%.%TYPE%.%FS%.%LANG%.bin
-del %BASEDIR%\data\*.json
-copy %BASEDIR%\data%LANG%\*.html %BASEDIR%\data\web
-copy %BASEDIR%\data%LANG%\*.json %BASEDIR%\data
-%MKSP% --create %BASEDIR%\data -b 4096 -p 256 -s %SPIFFS_SIZE% "%FSFN%"
-
-set LANG=IT
-set FSFN=%BASEDIR%\bin-tar\wordclock%VERS%.%TYPE%.%FS%.%LANG%.bin
-del %BASEDIR%\data\*.json
-copy %BASEDIR%\data%LANG%\*.html %BASEDIR%\data\web
-copy %BASEDIR%\data%LANG%\*.json %BASEDIR%\data
-%MKSP% --create %BASEDIR%\data -b 4096 -p 256 -s %SPIFFS_SIZE% "%FSFN%"
-
-set LANG=ES
-set FSFN=%BASEDIR%\bin-tar\wordclock%VERS%.%TYPE%.%FS%.%LANG%.bin
-del %BASEDIR%\data\*.json
-copy %BASEDIR%\data%LANG%\*.html %BASEDIR%\data\web
-copy %BASEDIR%\data%LANG%\*.json %BASEDIR%\data
-%MKSP% --create %BASEDIR%\data -b 4096 -p 256 -s %SPIFFS_SIZE% "%FSFN%"
-del %BASEDIR%\data\*.json
+	%MKSP% --create %BASEDIR%\data -b 4096 -p 256 -s %SPIFFS_SIZE% "!FSFN!"
+	
+)
 
 pause

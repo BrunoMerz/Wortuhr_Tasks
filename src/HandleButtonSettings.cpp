@@ -543,20 +543,6 @@ void handleButtonSettings(AsyncWebServerRequest *request)
 #endif
 
   // ------------------------------------------------------------------------
-  // Logging on/off
-  /*
-  message += F("<tr><td>"
-               LANG_LOGGING
-               ":</td><td>"
-               "<input type=\"checkbox\" id=\"log\" name=\"log\" value=\"1\"");
-  if (settings->mySettings.logging) message += F(" checked");
-  message += ">"
-             "\n<input type=\"checkbox\" id=\"logdummy\" name=\"log\" value=\"0\"";
-  if (!settings->mySettings.logging) message += F(" checked");
-  message += " hidden>" 
-             "\n</td></tr>\n";
-*/
-  // ------------------------------------------------------------------------
   message += F("</table>\n"
                "<br><button title=\"Explorer\" type=\"button\" onclick=\"window.location.href='/fs'\"><span style=\"color:White;font-size:14px;\">&#128193;LittleFS</span></button>"
                "<br><button title=\"Explorer\" type=\"button\" onclick=\"window.location.href='/update'\"><span style=\"color:White;font-size:14px;\">&#128193;" LANG_INSTALL "</span></button>"
@@ -564,11 +550,7 @@ void handleButtonSettings(AsyncWebServerRequest *request)
                "<br><button title=\"" LANG_BACK "\" type=\"button\" onclick=\"window.location.href='/'\"><span style=\"color:White;font-size:14px;\">&#128281; " LANG_BACK "</span></button>"
                "<button title=\"" LANG_SAVE "\"><span style=\"color:White;font-size:14px;\">&#128077; " LANG_SAVE "</span></button>"
                "</form>\n");
-  //##################### sende Settings html script Teil1
-  //DEBUG_PRINTLN(message);
-  //webServer.sendContent(message);
-  //message = "";
-  //delay(0);
+
   message += F("<script>\n"
                "var urlBase = \"/\";\n");
 // Alarm1
@@ -602,10 +584,7 @@ void handleButtonSettings(AsyncWebServerRequest *request)
                  "$.post(posturl);"
                  "});\n");
   }
-  //##################### sende Settings html script Teil2
-  //webServer.sendContent(message);
-  //message = "";
-  //elay(0);
+
   message += F("$(\"#bgce_off\").click(function(){"
                "var posturl = urlBase + \"BackgroundColor?bgce=off\";\n"
                "$.post(posturl);"
@@ -639,10 +618,7 @@ void handleButtonSettings(AsyncWebServerRequest *request)
                "$(\"#srandon\").click(function(){"
                "$(\"#wochentage\").hide();"
                "});\n");
-//##################### sende Settings html script Teil3              
-  //webServer.sendContent(message);
-  //message = "";
-  //delay(0);
+
 // hb
   message += F("$(\"#hb\").click(function(){if($(this).prop('checked')) $(\"#hbdummy\").prop('checked', false); else $(\"#hbdummy\").prop('checked', true);});");
 // wsl
@@ -680,8 +656,8 @@ void handleButtonSettings(AsyncWebServerRequest *request)
                "});\n"
                "</script>\n"
                "</body>\n</html>");
-    //##################### sende letzen html Teil 5
-    request->send(200, TEXT_HTML, message);
+
+  request->send(200, TEXT_HTML, message);
 
 }
 

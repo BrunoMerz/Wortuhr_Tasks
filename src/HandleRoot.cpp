@@ -201,7 +201,7 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("<hr>\n");
   #endif
 
-    // Abschnitt Innentemperatur + Luftfeuchtigkeit + Luftdruck
+  // Abschnitt Innentemperatur + Luftfeuchtigkeit + Luftdruck
 
   #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
     message += F("<br><span title=\"" LANG_INDOOR "\" style=\"font-size:30px;\">&#127968;</span>");  //Haus
@@ -215,12 +215,6 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
   #endif
     message +=F("</span>");
   #endif
-
-    // ################### sende html Teil 1
-    //webServer.sendHeader("Cache-Control", "no-cache");
-    //webServer.send(200, TEXT_HTML, message);
-    //response->print(message);
-    //message = "";
 
   #ifdef SENSOR_BME280
     message += "<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modehum()\">" + String(myBME->roomHumidity,0) + "%RH</span>"
@@ -275,10 +269,7 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
       message += String(LUFTDRUCKMIN + i);
       message += F("hPa\",C:\"#000000\"},{Y:\" \",C:\"#000000\"},\n");
     }
-    // ################### sende html Teil 2
-    // webServer.sendContent(message);
-    // message = "";
-    //delay(0);
+
     message += F("]};\n");
     message += F("var graphxoffset = 42;\n");
     message += F("var graphyoffset = 15;\n");
@@ -360,15 +351,11 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("</script>");
     message += F("</div>\n");
     message += F("<hr>\n");
-    //##################### sende Luftdruck Diagramm html Teil 3
-    //webServer.sendContent(message);
-    //message = "";
-    //delay(0);
   #else
     message += F("<br>\n");
   #endif
 
-    // Abschnitt Außentemperatur + Luftfeuchtigkeit
+  // Abschnitt Außentemperatur + Luftfeuchtigkeit
   #ifdef APIKEY
     if ( strlen(settings->mySettings.openweatherapikey) > 25 )
     {
@@ -412,10 +399,6 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
       }
 
       message += F("<br><br><hr>\n");
-      //##################### sende Außentemperatur + Luftfeuchtigkeit html Teil 4
-      //response->print(message);
-      //message = "";
-      //delay(0);
     }
   #endif
 
@@ -475,10 +458,7 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("cv.fillStyle = yAchse.values[i].C;\n");
     message += F("cv.fillText(yAchse.values[i].Y,0,canvasHeight - graphGridSize*i-graphyoffset+3,graphxoffset);\n");
     message += F("}\n");
-  //##################### sende Außentemperatur + Luftfeuchtigkeit html Teil 4.1
-    //webServer.sendContent(message);
-    //message = "";
-    //delay(0);
+
     //Data Graph:
     message += "var data = { values:[\n";
     for ( int i = 0; i <= 71; i++)
@@ -500,10 +480,6 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("}\n");
     message += F("]};\n");
 
-    //##################### sende Temp Diagramm html Teil 4.2
-    //webServer.sendContent(message);
-    //message = "";
-    //delay(0);
     //Options Graph
 
     message += F("var graphMinValue = -20;\n"                         // Value der Nulllinie
@@ -559,10 +535,6 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("cv.stroke();\n");
     message += F("}\n");
     message += F("</script></div><hr>\n");
-    //##################### sende Temp Diagramm html Teil 4.3
-    //webServer.sendContent(message);
-    //message = "";
-    //delay(0);
   #endif
 
     // Abschnitt Wortuhr und Uptime
@@ -576,9 +548,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("<br>\nUptime: ");
     message += mt->convertSeconds(upTime);
     message += F("<br>\nFirmware: ");
-    message += String(FIRMWARE_VERSION);
+    message += FIRMWARE_VERSION;
     message += " ";
-    message += __DATE__;
+    message += BUILD_DATE;
     message += F("<br>\n");
 
     // QR-Code Button
@@ -595,10 +567,6 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("<hr>\n");
     message += F("<button id=\"Infobutton\" title=\"Info\" name=\"Info\" onclick=\"window.location.href='/debugClock'\">Info</button>");
     message += F("</span>");
-    //##################### sende Temp Diagramm html Teil 5
-    //response->print(message);
-    //message = "";
-    //delay(0);
     message += F("\n<script>\n"
                   "$(\"#button_zeit\").click(function() {"
                   "$.post(\"/handleButtonTime\");"
@@ -641,11 +609,8 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("</script>\n");
 
 
-    // Ende Webserver
-    message += F("</body></html>");
-    //##################### sende letzen html Teil 6
-    //response->print(message);
-    request->send(200, "text/html", message);
+  // Ende Webserver
+  message += F("</body></html>");
+  request->send(200, "text/html", message);
   glb->setHighWaterMark(TASK_MAX);
-  //Serial.printf("handleRoot: HighWater=%d\n", uxTaskGetStackHighWaterMark(NULL));
 }

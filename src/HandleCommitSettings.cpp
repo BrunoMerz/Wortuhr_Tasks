@@ -7,6 +7,7 @@
 #include "MyTime.h"
 #include "Html_content.h"
 #include "Helper.h"
+#include "Game.h"
 
 //#define myDEBUG
 #include "MyDebug.h"
@@ -24,6 +25,7 @@ static Settings *settings = Settings::getInstance();
 static MyTime *mt = MyTime::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
 static Renderer *renderer = Renderer::getInstance();
+static Game *game = Game::getInstance();
 
 
 void handleCommitSettings(AsyncWebServerRequest *request) 
@@ -379,15 +381,15 @@ void handleCommitSettings(AsyncWebServerRequest *request)
   // Highscores reset
   if (request->arg(F("hsres")) == "1")
   {
-    //highscore[SNAKE] = 0;
-    //highscore[TETRIS] = 0;
-    //highscore[BRICKS] = 0;
-    //highscore[VIERGEWINNT] = 0;
+    game->highscore[SNAKE] = 0;
+    game->highscore[TETRIS] = 0;
+    game->highscore[BRICKS] = 0;
+    game->highscore[VIERGEWINNT] = 0;
 
-//mz    settings->mySettings.highscore[SNAKE] = highscore[SNAKE];
-//mz    settings->mySettings.highscore[TETRIS] = highscore[TETRIS];
-//mz    settings->mySettings.highscore[BRICKS] = highscore[BRICKS];
-//mz    settings->mySettings.highscore[VIERGEWINNT] = highscore[VIERGEWINNT];
+    settings->mySettings.highscore[SNAKE] = game->highscore[SNAKE];
+    settings->mySettings.highscore[TETRIS] = game->highscore[TETRIS];
+    settings->mySettings.highscore[BRICKS] = game->highscore[BRICKS];
+    settings->mySettings.highscore[VIERGEWINNT] = game->highscore[VIERGEWINNT];
   }
 // ------------------------------------------------------------------------
 // MQTT
@@ -441,8 +443,6 @@ void handleCommitSettings(AsyncWebServerRequest *request)
 
     callRoot(request);
   }
-  //ldr_update = true;
-  //screenBufferNeedsUpdate = true;
 }
 //------------------------------------------------------------------------
 // Ende handleCommitSettings()

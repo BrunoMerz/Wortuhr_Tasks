@@ -157,6 +157,7 @@ LedDriver::LedDriver()
     enable_bg_color=0;
     bg_color=0;
     transitionInProgress=false;
+    ldrValue=MIN_LDR_STARTVALUE;
     minLdrValue=MIN_LDR_STARTVALUE; // The ESP will crash if minLdrValue and maxLdrValue are equal due to an error in map();
     maxLdrValue=MAX_LDR_STARTVALUE;
     lastLdrValue=0;

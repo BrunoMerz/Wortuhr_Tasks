@@ -210,6 +210,7 @@ MyTime *MyTime::getInstance() {
 MyTime::MyTime(void) {
   mytm.startTime=0;
   mytm.upTime=0;
+  mytm.tm_loc=0;
 }
 
 #define WAITFORTIMEINIT 100

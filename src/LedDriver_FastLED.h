@@ -58,10 +58,10 @@ public:
     void saveMatrix(uint16_t matrix[], bool clear=false);
     void setOnOff(void);
     
-    int ldrValue;
-    int lastLdrValue;
-    int minLdrValue;
-    int maxLdrValue;
+    uint16_t ldrValue;
+    uint16_t lastLdrValue;
+    uint16_t minLdrValue;
+    uint16_t maxLdrValue;
     uint8_t abcBrightness;
     uint8_t enable_bg_color;
     uint32_t bg_color;
