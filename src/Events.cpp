@@ -215,6 +215,7 @@ void Events::runEvent(uint8_t akteventidx)
   DEBUG_PRINTLN("runEvent called");
 
   taskParams.taskInfo[TASK_TIME].handleEvent = false;
+  taskParams.taskInfo[TASK_MODES].handleEvent = false;
 
 
 
@@ -271,4 +272,5 @@ void Events::runEvent(uint8_t akteventidx)
       }
     }
     taskParams.taskInfo[TASK_TIME].handleEvent = true;
+    taskParams.taskInfo[TASK_MODES].handleEvent = true;
 }

@@ -13,7 +13,6 @@
 
 #include "MyWifi.h"
 #include "Configuration.h"
-//#include "esp_task_wdt.h"
 
 //#define myDEBUG
 #include "MyDebug.h"
@@ -83,7 +82,7 @@ boolean wpsStart(void) {
       _wpsSuccess=true;
       break;
     }
-    delay(1000);
+    vTaskDelay(pdMS_TO_TICKS(1000));
     DEBUG_PRINTF("Waiting for IP, i=%d\n",i);
   }
   if(!_wpsSuccess) {
@@ -313,11 +312,11 @@ bool MyWifi::startConfigPortal(char *ssid) {
 
 
   WiFi.disconnect(true);
-  delay(100);
+  vTaskDelay(pdMS_TO_TICKS(100));
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
   WiFi.softAP(ssid);
-  delay(100);
+  vTaskDelay(pdMS_TO_TICKS(100));
  
   DEBUG_PRINTLN("adding handler");
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -338,15 +337,15 @@ bool MyWifi::startConfigPortal(char *ssid) {
   DEBUG_PRINTLN("Starting DNS Portal");
   dns.start(DNS_PORT, "*", apIP);
 
-  delay(100);
+  vTaskDelay(pdMS_TO_TICKS(100));
 
   DEBUG_PRINTLN("Starting server");
   server.begin();
   
-  delay(100);
+  vTaskDelay(pdMS_TO_TICKS(100));
 
   while(!_got_ip) {
-    delay(10);
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
   DEBUG_PRINTLN("server.end()");
   server.end();
@@ -436,18 +435,19 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
     if(WiFi.isConnected()) {
       WiFi.disconnect();
       i=0;
-
+/*
       while(i++ < 10 && _wifi_stat != SYSTEM_EVENT_STA_DISCONNECTED) {
         DEBUG_PRINTLN("Warten auf disconnect");
-        delay(100);
+        vTaskDelay(pdMS_TO_TICKS(100));
       }
+*/
     }
 
     while(!_got_ip) {
       _wifi_stat = -1;
       DEBUG_PRINTLN("vor WiFi.begin");
       WiFi.disconnect(true, true);  // trennt, vergisst SSID & Hostname
-      delay(100);
+      vTaskDelay(pdMS_TO_TICKS(100));
       // Hostname setzen **vor** WiFi.begin()
       WiFi.setHostname(settings->mySettings.systemname);
       WiFi.begin(_ssid, _passwd);
@@ -457,7 +457,7 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
 #ifdef myDEBUG
         DEBUG_PRINTF("_wifi_stat=%d, i=%d\n", _wifi_stat, i);
 #endif
-        delay(1000);
+        vTaskDelay(pdMS_TO_TICKS(1000));
         if(digitalRead(WIFI_RESET)) {
           doReset();
         }
@@ -470,6 +470,7 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
 #if defined(LILYGO_T_HMI)
     ir->renderAndDisplayPNG("/tft/accesspoint.png",0,1);
 #endif
+    Serial.println(F("Starting Accesspoint"));
     ret = startConfigPortal(settings->mySettings.systemname);
     _ssid = WiFi.SSID();
     _passwd = WiFi.psk();

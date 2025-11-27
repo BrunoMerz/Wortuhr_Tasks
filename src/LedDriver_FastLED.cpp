@@ -12,6 +12,11 @@
 #endif
 #include "Settings.h"
 
+#if defined(SYSLOGSERVER_SERVER)
+#include "Syslog.h"
+extern Syslog syslog;
+#endif
+
 //#define myDEBUG
 #include "MyDebug.h"
 
@@ -237,10 +242,13 @@ void LedDriver::clear()
 void LedDriver::show()
 {
   if(mode != MODE_BLANK) {
-    if(xSemaphoreTake(xLEDMutex, portMAX_DELAY) == pdTRUE) {
+#if defined(SYSLOGSERVER_SERVER)
+      syslog.log(LOG_INFO,"show: start");
+#endif
       FastLED.show();
-      xSemaphoreGive(xLEDMutex);
-    }
+#if defined(SYSLOGSERVER_SERVER)
+      syslog.log(LOG_INFO,"show: end");
+#endif
   }
 }
 
@@ -691,8 +699,8 @@ void LedDriver::matrix_regen(uint16_t screenBufferNew[], uint32_t color)
         } // x
       }  // y
       show();
-      delay (int(TRANSITION_SPEED / 9));
-      delay (1);
+      vTaskDelay(pdMS_TO_TICKS(int(TRANSITION_SPEED / 9)));
+      vTaskDelay(pdMS_TO_TICKS(1));
     }
     if ( i > 100 && mleer == 0x7FF) break;
   }

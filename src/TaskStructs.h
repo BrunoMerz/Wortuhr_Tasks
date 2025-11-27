@@ -38,6 +38,8 @@ typedef struct {
     uint32_t     stackSize;
     bool         handleEvent;
     eState       state;
+    UBaseType_t  priority;
+    BaseType_t   core;
     char         name[24];
 } s_taskInfo;
 

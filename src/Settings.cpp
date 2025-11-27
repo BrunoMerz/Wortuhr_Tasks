@@ -112,6 +112,8 @@ void Settings::resetToDefault()
     mySettings.mqtt_password[0] = '\0';
     mySettings.logging = false;
     mySettings.secondsAll = false;
+    mySettings.secondsBell = true;
+    mySettings.secondHand = false;
 #if defined(FRONTCOVER_DE)
     mySettings.language = FC_DE;
 #endif
@@ -167,7 +169,7 @@ void Settings::loadFromNVS()
    DEBUG_PRINTLN("loadFromNVS");
 
    bool ret = preferences.begin("wordclock", false);
-   size_t lng = preferences.getBytes("all", (void *)&mySettings, sizeof(mySettings)+8);
+   size_t lng = preferences.getBytes("all", (void *)&mySettings, sizeof(mySettings));
 
    DEBUG_PRINTF("loadFromNVS: ret=%d, lng=%d, magicNumber=%d, versiom=%d\n",ret, lng, mySettings.magicNumber, mySettings.version);
 
@@ -183,7 +185,7 @@ void Settings::saveToNVS()
 {
     DEBUG_PRINTLN("Settings saved to NVS.");
     bool ret = preferences.begin("wordclock", false);
-    size_t lng = preferences.putBytes("all",(const void*)&mySettings, sizeof(mySettings)+8);
+    size_t lng = preferences.putBytes("all",(const void*)&mySettings, sizeof(mySettings));
     preferences.end();
     DEBUG_PRINTF("saveToNVS: ret=%d, lng=%d\n", ret, lng);
 }

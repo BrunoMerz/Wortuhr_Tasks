@@ -379,7 +379,7 @@ bool handleList(AsyncWebServerRequest *request) {
 #endif
 
             temp = "";
-            delay(0);
+            vTaskDelay(pdMS_TO_TICKS(1));
         } 
     }
     temp += F(",{\"usedBytes\":\"");

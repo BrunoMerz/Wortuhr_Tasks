@@ -8,8 +8,12 @@
 #include "WebHandler.h"
 #include "Html_content.h"
 #include "OpenWeather.h"
-#include "Global.h"
 #include "TaskStructs.h"
+
+#if defined(SYSLOGSERVER_SERVER)
+#include "Syslog.h"
+extern Syslog syslog;
+#endif
 
 //#define myDEBUG
 #include "MyDebug.h"
@@ -17,13 +21,14 @@
 #include "ESPAsyncWebServer.h"
 #include <LittleFS.h>
 
+extern s_taskParams taskParams;
+
 static Settings *settings = Settings::getInstance();
 static MyTime *mt = MyTime::getInstance();
 static MyWifi *myWifi = MyWifi::getInstance();
 static AsyncWebServer *webServer = myWifi->getServer();
 static OpenWeather *outdoorWeather = OpenWeather::getInstance();
 static Renderer *renderer = Renderer::getInstance();
-static Global *glb = Global::getInstance();
 
 #if defined(SENSOR_BME280)
 #include "MyBME.h"
@@ -75,8 +80,11 @@ String getWeatherIcon(String weathericonnummer)
 
 void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, uint8_t web_moonphase, time_t upTime, uint8_t sunriseMinute, uint8_t sunriseHour, uint8_t sunsetMinute, uint8_t sunsetHour)
 {
-    //AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
+    AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
     String message;
+#if defined(SYSLOGSERVER_SERVER)
+    syslog.log(LOG_INFO, "handleRoot: start");
+#endif
     message = F("<!doctype html>");
     message += F("<html><head>");
     message += F("<title>");
@@ -115,7 +123,8 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
                   "<button title=\"" LANG_TIMEBUTTON "\" id=\"button_zeit\" type=\"button\" \">&#128344;</button>\n");
 
     message += F("<hr>\n");
-
+    response->print(message);
+    message = "";
     // Abschnitt Mondphase
   #ifdef SHOW_MODE_MOONPHASE
 
@@ -200,7 +209,8 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("</tr></table>");
     message += F("<hr>\n");
   #endif
-
+  response->print(message);
+  message = "";
   // Abschnitt Innentemperatur + Luftfeuchtigkeit + Luftdruck
 
   #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
@@ -351,6 +361,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("</script>");
     message += F("</div>\n");
     message += F("<hr>\n");
+
+    response->print(message);
+    message = "";
   #else
     message += F("<br>\n");
   #endif
@@ -400,6 +413,8 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
 
       message += F("<br><br><hr>\n");
     }
+    response->print(message);
+    message = "";
   #endif
 
   #ifdef SENSOR_BME280
@@ -535,6 +550,9 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
     message += F("cv.stroke();\n");
     message += F("}\n");
     message += F("</script></div><hr>\n");
+
+    response->print(message);
+    message = "";
   #endif
 
     // Abschnitt Wortuhr und Uptime
@@ -606,11 +624,14 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
                   "};\n");
   #endif
 
-    message += F("</script>\n");
-
+  // Ende Script
+  message += F("</script>\n");
 
   // Ende Webserver
   message += F("</body></html>");
-  request->send(200, "text/html", message);
-  glb->setHighWaterMark(TASK_MAX);
+  response->print(message);
+  request->send(response);
+#if defined(SYSLOGSERVER_SERVER)
+  syslog.log(LOG_INFO, "handleRoot: end");
+#endif
 }

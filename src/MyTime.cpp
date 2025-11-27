@@ -19,7 +19,6 @@
 #include "esp_sntp.h"
 #endif
 
-static bool isInitialized=false;
 
 // the short strings for each day or month must be exactly dt_SHORT_STR_LEN
 #define dt_SHORT_STR_LEN  3 // the length of short strings
@@ -71,6 +70,22 @@ const char dayShortNames_P[] PROGMEM = "ErrSunMonTueWedThuFriSat";
 
 /* functions to return date strings */
 
+MyTime* MyTime::instance = 0;
+
+MyTime *MyTime::getInstance() {
+  if (!instance)
+  {
+      instance = new MyTime();
+  }
+  return instance;
+}
+
+MyTime::MyTime(void) {
+  mytm.startTime=0;
+  mytm.upTime=0;
+  mytm.tm_loc=0;
+  isInitialized=false;
+}
 
 int MyTime::second() {
   return mytm.tm_sec;
@@ -156,89 +171,43 @@ time_t MyTime::toLocal(time_t utc) {
 time_t MyTime::toUTC(time_t loc) {
   return loc - mytm.tm_tzoffset * 60;
 }
-/*
-#if defined(ESP8266)
-// This function is set as the callback when time data is retrieved
-// In this case we will print the new time to serial port, so the user can see it change (from 1970)
-void time_is_set_scheduled() {
-  time_t now1 = time(nullptr);
-#else
-*/
-void time_is_set_scheduled(struct timeval *tv) {
-
-  time_t now1 = tv->tv_sec;
-  time_t now2 = now1;
-  time_t tmp;
-  /*
-  if(isInitialized && mytm.tm_loc) {
-    tmp = now1;
-    tmp -= mytm.tm_loc;
-    mytm.esptimedrift = tmp;
-    if ( abs(mytm.esptimedrift) > abs(mytm.maxesptimedrift) ) 
-      mytm.maxesptimedrift = mytm.esptimedrift;
-  }
-  */
-  DEBUG_PRINT("In time_is_set_scheduled: Current Time=");
-  DEBUG_PRINTLN(ctime(&now1));
-  DEBUG_PRINTLN("");
-  
-  tm *gm = gmtime(&now1);
-  int8_t gm_hour = gm?gm->tm_hour:0;
-  int8_t gm_min = gm?gm->tm_min:0;
-  
-  tm *lt = localtime(&now2);
-  int8_t lt_hour = lt?lt->tm_hour:0;
-  int8_t lt_min = lt?lt->tm_min:0;
-//  mytm.tm_tzoffset = (lt_hour-gm_hour)*60+lt_min-gm_min;
-
-  DEBUG_PRINTF("lt_hour=%d, lt_min=%d, isInitialized=%d\n",lt_hour, lt_min, isInitialized);
-   
-  isInitialized = true;
-  
-}
-
-MyTime* MyTime::instance = 0;
-
-MyTime *MyTime::getInstance() {
-  if (!instance)
-  {
-      instance = new MyTime();
-  }
-  return instance;
-}
-
-MyTime::MyTime(void) {
-  mytm.startTime=0;
-  mytm.upTime=0;
-  mytm.tm_loc=0;
-}
-
-#define WAITFORTIMEINIT 100
 
 void MyTime::confTime(void) {
+  struct tm utc;
+  struct tm local;
+  struct tm timeinfo;
   // This is where your time zone is set
-   DEBUG_PRINTF("confTime: TZ=%s, NTP=%s\n",mytm.tm_timezone.c_str(), mytm.tm_ntpserver.c_str());
-#if defined(ESP8266)
-  configTime(mytm.tm_timezone.c_str(), mytm.tm_ntpserver.c_str());
-  settimeofday_cb(time_is_set_scheduled);
-#else
+  DEBUG_PRINTF("confTime: TZ=%s, NTP=%s\n",mytm.tm_timezone.c_str(), mytm.tm_ntpserver.c_str());
+
   configTzTime(mytm.tm_timezone.c_str(), mytm.tm_ntpserver.c_str());
-  sntp_set_time_sync_notification_cb(time_is_set_scheduled);
-  sntp_setservername(0, mytm.tm_ntpserver.c_str());
-  sntp_set_sync_interval(10800000);   // 3 Stunden
-  sntp_init();
-  int i=0;
-  while(!isInitialized && i++ < WAITFORTIMEINIT) delay(100);
-  DEBUG_PRINTF("confTime: isInitialized=%d, i=%d\n",isInitialized, i);
-  if(i<WAITFORTIMEINIT) {
-    getTime();
-    mytm.startTime=mytm.tm_loc;
+  sntp_set_sync_interval(10800000);   // 3 hours
+
+  // Wait for first time
+  while (!getLocalTime(&timeinfo)) {
+    Serial.println("Warte auf Zeit...");
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
-#endif
+
+  getTime();
+
+  mytm.startTime=mytm.tm_loc;
+
+  // get UTC-Zeit
+  gmtime_r(&mytm.tm_loc, &utc);
+
+  // get local time (Zeitzone + DST korrekt)
+  localtime_r(&mytm.tm_loc, &local);
+
+  // calculate Offset (in seconds)
+  mytm.tm_tzoffset = (mktime(&local) - mktime(&utc));
+
+  // log result
+  isInitialized = true;
+  //Serial.printf("Offset to UTC: %d seconds\n", mytm.tm_tzoffset );
 }
 
 
-time_t MyTime::getLocalTime(void) {
+time_t MyTime::getLT(void) {
   return mytm.tm_loc;
 }
 
@@ -269,10 +238,10 @@ void MyTime::getTime(void) {
   mytm.tm_year = lt->tm_year+1900;
   mytm.tm_isdst= lt->tm_isdst;
   mytm.tm_loc  = now;
-  mytm.tm_utc  = now - mytm.tm_tzoffset * 60; // UTC = localtime - timezone offset (min) * 60
+  mytm.tm_utc  = mytm.tm_loc - mytm.tm_tzoffset;
 
   mytm.upTime = mytm.tm_loc - mytm.startTime;
-  //DEBUG_PRINTF("MyTime.getTime: utc=%lld, loc=%lld\n",mytm.tm_utc,mytm.tm_loc);
+  //Serial.printf("MyTime.getTime: utc=%ld, loc=%ld\n",mytm.tm_utc,mytm.tm_loc);
 }
 
 

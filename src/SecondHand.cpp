@@ -220,6 +220,6 @@ void SecondHand::show(uint16_t dly) {
     Serial.printf("show: _lastSecond=%d, _aktSecond=%d\n",_lastSecond, _aktSecond);
 #endif
   ledDriver->show();
-  delay(dly);
+  vTaskDelay(pdMS_TO_TICKS(dly));
 }
 #endif

@@ -7,7 +7,6 @@
 #include "TaskStructs.h"
 #include "Events.h"
 #include "Renderer.h"
-#include "Global.h"
 #include "LedDriver_FastLED.h"
 #include "MyTime.h"
 #include "OpenWeather.h"
@@ -21,7 +20,6 @@
 
 static Renderer *renderer = Renderer::getInstance();
 static Settings *settings = Settings::getInstance();
-static Global   *glb      = Global::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
 static MyTime *mt = MyTime::getInstance();
 static OpenWeather *outdoorWeather = OpenWeather::getInstance();
@@ -122,7 +120,6 @@ void buttonModePressed(AsyncWebServerRequest *request)
         NULL,// Task handle
         0
     );
-    glb->Modecount++;
 }
 
 /******************************************************************************

@@ -47,7 +47,6 @@ extern void buttonTimePressed(AsyncWebServerRequest *request);
 extern void startGame(AsyncWebServerRequest *request);
 extern void handleGameControl(AsyncWebServerRequest *request);
 extern void formatFS();
-extern void handleUpload();
 
 static Settings *settings = Settings::getInstance();
 static MyWifi *mywifi = MyWifi::getInstance();
@@ -111,13 +110,10 @@ bool handleFile(AsyncWebServerRequest *request) {
     else
       mime_type = F("application/octet-stream");
 #endif
-#ifdef DEBUG_WEB
-    glb->highWaterMark = uxTaskGetStackHighWaterMark(NULL);
-    glb->codeline = __LINE__;
-    glb->codetab = __NAME__;
-    DEBUG_PRINTF("handleFile: mime_type=%s uxHighWaterMark=%d\n", mime_type.c_str(), glb->HighWaterMark);
-#endif
-    request->send(LittleFS, path, mime_type);
+    AsyncWebServerResponse *response =
+      request->beginResponse(LittleFS, path, mime_type, false);
+    response->addHeader("Cache-Control", "public, max-age=31536000");
+    request->send(response);
     return true;
   }
   else
@@ -144,27 +140,6 @@ void handlebacktoMODE_TIME(AsyncWebServerRequest *request)
   taskParams.endless_loop = false;
   taskParams.updateScreen = true;
   callRoot(request);
-}
-
-
-void handleContent(AsyncWebServerRequest *request, const uint8_t * image, size_t size, const char * mime_type) {
-  uint8_t buffer[512];
-  size_t buffer_size = sizeof(buffer);
-  size_t sent_size = 0;
-
-  AsyncResponseStream *response = request->beginResponseStream(mime_type, -1);
-
-  while (sent_size < size) {
-    size_t chunk_size = min(buffer_size, size - sent_size);
-    memcpy_P(buffer, image + sent_size, chunk_size);
-    response->write((const uint8_t*)buffer, chunk_size);
-    sent_size += chunk_size;
-#ifdef DEBUG_WEB
-    DEBUG_PRINTF("sendContent: %i byte : %i byte of %i byte\n", chunk_size, sent_size,size );
-#endif
-  }
-  //response->setContentLength(sent_size);
-  request->send(response);
 }
 
 
@@ -262,7 +237,7 @@ void WebHandler::webRequests()
   // Reboot
   webServer->on("/reboot", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(200, TEXT_PLAIN, F("OK. I'll be back!"));
-    delay(5000);
+    vTaskDelay(pdMS_TO_TICKS(5000));
     ESP.restart();
   });
 
@@ -389,8 +364,9 @@ void WebHandler::webRequests()
 
   });
 
-  
-
+#if defined(WITH_ALEXA)
+  alexa->espalexa.begin(webServer);
+#else
   webServer->begin();
-  
+#endif
 }

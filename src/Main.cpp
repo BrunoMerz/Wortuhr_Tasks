@@ -10,13 +10,14 @@
 #include "WebHandler.h"
 #include "OpenWeather.h"
 #include "Animation.h"
-#include "Global.h"
 #include "MzOTA.h"
 #include "TaskStructs.h"
 #include "DisplayModes.h"
 #include "Events.h"
 #include "soc/soc.h"
+#ifndef ARDUINO_ESP32_C6_DEVKITM_1
 #include "soc/rtc_cntl_reg.h"
+#endif
 
 #if defined(WITH_ALEXA)
   #include "MyAlexa.h"
@@ -30,10 +31,24 @@
 #include "SecondHand.h"
 #endif
 
-
+#ifdef SYSLOGSERVER_SERVER
+#include "Syslog.h"
+WiFiUDP wifiUdp;
+Syslog syslog(wifiUdp);
+#endif
 
 //#define myDEBUG
 #include "MyDebug.h"
+
+#if CONFIG_FREERTOS_UNICORE
+  #define CORE_0 0
+  #define CORE_1 0
+  #define CORE_ANY tskNO_AFFINITY
+#else
+  #define CORE_0 0
+  #define CORE_1 1
+  #define CORE_ANY tskNO_AFFINITY
+#endif
 
 s_taskParams taskParams = {
     .feedPosition = 0,
@@ -43,25 +58,76 @@ s_taskParams taskParams = {
     .endless_loop = false,
     .feedText = "",
     .animation = "",
+
+#if defined(ARDUINO_LOLIN_S2_MINI)
     .taskInfo = {
-        [TASK_STARTUP]     = {NULL, 6144, true, STATE_INIT, "Startup"},
-        [TASK_SCHEDULER]   = {NULL, 4096, true, STATE_INIT, "queueScheduler"},
-        [TASK_TIME]        = {NULL, 3072, true, STATE_INIT, "DisplayTime"},
-        [TASK_MODES]       = {NULL, 4096, true, STATE_INIT, "ModesQueueHandler"},
-        [TASK_TEXT]        = {NULL, 2048, true, STATE_INIT, "showTextHandler"},
-        [TASK_ANIMATION]   = {NULL, 5120, true, STATE_INIT, "animationQueueHandler"},
-        [TASK_EVENT]       = {NULL, 5120, true, STATE_INIT, "eventQueueHandler"},
+      //                    handle stack active    state prio core  name
+        [TASK_STARTUP]     = {NULL, 3000, true, STATE_INIT, 3, CORE_1,   "Startup"},
+        [TASK_SCHEDULER]   = {NULL, 3000, true, STATE_INIT, 1, CORE_ANY, "queueScheduler"},
+        [TASK_TIME]        = {NULL, 4000, true, STATE_INIT, 5, CORE_ANY, "DisplayTime"},
+        [TASK_MODES]       = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "ModesQueueHandler"},
+        [TASK_TEXT]        = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "showTextHandler"},
+        [TASK_ANIMATION]   = {NULL, 2000, true, STATE_INIT, 5, CORE_ANY, "animationQueueHandler"},
+        [TASK_EVENT]       = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "eventQueueHandler"},
 #if defined(WITH_SECOND_BELL)
-        [TASK_SECOND_BELL] = {NULL, 2048, true, STATE_INIT, "DisplaySecondBell"},
+        [TASK_SECOND_BELL] = {NULL, 2000, true, STATE_INIT, 5, CORE_ANY, "DisplaySecondBell"},
 #endif
 #if defined(WITH_SECOND_HAND)
-        [TASK_SECOND_HAND] = {NULL, 2048, true, STATE_INIT, "displaySecondHand"},
+        [TASK_SECOND_HAND] = {NULL, 2500, true, STATE_INIT, 5, CORE_ANY, "displaySecondHand"},
 #endif
 #if defined(LILYGO_T_HMI)
-        [TASK_T_HMI]       = {NULL, 4096, true, STATE_INIT, "hmiHandler"},
-        [TASK_DRAW]        = {NULL, 4096, true, STATE_INIT, "drawTask"},
+        [TASK_T_HMI]       = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "hmiHandler"},
+        [TASK_DRAW]        = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "drawTask"},
 #endif
     }
+#endif
+
+#if defined(ARDUINO_LOLIN_S3_MINI)
+    .taskInfo = {
+      //                    handle stack active    state prio core  name
+        [TASK_STARTUP]     = {NULL, 3328, true, STATE_INIT, 3, CORE_1,   "Startup"},
+        [TASK_SCHEDULER]   = {NULL, 3660, true, STATE_INIT, 1, CORE_ANY, "queueScheduler"},
+        [TASK_TIME]        = {NULL, 2995, true, STATE_INIT, 5, CORE_ANY, "DisplayTime"},
+        [TASK_MODES]       = {NULL, 3328, true, STATE_INIT, 5, CORE_ANY, "ModesQueueHandler"},
+        [TASK_TEXT]        = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "showTextHandler"},
+        [TASK_ANIMATION]   = {NULL, 1664, true, STATE_INIT, 5, CORE_ANY, "animationQueueHandler"},
+        [TASK_EVENT]       = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "eventQueueHandler"},
+#if defined(WITH_SECOND_BELL)
+        [TASK_SECOND_BELL] = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "DisplaySecondBell"},
+#endif
+#if defined(WITH_SECOND_HAND)
+        [TASK_SECOND_HAND] = {NULL, 2048, true, STATE_INIT, 5, CORE_ANY, "displaySecondHand"},
+#endif
+#if defined(LILYGO_T_HMI)
+        [TASK_T_HMI]       = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "hmiHandler"},
+        [TASK_DRAW]        = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "drawTask"},
+#endif
+    }
+#endif
+
+#if defined(ARDUINO_ESP32_C6_DEVKITM_1)
+    .taskInfo = {
+      //                    handle stack active    state prio core  name
+        [TASK_STARTUP]     = {NULL, 4096, true, STATE_INIT, 3, CORE_1,   "Startup"},
+        [TASK_SCHEDULER]   = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "queueScheduler"},
+        [TASK_TIME]        = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "DisplayTime"},
+        [TASK_MODES]       = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "ModesQueueHandler"},
+        [TASK_TEXT]        = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "showTextHandler"},
+        [TASK_ANIMATION]   = {NULL, 2048, true, STATE_INIT, 5, CORE_ANY, "animationQueueHandler"},
+        [TASK_EVENT]       = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "eventQueueHandler"},
+#if defined(WITH_SECOND_BELL)
+        [TASK_SECOND_BELL] = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "DisplaySecondBell"},
+#endif
+#if defined(WITH_SECOND_HAND)
+        [TASK_SECOND_HAND] = {NULL, 2048, true, STATE_INIT, 5, CORE_ANY, "displaySecondHand"},
+#endif
+#if defined(LILYGO_T_HMI)
+        [TASK_T_HMI]       = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "hmiHandler"},
+        [TASK_DRAW]        = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "drawTask"},
+#endif
+    }
+#endif
+
 };
 
 unsigned long ota_progress_millis = 0;
@@ -73,16 +139,23 @@ EventGroupHandle_t xEvent;
 SemaphoreHandle_t xMutex;
 uint16_t nightOffTime;
 uint16_t dayOnTime;
+uint32_t autoModeChangeTimer;
+uint8_t akt_transition;
 
 
 uint16_t matrix[10] = {};
 
-static Global *glb = Global::getInstance();
 static OpenWeather *ow = OpenWeather::getInstance();
 static DisplayModes *dm = DisplayModes::getInstance();
 static AnimationFS *anifs = AnimationFS::getInstance();
-static MyWifi *myWifi = MyWifi::getInstance();
 static MyTime *mt = MyTime::getInstance();
+static Settings *settings=Settings::getInstance();
+static Renderer *renderer=Renderer::getInstance();
+static IconRenderer *icor=IconRenderer::getInstance();
+static LedDriver *ledDriver=LedDriver::getInstance();
+static MyWifi *myWifi=MyWifi::getInstance();
+static WebHandler *webHandler = WebHandler::getInstance();
+static Events *evt = Events::getInstance();
 
 
 
@@ -110,7 +183,7 @@ static void displaySeconds(void) {
 
 static void wifiReset(void) {
   DEBUG_PRINTLN(F("WifiReset........."));
-  delay(100);
+  vTaskDelay(pdMS_TO_TICKS(100));
   myWifi->doReset();
 }
 
@@ -153,10 +226,6 @@ void onOTAEnd(bool success) {
 
 void queueScheduler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
-  Settings *settings    = Settings::getInstance();
-  OpenWeather *ow       = OpenWeather::getInstance();
-  LedDriver *ledDriver  = LedDriver::getInstance();
-  Events *evt            = Events::getInstance();
 
 #if defined(WITH_ALEXA)
   MyAlexa *alexa = MyAlexa::getInstance();
@@ -175,12 +244,19 @@ void queueScheduler(void *p) {
   dayOnTime = mt->hour(settings->mySettings.dayOnTime) * 60 + mt->minute(settings->mySettings.dayOnTime);
   uint32_t aktts;
   bool isNightOff;
-  glb->autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
+  autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
   uint8_t autoMode = 0;
   uint32_t colorsaver;
  
+  taskParams.taskInfo[TASK_SCHEDULER].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_SCHEDULER].priority = uxTaskPriorityGet(NULL);
 
-  DEBUG_PRINTF("queueScheduler: Core=%d\n", xPortGetCoreID());
+  // wait for time
+  while(!mt->isInitialized)
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+  // Initialize time and weather for webSite
+  renderer->setTime(mt->mytm.tm_hour, mt->mytm.tm_min, matrix);
   ow->getOutdoorConditions(String(settings->mySettings.openweatherlocation), String(settings->mySettings.openweatherapikey));
 
   while(true) {
@@ -260,39 +336,29 @@ void queueScheduler(void *p) {
         ledDriver->setOnOff();
       }
 
-      if (xEventGroupSetBits(xEvent, MODE_TIME)) {
-        glb->stackSize = tp->taskInfo[TASK_SCHEDULER].stackSize;
-        glb->setHighWaterMark(TASK_SCHEDULER);
-        glb->codeline = __LINE__;
-        glb->codetab = __NAME__;
-        DEBUG_PRINTF("Gesendet: MODE_TIME, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", aktMinute, aktSecond, glb->highWaterMark);
-      }
+      xEventGroupSetBits(xEvent, MODE_TIME);
     }
 
-    glb->autoModeChangeTimer--;
-    if (!glb->autoModeChangeTimer)
+    autoModeChangeTimer--;
+    if (!autoModeChangeTimer)
     {
       if (aktSecond > 45)
       {
-        glb->autoModeChangeTimer = glb->autoModeChangeTimer + 30;
+        autoModeChangeTimer = autoModeChangeTimer + 30;
       }
       else if (aktSecond < 15)
       {
-        glb->autoModeChangeTimer = glb->autoModeChangeTimer + 15;
+        autoModeChangeTimer = autoModeChangeTimer + 15;
       }
       else
       {
-        //DEBUG_PRINTF("autoMode=%d, aktSecond=%d\n", autoMode, aktSecond);
+        DEBUG_PRINTF("autoMode=%d, aktSecond=%d\n", autoMode, aktSecond);
 
-        glb->autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
-        
-        if (dpm[autoMode].event_automode && xEventGroupSetBits(xEvent, dpm[autoMode].event_type)) {
-          glb->stackSize = tp->taskInfo[TASK_SCHEDULER].stackSize;
-          glb->setHighWaterMark(TASK_SCHEDULER);
-          glb->codeline = __LINE__;
-          glb->codetab = __NAME__;
-          DEBUG_PRINTF("Gesendet: %s, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", dpm[autoMode].event_name.c_str(), aktMinute, aktSecond, glb->highWaterMark);
-        }
+        autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
+
+        if (dpm[autoMode].event_automode)
+          xEventGroupSetBits(xEvent, dpm[autoMode].event_type);
+
         if(++autoMode >= dpmSize)
           autoMode = 0;
       }
@@ -310,11 +376,10 @@ void queueScheduler(void *p) {
 
 void ModesQueueHandler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
-  LedDriver *ledDriver=LedDriver::getInstance();
-  Renderer *renderer=Renderer::getInstance();
-  Settings *settings=Settings::getInstance();
-  OpenWeather *outdoorWeather = OpenWeather::getInstance();
-  DEBUG_PRINTF("temp: Core=%d\n", xPortGetCoreID());
+
+  taskParams.taskInfo[TASK_MODES].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_MODES].priority = uxTaskPriorityGet(NULL);
+
   while(true) {
     for(uint8_t mode=0; mode < dpmSize; mode++) {
       uint32_t b = xEventGroupWaitBits(xEvent, dpm[mode].event_type, pdTRUE, pdFALSE, pdMS_TO_TICKS(10));
@@ -322,12 +387,6 @@ void ModesQueueHandler(void *p) {
       if (tp->taskInfo[TASK_MODES].handleEvent && (b & dpm[mode].event_type)) {
         if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
           if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-
-          glb->stackSize = tp->taskInfo[TASK_MODES].stackSize;
-          glb->setHighWaterMark(TASK_MODES);
-          glb->codeline = __LINE__;
-          glb->codetab = __NAME__;
-          DEBUG_PRINTF("Erhalten: %s, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", dpm[mode].event_name.c_str(), mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
 
           dpm[mode].event_fct();
 
@@ -338,6 +397,9 @@ void ModesQueueHandler(void *p) {
           ledDriver->lastMode = dpm[mode].event_type;
           xSemaphoreGive(xMutex);
           xEventGroupSetBits(xEvent, MODE_TIME);
+#if defined(SYSLOGSERVER_SERVER)
+          syslog.log(LOG_INFO,("ModesQueueHandler: " + dpm[mode].event_name));
+#endif
         }
       }
       vTaskDelay(pdMS_TO_TICKS(10));
@@ -348,21 +410,14 @@ void ModesQueueHandler(void *p) {
 
 void showTextHandler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
-  LedDriver *ledDriver=LedDriver::getInstance();
-  Renderer *renderer=Renderer::getInstance();
-  Settings *settings=Settings::getInstance();
-                                                                                                          ;
-  DEBUG_PRINTF("showText: Core=%d\n", xPortGetCoreID());
+
+  taskParams.taskInfo[TASK_TEXT].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_TEXT].priority = uxTaskPriorityGet(NULL);
+
   while(true) {
     if (tp->taskInfo[TASK_TEXT].handleEvent && xEventGroupWaitBits(xEvent, MODE_FEED, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-
-        glb->stackSize = tp->taskInfo[TASK_TEXT].stackSize;
-        glb->setHighWaterMark(TASK_TEXT);
-        glb->codeline = __LINE__;
-        glb->codetab = __NAME__;
-        DEBUG_PRINTF("Erhalten: MODE_FEED, aktMinute=%d, aktSecond=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->highWaterMark);
 
         ledDriver->mode = MODE_FEED;
         DEBUG_PRINTLN(tp->feedText);
@@ -407,6 +462,9 @@ void showTextHandler(void *p) {
         xEventGroupSetBits(xEvent, MODE_TIME); // Uhrzeit wieder anzeigen
         tp->taskInfo[TASK_TEXT].state = STATE_PROCESSED;
       }
+#if defined(SYSLOGSERVER_SERVER)
+      syslog.log(LOG_INFO, "showTextHandler");
+#endif
     }
     vTaskDelay(pdMS_TO_TICKS(10));
   } // while
@@ -415,21 +473,14 @@ void showTextHandler(void *p) {
 
 void animationQueueHandler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
-  LedDriver *ledDriver=LedDriver::getInstance();
-  Renderer *renderer=Renderer::getInstance();
-  Settings *settings=Settings::getInstance();
 
-  DEBUG_PRINTF("animation: Core=%d\n", xPortGetCoreID());
+  taskParams.taskInfo[TASK_ANIMATION].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_ANIMATION].priority = uxTaskPriorityGet(NULL);
+
   while(true) {
     if (tp->taskInfo[TASK_ANIMATION].handleEvent && xEventGroupWaitBits(xEvent, MODE_SHOWANIMATION, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
         if(ledDriver->mode == MODE_BLANK) { xSemaphoreGive(xMutex); vTaskDelay(pdMS_TO_TICKS(10)); continue; }
-
-        glb->stackSize = tp->taskInfo[TASK_ANIMATION].stackSize;
-        glb->setHighWaterMark(TASK_ANIMATION);
-        glb->codeline = __LINE__;
-        glb->codetab = __NAME__;
-        DEBUG_PRINTF("Erhalten: MODE_SHOWANIMATION, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
 
         renderer->clearScreenBuffer(matrix);
  
@@ -448,6 +499,9 @@ void animationQueueHandler(void *p) {
         ledDriver->lastMode = MODE_SHOWANIMATION;
         xSemaphoreGive(xMutex);
         xEventGroupSetBits(xEvent, MODE_TIME);
+#if defined(SYSLOGSERVER_SERVER)
+        syslog.log(LOG_INFO,"animationQueueHandler");
+#endif
       }
     }
     vTaskDelay(pdMS_TO_TICKS(10));
@@ -457,9 +511,6 @@ void animationQueueHandler(void *p) {
 
 void eventQueueHandler(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
-  Settings *settings    = Settings::getInstance();
-  LedDriver *ledDriver  = LedDriver::getInstance();
-  Events *evt           = Events::getInstance();
 
   int lastHour=0;
   int lastSecond=0;
@@ -471,13 +522,16 @@ void eventQueueHandler(void *p) {
   time_t aktTime;
   time_t lastCall[MAXEVENTS+1];
 
-  DEBUG_PRINTF("event: Core=%d\n", xPortGetCoreID());
+  taskParams.taskInfo[TASK_EVENT].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_EVENT].priority = uxTaskPriorityGet(NULL);
 
 
   while(true) {
     while(!tp->taskInfo[TASK_EVENT].handleEvent || ledDriver->mode == MODE_BLANK)
       vTaskDelay(pdMS_TO_TICKS(500));
-
+#if defined(SYSLOGSERVER_SERVER)
+    syslog.log(LOG_INFO,"eventQueueHandler");
+#endif
     mt->getTime();
     aktMonth = mt->mytm.tm_mon;
     aktDay = mt->mytm.tm_mday;
@@ -499,8 +553,6 @@ void eventQueueHandler(void *p) {
     for (uint8_t i = 0; i <= MAXEVENTS; i++) {
       if (evt->events[i].aktiv && (evt->events[i].start == ST_DATE &&  aktDay == evt->events[i].day && aktMonth == evt->events[i].month) || evt->events[i].start == ST_ALWAYS) {
         if(aktTime - lastCall[i] >= evt->events[i].intervall*60) {
-          // Damit keine Anzeige während der Eventbehandlung auftritt autoModeChangeTimer hochsetzen
-          glb->autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
           DEBUG_PRINTF("event: found=%d, Sekunde=%d\n", i, aktSecond);
           evt->runEvent(i);
           DEBUG_PRINTF("event: %d processed\n", i);
@@ -508,25 +560,33 @@ void eventQueueHandler(void *p) {
         }
       }
     }
-
-    vTaskDelay(pdMS_TO_TICKS(10));
+    
+    vTaskDelay(pdMS_TO_TICKS(60000));
   } // while
 }
 
 #ifdef WITH_SECOND_BELL
 void displaySecondBell(void *) {
   SecondBell *secondBell=SecondBell::getInstance();
-  LedDriver *ledDriver=LedDriver::getInstance();
 
   int lastSecond=0;
   int aktSecond;
-  DEBUG_PRINTF("secondBell: Core=%d\n", xPortGetCoreID());
+
+  taskParams.taskInfo[TASK_SECOND_BELL].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_SECOND_BELL].priority = uxTaskPriorityGet(NULL);
+
   while(true) {
-    mt->getTime();
-    aktSecond = mt->mytm.tm_sec;
-    if(aktSecond!=lastSecond) {
-      lastSecond=aktSecond;
-      secondBell->blinkSecond();
+    if(secondBell->getStatus() && settings->mySettings.secondsBell) {
+      mt->getTime();
+      aktSecond = mt->mytm.tm_sec;
+      if(aktSecond!=lastSecond) {
+        lastSecond=aktSecond;
+        secondBell->blinkSecond();
+#if defined(SYSLOGSERVER_SERVER)
+        syslog.log(LOG_INFO,"displaySecondBell");
+#endif
+        vTaskDelay(pdMS_TO_TICKS(800));
+      }
     }
     vTaskDelay(pdMS_TO_TICKS(100));
   }
@@ -536,11 +596,13 @@ void displaySecondBell(void *) {
 #ifdef WITH_SECOND_HAND
 void displaySecondHand(void *) {
   SecondHand *secondHand=SecondHand::getInstance();
-  LedDriver *ledDriver=LedDriver::getInstance();
 
   int lastSecond=0;
   int aktSecond;
-  DEBUG_PRINTF("secondHand: Core=%d\n", xPortGetCoreID());
+
+  taskParams.taskInfo[TASK_SECOND_HAND].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_SECOND_HAND].priority = uxTaskPriorityGet(NULL);
+
   while(true) {
     mt->getTime();
     aktSecond = mt->mytm.tm_sec;
@@ -618,13 +680,13 @@ void t_hmiHandler(void *) {
   uint8_t lastSecond=100;
   WidgetMode aktMode = WIDGET_UNKNOWN;
 
-  DEBUG_PRINTF("t_hmiHandler: Core=%d\n", xPortGetCoreID());
+  taskParams.taskInfo[TASK_T_HMI].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_T_HMI].priority = uxTaskPriorityGet(NULL);
 
   MyTFT *tft = MyTFT::getInstance();
   MyTouch *touch = MyTouch::getInstance();
   MyButtons *btns = MyButtons::getInstance();
   MyWidgets *widgets = MyWidgets::getInstance();
-  MyTime *mt = MyTime::getInstance();
 
   OneButton buttonWifiReset(WIFI_RESET, false, false);
   
@@ -691,9 +753,6 @@ void t_hmiHandler(void *) {
 
 void displayTime(void *p) {
   s_taskParams *tp = (s_taskParams*)p;
-  Settings *settings=Settings::getInstance();
-  LedDriver *ledDriver=LedDriver::getInstance();
-  Renderer *renderer=Renderer::getInstance();
 
   int lastHour=0;
   int lastMinute=0;
@@ -703,15 +762,20 @@ void displayTime(void *p) {
   int aktMinute;
   int aktSecond;
   uint8_t lastDay = 0;
+  akt_transition = 1;
+  uint8_t akt_transition_old = 1;
 
   mt->mytm.tm_ntpserver = settings->mySettings.ntphost;
   mt->mytm.tm_timezone = settings->mySettings.timezone; //"CET-1CEST,M3.5.0,M10.5.0/3";
   mt->mytm.tm_lon = settings->mySettings.longitude;
   mt->mytm.tm_lat = settings->mySettings.latitude;
-  DEBUG_PRINTLN(F("configure time"));
+  DEBUG_PRINTLN(F("calling confTime"));
   mt->confTime();
-  DEBUG_PRINTLN(F("get time"));
-  DEBUG_PRINTF("time: Core=%d\n", xPortGetCoreID());
+  DEBUG_PRINTLN(F("after confTime"));
+
+  taskParams.taskInfo[TASK_TIME].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_TIME].priority = uxTaskPriorityGet(NULL);
+
   while(true) {
     if (tp->taskInfo[TASK_TIME].handleEvent && xEventGroupWaitBits(xEvent, MODE_TIME, pdFALSE, pdFALSE, portMAX_DELAY)) {
       if (xSemaphoreTake(xMutex, portMAX_DELAY)) {
@@ -720,13 +784,9 @@ void displayTime(void *p) {
           vTaskDelay(pdMS_TO_TICKS(10)); 
           continue; 
         }
-
-        glb->stackSize = tp->taskInfo[TASK_TIME].stackSize;
-        glb->setHighWaterMark(TASK_TIME);
-        glb->codeline = __LINE__;
-        glb->codetab = __NAME__;
-        DEBUG_PRINTF("Erhalten: MODE_TIME, aktMinute=%d, aktSecond=%d, stackSize=%d, uxHighWaterMark=%d\n", mt->mytm.tm_min, mt->mytm.tm_sec, glb->stackSize, glb->highWaterMark);
-
+#if defined(SYSLOGSERVER_SERVER)
+        syslog.log(LOG_INFO,"displayTime: Start");
+#endif
         ledDriver->mode = MODE_TIME;
         mt->getTime();
         aktDay = mt->mytm.tm_mday;
@@ -748,7 +808,6 @@ void displayTime(void *p) {
         if (aktDay != lastDay)
         {
           lastDay = aktDay;
-          glb->Modecount = 0;
 
 #ifdef SHOW_MODE_MOONPHASE
           ow->moonphase = ow->getMoonphase(mt->mytm.tm_year, mt->mytm.tm_mon, mt->mytm.tm_mday);
@@ -772,58 +831,58 @@ void displayTime(void *p) {
         }
         else
         {
-          glb->akt_transition = settings->mySettings.transition;
+          akt_transition = settings->mySettings.transition;
           if ( settings->mySettings.transition == TRANSITION_RANDOM )
           {
-            glb->akt_transition_old = glb->akt_transition;
+            akt_transition_old = akt_transition;
             for (uint8_t i = 0; i <= 20; i++)
             {
-              glb->akt_transition = random(TRANSITION_NORMAL + 1, TRANSITION_MAX);
-              if ( glb->akt_transition != glb->akt_transition_old ) break;
+              akt_transition = random(TRANSITION_NORMAL + 1, TRANSITION_MAX);
+              if ( akt_transition != akt_transition_old ) break;
             }
           }
           if ( settings->mySettings.transition == TRANSITION_ALLE_NACHEINANDER )
           {
-            glb->akt_transition_old++;
-            if ( glb->akt_transition_old >= TRANSITION_MAX ) glb->akt_transition_old = TRANSITION_NORMAL + 1;
-            glb->akt_transition = glb->akt_transition_old;
+            akt_transition_old++;
+            if ( akt_transition_old >= TRANSITION_MAX ) akt_transition_old = TRANSITION_NORMAL + 1;
+            akt_transition = akt_transition_old;
           }
 
-          if (glb->akt_transition == TRANSITION_NORMAL)
+          if (akt_transition == TRANSITION_NORMAL)
             ledDriver->writeScreenBuffer(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVEUP)
+          else if (akt_transition == TRANSITION_MOVEUP)
             ledDriver->moveScreenBufferUp(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVEDOWN)
+          else if (akt_transition == TRANSITION_MOVEDOWN)
             ledDriver->moveScreenBufferDown(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVELEFT)
+          else if (akt_transition == TRANSITION_MOVELEFT)
             ledDriver->moveScreenBufferLeft(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVERIGHT)
+          else if (akt_transition == TRANSITION_MOVERIGHT)
             ledDriver->moveScreenBufferRight(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVELEFTDOWN)
+          else if (akt_transition == TRANSITION_MOVELEFTDOWN)
             ledDriver->moveScreenBufferLeftDown(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVERIGHTDOWN)
+          else if (akt_transition == TRANSITION_MOVERIGHTDOWN)
             ledDriver->moveScreenBufferRightDown(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MOVECENTER)
+          else if (akt_transition == TRANSITION_MOVECENTER)
             ledDriver->moveScreenBufferCenter(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_FADE)
+          else if (akt_transition == TRANSITION_FADE)
             ledDriver->writeScreenBufferFade(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_FARBENMEER)
+          else if (akt_transition == TRANSITION_FARBENMEER)
             ledDriver->farbenmeer(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_MATRIX)
+          else if (akt_transition == TRANSITION_MATRIX)
             ledDriver->matrix_regen(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_SPIRALE_LINKS)
+          else if (akt_transition == TRANSITION_SPIRALE_LINKS)
             ledDriver->moveSeriell(matrix, settings->mySettings.ledcol, SPIRALE_LINKS);
-          else if (glb->akt_transition == TRANSITION_ZEILENWEISE)
+          else if (akt_transition == TRANSITION_ZEILENWEISE)
             ledDriver->moveSeriell(matrix, settings->mySettings.ledcol, ZEILENWEISE);
-          else if (glb->akt_transition == TRANSITION_SPIRALE_RECHTS)
+          else if (akt_transition == TRANSITION_SPIRALE_RECHTS)
             ledDriver->moveSeriell(matrix, settings->mySettings.ledcol, SPIRALE_RECHTS);
-          else if (glb->akt_transition == TRANSITION_MITTE_LINKSHERUM)
+          else if (akt_transition == TRANSITION_MITTE_LINKSHERUM)
             ledDriver->moveSeriell(matrix, settings->mySettings.ledcol, MITTE_LINKSHERUM);
-          else if (glb->akt_transition == TRANSITION_REGENBOGEN)
+          else if (akt_transition == TRANSITION_REGENBOGEN)
             ledDriver->regenbogen(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_QUADRATE)
+          else if (akt_transition == TRANSITION_QUADRATE)
             ledDriver->quadrate(matrix, settings->mySettings.ledcol);
-          else if (glb->akt_transition == TRANSITION_KREISE)
+          else if (akt_transition == TRANSITION_KREISE)
             ledDriver->kreise(matrix, settings->mySettings.ledcol);
           else
           {
@@ -839,6 +898,9 @@ void displayTime(void *p) {
       }
       vTaskDelay(pdMS_TO_TICKS(500));
     } // if (xEventGroupWaitBits
+#if defined(SYSLOGSERVER_SERVER)
+    syslog.log(LOG_INFO,"displayTime: End");
+#endif
     vTaskDelay(pdMS_TO_TICKS(10));
   } // while(true)
 }
@@ -846,24 +908,23 @@ void displayTime(void *p) {
 
 
 void startup(void *) {
-  Settings *settings=Settings::getInstance();
-  Renderer *renderer=Renderer::getInstance();
-  IconRenderer *icor=IconRenderer::getInstance();
-  LedDriver *ledDriver=LedDriver::getInstance();
-  MyWifi *myWifi=MyWifi::getInstance();
-  WebHandler *webHandler = WebHandler::getInstance();
-  Global *glb = Global::getInstance();
-
+  BaseType_t taskState;
 #if defined(LILYGO_T_HMI)
   #include "MyTFT.h"
   MyTFT *tft = MyTFT::getInstance();
   tft->init();
+  vTaskDelay(1);
 #endif
 
   DEBUG_PRINTLN("startup called");
-  DEBUG_PRINTF("startup: Core=%d\n", xPortGetCoreID());
-  settings->init();
 
+  taskParams.taskInfo[TASK_STARTUP].core = xPortGetCoreID();
+  taskParams.taskInfo[TASK_STARTUP].priority = uxTaskPriorityGet(NULL);
+
+  settings->init();
+  vTaskDelay(1);
+
+  ledDriver->abcBrightness = map(settings->mySettings.brightness, 10, 100, MIN_BRIGHTNESS, MAX_BRIGHTNESS);
   ledDriver->setBrightness(settings->mySettings.brightness);
 
 #ifdef LDR
@@ -871,7 +932,6 @@ void startup(void *) {
   if (settings->mySettings.useAbc)
     ledDriver->setBrightnessFromLdr();
 #endif
-
 
 
   renderer->language = settings->mySettings.language;
@@ -884,10 +944,14 @@ void startup(void *) {
   DEBUG_PRINTLN("nach setSmallText");
   
   ledDriver->farbenmeer(matrix, colorArray[WHITE]);
-
+  DEBUG_PRINTLN("nach farbenmeer");
   icor->renderAndDisplay("/ico/setup.ico",0,1);
-  myWifi->init();
   DEBUG_PRINTLN(F("vor setup WiFi"));
+
+  vTaskDelay(1);
+  myWifi->init();
+  vTaskDelay(1);
+
 #if defined(LILYGO_T_HMI)
   tft->printStateLine("Start WIFI...", 0, true);
 #endif
@@ -905,6 +969,19 @@ void startup(void *) {
 #endif
     webHandler->webRequests();
 
+    vTaskDelay(1);
+
+#ifdef SYSLOGSERVER_SERVER
+  Serial.println(F("Starting syslog."));
+  Serial.println();
+  syslog.server(SYSLOGSERVER_SERVER, SYSLOGSERVER_PORT);
+  syslog.deviceHostname(HOSTNAME);
+  syslog.appName(settings->mySettings.systemname);
+  syslog.defaultPriority(LOG_INFO);
+  syslog.log(LOG_INFO, "Setup Starting syslog: IP=" + myWifi->IP().toString());
+  syslog.log(LOG_INFO, "Reset reason: " + String(esp_reset_reason()));
+#endif
+
     // MzOTA
     MzOTA.begin(myWifi->getServer());
 
@@ -914,6 +991,8 @@ void startup(void *) {
     MzOTA.onEnd(onOTAEnd);
   }
 
+  vTaskDelay(1);
+
   for(uint16_t i=0;i<10;i++)
     matrix[i]=0;
   
@@ -921,15 +1000,7 @@ void startup(void *) {
 
   // Define a random time
   randomSeed(analogRead(ANALOG_PIN));
-  glb->randomHour = random(9, 16);
-  for (uint8_t i = 0; i <= 20; i++)
-  {
-    glb->randomMinute = random(23, 37); // eine Zufallsminute die nicht auf eine volle 5 Minute fällt
-    if (glb->randomMinute % 5 != 0)
-      break;
-  }
-  glb->randomSecond = random(5, 56);
-  
+
   xMutex = xSemaphoreCreateBinary();
   xSemaphoreGive(xMutex);  // Anfangszustand: freigegeben
 
@@ -940,101 +1011,118 @@ void startup(void *) {
   }
 
 
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &queueScheduler,   // Function name of the task
     taskParams.taskInfo[TASK_SCHEDULER].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_SCHEDULER].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_SCHEDULER].priority,          // Task priority
     &taskParams.taskInfo[TASK_SCHEDULER].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_SCHEDULER].core
   );
+  DEBUG_PRINTF("Nach start von TASK_SCHEDULER, ret=%d\n", taskState);
+  vTaskDelay(1);
 
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &displayTime,   // Function name of the task
     taskParams.taskInfo[TASK_TIME].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_TIME].stackSize,           // Stack size (bytes)
     &taskParams,    // Parameter to pass
-    1,              // Task priority
+    taskParams.taskInfo[TASK_TIME].priority,              // Task priority
     &taskParams.taskInfo[TASK_TIME].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_TIME].core
   );
+  DEBUG_PRINTF("Nach start von TASK_TIME, ret=%d\n", taskState);
+  vTaskDelay(1);
 
 #ifdef WITH_SECOND_BELL
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &displaySecondBell,   // Function name of the task
     taskParams.taskInfo[TASK_SECOND_BELL].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_SECOND_BELL].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_SECOND_BELL].priority,          // Task priority
     &taskParams.taskInfo[TASK_SECOND_BELL].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_SECOND_BELL].core
   );
+  DEBUG_PRINTF("Nach start von TASK_SECOND_BELL, ret=%d\n", taskState);
+  vTaskDelay(1);
 #endif
 
 #ifdef WITH_SECOND_HAND
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &displaySecondHand,   // Function name of the task
     taskParams.taskInfo[TASK_SECOND_HAND].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_SECOND_HAND].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_SECOND_HAND].priority,          // Task priority
     &taskParams.taskInfo[TASK_SECOND_HAND].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_SECOND_HAND].core
   );
+  DEBUG_PRINTF("Nach start von TASK_SECOND_HAND, ret=%d\n", taskState);
+  vTaskDelay(1);
 #endif
 
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &ModesQueueHandler,   // Function name of the task
     taskParams.taskInfo[TASK_MODES].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_MODES].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_MODES].priority,          // Task priority
     &taskParams.taskInfo[TASK_MODES].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_MODES].core
   );
+  DEBUG_PRINTF("Nach start von TASK_MODES, ret=%d\n", taskState);
+  vTaskDelay(1);
 
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &showTextHandler,   // Function name of the task
     taskParams.taskInfo[TASK_TEXT].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_TEXT].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_TIME].priority,          // Task priority
     &taskParams.taskInfo[TASK_TEXT].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_TEXT].core
   );
+  DEBUG_PRINTF("Nach start von TASK_TEXT, ret=%d\n", taskState);
+  vTaskDelay(1);
 
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &animationQueueHandler,   // Function name of the task
     taskParams.taskInfo[TASK_ANIMATION].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_ANIMATION].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_ANIMATION].priority,          // Task priority
     &taskParams.taskInfo[TASK_ANIMATION].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_ANIMATION].core
   );
+  DEBUG_PRINTF("Nach start von TASK_ANIMATION, ret=%d\n", taskState);
+  vTaskDelay(1);
 
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &eventQueueHandler,   // Function name of the task
     taskParams.taskInfo[TASK_EVENT].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_EVENT].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_EVENT].priority,          // Task priority
     &taskParams.taskInfo[TASK_EVENT].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_EVENT].core
   );
-
+  DEBUG_PRINTF("Nach start von TASK_EVENT, ret=%d\n", taskState);
+  vTaskDelay(1);
 
 #if defined(LILYGO_T_HMI)
-  xTaskCreatePinnedToCore(
+  taskState = xTaskCreatePinnedToCore(
     &t_hmiHandler,   // Function name of the task
     taskParams.taskInfo[TASK_T_HMI].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_T_HMI].stackSize,       // Stack size (bytes)
     &taskParams,       // Parameter to pass
-    1,          // Task priority
+    taskParams.taskInfo[TASK_T_HMI].priority,          // Task priority
     &taskParams.taskInfo[TASK_T_HMI].taskHandle,// Task handle
-    0
+    taskParams.taskInfo[TASK_T_HMI].core
   );
+  DEBUG_PRINTF("Nach start von TASK_T_HMI, ret=%d\n", taskState);
+  vTaskDelay(1);
 #endif
 
   taskParams.feedText = "  " + String(settings->mySettings.systemname) + ":" + myWifi->IP().toString();
@@ -1045,52 +1133,44 @@ void startup(void *) {
   while(!(taskParams.taskInfo[TASK_TEXT].state==STATE_PROCESSED))
     vTaskDelay(pdMS_TO_TICKS(100));
 
-  /*DEBUG_PRINTLN("Task beendet sich selbst...");
+  DEBUG_PRINTLN("Task beendet sich selbst...");
   vTaskDelay(pdMS_TO_TICKS(1000));
   vTaskDelete(NULL); // Löscht die eigene Task
-  */
-  for(;;) {
-    vTaskDelay(pdMS_TO_TICKS(10000)); // Immer aktiv bleiben
-    // Optional: Periodische Health-Checks
-    // Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
-  }
+
 }
 
 
 void setup() {
-  delay(1000);
+  vTaskDelay(pdMS_TO_TICKS(1000));
   Serial.begin(SERIAL_SPEED);
   int i=0;
   while(!Serial) {
-    delay(100);
+    vTaskDelay(pdMS_TO_TICKS(100));
     if(i++ == 20) break;
   }
   Serial.println("\n\nStarting....");
   Serial.flush();
 
+#ifndef ARDUINO_ESP32_C6_DEVKITM_1
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
-/*
-  if(esp_reset_reason() != ESP_RST_PANIC) {
-    Serial.println("erzeuge Panic nach 5 Sekunden");
-    Serial.flush();
-    delay(5000);
-    *((int *)0) = 42;
-  }
-*/
+#endif
+
   //--------------------------------------------------
   initFS();
   //--------------------------------------------------
-  
-  xTaskCreatePinnedToCore(
+  DEBUG_PRINTLN("Vor setup() ende");
+    BaseType_t taskState = xTaskCreatePinnedToCore(
       &startup,   // Function name of the task
       taskParams.taskInfo[TASK_STARTUP].name,  // Name of the task (e.g. for debugging)
-      taskParams.taskInfo[TASK_STARTUP].stackSize,       // Stack size (bytes)
+      taskParams.taskInfo[TASK_STARTUP].stackSize,// Stack size (bytes)
       &taskParams,       // Parameter to pass
-      1,          // Task priority
+      taskParams.taskInfo[TASK_STARTUP].priority,          // Task priority
       &taskParams.taskInfo[TASK_STARTUP].taskHandle,       // Task handle
-      1
-  );
+      taskParams.taskInfo[TASK_STARTUP].core
+    );
+    DEBUG_PRINTF("Nach start von TASK_STARTUP, ret=%d\n", taskState);
 }
 
 void loop() {
+  vTaskDelay(portMAX_DELAY);
 }

@@ -302,7 +302,6 @@ void MzOTAClass::begin(MZOTA_WEBSERVER *server, const char * username, const cha
           MZOTA_DEBUG_MSG("Authentication Failed on UPLOAD_FILE_START\n");
           return;
         }
-        Serial.printf("Update Received: %s\n", upload.filename.c_str());
         _current_progress_size = 0;
       } else if (upload.status == UPLOAD_FILE_WRITE) {
           if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {

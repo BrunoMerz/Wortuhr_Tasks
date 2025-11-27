@@ -15,7 +15,6 @@
 #include "TaskStructs.h"
 #include "Events.h"
 #include "Renderer.h"
-#include "Global.h"
 #include "LedDriver_FastLED.h"
 #include "MyTime.h"
 #include "OpenWeather.h"

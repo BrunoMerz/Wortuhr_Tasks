@@ -48,7 +48,7 @@ class MyTime {
   public:
     static MyTime* getInstance();
     void   getTime(void);
-    time_t getLocalTime(void);
+    time_t getLT(void);
     String getDate(void);
     void   confTime(void);
     void   setTime(char *tms);
@@ -75,7 +75,7 @@ class MyTime {
     time_t toLocal(time_t utc);
     time_t toUTC(time_t loc);
     MYTM   mytm;
- 
+    bool isInitialized;
     
   private:
     MyTime(void);

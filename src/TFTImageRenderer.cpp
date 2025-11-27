@@ -258,7 +258,7 @@ void TFTImageRenderer::renderAndDisplayICO(char* iconFileName, int delayAfter, b
     }
   }
 
-  delay(delayAfter);
+  vTaskDelay(pdMS_TO_TICKS(delayAfter));
  
   // clear TFT
   if(cleanUp & 2)
@@ -346,7 +346,7 @@ void TFTImageRenderer::renderAndDisplayPNG(char* pngFileName, int delayAfter, by
     DEBUG_PRINT(millis()-dt); DEBUG_PRINTLN("ms");
   }
 
-  delay(delayAfter);
+  vTaskDelay(pdMS_TO_TICKS(delayAfter));
  
   // clear TFT
   if(cleanUp & 2)

@@ -90,7 +90,7 @@ void MyAlexa::init(char *systemname, Mode *mode, AsyncWebServer *webServer) {
   mqtt->publish("addDevice",buf);
 #endif
   espalexa.addDevice(espalexadev);
-  espalexa.begin(webServer);
+  
 }
 
 void MyAlexa::handle(void) {

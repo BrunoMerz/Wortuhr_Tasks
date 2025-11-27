@@ -348,3 +348,44 @@ typedef enum eFrontcover : uint16_t
 #define PIN_LDR          ANALOG_PIN     // A0      A0,LDR             ADC
 #define WIFI_RESET      (05)
 #endif
+
+#if defined(ARDUINO_LOLIN_S2_MINI)
+//******************************************************************************
+// ARDUINO_LOLIN_S2_MINI / WeMos Anschlüsse:
+//******************************************************************************
+
+//
+#define ANALOG_PIN       (2)      // A1
+#define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
+#define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
+#define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
+#define PIN_AUDIO_RX     D5     // D5      D5,14
+#define PIN_AUDIO_TX     D7     // D3      D7,13
+#define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
+#define PIN_LEDS_DATA    16     //
+#if defined(WITH_SECOND_HAND)
+#define PIN_SECONDS_DATA 17     //
+#endif
+#define PIN_LDR          ANALOG_PIN
+#define WIFI_RESET       (14)
+
+#endif
+
+#if defined(ARDUINO_ESP32_C6_DEVKITM_1)
+//******************************************************************************
+// ARDUINO_ESP32_C6_DEVKITM_1 Anschlüsse:
+//******************************************************************************
+
+#define ANALOG_PIN       A2
+#define PIN_WIRE_SCL     SCL    // D1,SCL  D1,SCL             SCL
+#define PIN_WIRE_SDA     SDA    // D2,SDA  D2,SDA             SDA
+#define PIN_LED          D4     // D4      D4,LED Data        LED_BUILTIN
+#define PIN_AUDIO_RX     D5     // D5      D5,14
+#define PIN_AUDIO_TX     D7     // D3      D7,13
+#define PIN_AUDIO_BUSY   D0     // D0      D0,16              kein Interrupt!
+#define PIN_LEDS_DATA    8     //
+#define PIN_SECONDS_DATA 14     //
+#define PIN_LDR          ANALOG_PIN
+#define WIFI_RESET       (14)
+
+#endif

@@ -27,7 +27,6 @@ SecondBell *SecondBell::getInstance() {
 
 SecondBell::SecondBell(void) {
     brightness=10;
-    settings->mySettings.secondsBell=true;
     _status=true;
 }
 
@@ -63,11 +62,7 @@ void SecondBell::blinkSecond(void) {
     #ifdef DEBUG_SECONDBELL
         Serial.printf("blinkSecond: r=%d, g=%d, b=%d\n",cs.red,cs.green,cs.blue);
     #endif
-#ifdef SYSLOGSERVER_SERVER
-        String logString="blinkSecond: Sec="+String(_aktSecond) + ",  state=";
-        _aktSecond % 2 == 0? logString+="off":logString+="on";
-        syslog.log(LOG_INFO,logString);
-#endif
+
         ledDriver->setPixelRGB(114, cs.red, cs.green, cs.blue);
         ledDriver->show();
     }

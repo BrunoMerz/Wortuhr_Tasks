@@ -15,13 +15,22 @@
 #include <Arduino.h>
 #include "Modes.h"
 
-#define ESPALEXA_MAXDEVICES 5
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#else
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
+#endif
+#include <ESPAsyncWebServer.h>
+
+#define ESPALEXA_MAXDEVICES 2
 #define ESPALEXA_ASYNC
 #define ESPALEXA_DEBUG
-#include "LedDriver_FastLED.h"
-#include "ESPAsyncWebServer.h"
-#include "Settings.h"
 #include "Espalexa.h"
+
+#include "LedDriver_FastLED.h"
+#include "Settings.h"
 
 class MyAlexa {
   public:

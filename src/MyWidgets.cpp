@@ -880,7 +880,7 @@ void MyMeter::updateNeedle(float val, uint32_t ms_delay)
       ms_delay += ms_delay / 5;
 
     // Wait before next update
-    delay(ms_delay);
+    vTaskDelay(pdMS_TO_TICKS(ms_delay));
   }
 }
 

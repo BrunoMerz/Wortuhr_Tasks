@@ -18,7 +18,9 @@ static MyTime *mt = MyTime::getInstance();
 void handleButtonSettings(AsyncWebServerRequest *request)
 {
   DEBUG_PRINTLN("Settings pressed.");
-  
+
+  AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
+
   String message = F("<!doctype html>"
                      "<html>"
                      "<head>");
@@ -48,24 +50,11 @@ void handleButtonSettings(AsyncWebServerRequest *request)
   message += F("<h2>");
   message += String(settings->mySettings.systemname);
   message += F(" " LANG_SETTINGS "</h2>");
-  // ################################################# sende html Teil 1
-  //request->send(200, TEXT_HTML, message);
-  //message = "";
-  //delay(0);
-  // ###################################################################
-  message += F("<form action=\"/commitSettings\">\n"
+
+  response->print(message);
+  
+  message = F("<form action=\"/commitSettings\">\n"
                "<table>\n");
-  // ------------------------------------------------------------------------
-
-
-  // ########################################################################### sende Settings html Teil 2
-  //webServer.sendContent(message);
-  //message = "";
-  //delay(0);
-  // ########################################################################### sende Settings html Teil 2
-  // ------------------------------------------------------------------------
-
-  // ------------------------------------------------------------------------
 
   // ------------------------------------------------------------------------
 #if defined(SunRiseLib) || defined(APIKEY)
@@ -167,13 +156,10 @@ void handleButtonSettings(AsyncWebServerRequest *request)
   message += num_to_string(settings->mySettings.ledcol);
   message += F("\">"
                "</td></tr>\n");
-  //-----------------------------------------------------------------------
-  //##################################### sende Settings html script Teil 3
-  //webServer.sendContent(message);
-  //message = "";
-  //delay(0);
-  // ######################################################################
-  message += F("<tr><td>"
+
+  response->print(message);
+
+  message = F("<tr><td>"
                LANG_MINUTE_COLOUR
                ":</td><td>"
                "<input type=\"color\" name=\"corcol\" value=\"");
@@ -248,13 +234,8 @@ void handleButtonSettings(AsyncWebServerRequest *request)
   message += F("\" name=\"bgc\" id=\"bgcolor\" >"
 
                "</td></tr>\n");
-  // ------------------------------------------------------------------------
-
-  //######################################################### sende Settings html Teil 4
-  //webServer.sendContent(message);
-  //message = "";
-  //delay(0);
-  //#########################################################
+  response->print(message);
+  message = "";
 
 #ifndef FRONTCOVER_BINARY
   message += F("<tr><td>"
@@ -657,8 +638,8 @@ void handleButtonSettings(AsyncWebServerRequest *request)
                "</script>\n"
                "</body>\n</html>");
 
-  request->send(200, TEXT_HTML, message);
-
+  response->print(message);
+  request->send(response);
 }
 
 

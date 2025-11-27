@@ -1,3 +1,4 @@
+
 #include "Arduino.h"
 #include "Configuration.h"
 #include "Languages.h"
@@ -7,13 +8,17 @@
 #include "Game.h"
 #include "OpenWeather.h"
 #include "MyFileAccess.h"
-#include "Global.h"
 #include "LedDriver_FastLED.h"
 #include "Events.h"
 #include "MyWifi.h"
 #include "taskStructs.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+
+#if defined(SYSLOGSERVER_SERVER)
+#include "Syslog.h"
+extern Syslog syslog;
+#endif
 
 //#include myDEBUG
 #include "MyDebug.h"
@@ -23,13 +28,14 @@
 
 extern float getHeapFragmentation();
 extern s_taskParams taskParams;
+extern uint32_t autoModeChangeTimer;
+extern uint8_t akt_transition;
 
 static MyTime *mt = MyTime::getInstance();
 static Settings *settings = Settings::getInstance();
 static OpenWeather *outdoorWeather = OpenWeather::getInstance();
 static MyFileAccess *fa = MyFileAccess::getInstance();
 static OpenWeather *ow = OpenWeather::getInstance();
-static Global *glb = Global::getInstance();
 static LedDriver *ledDriver = LedDriver::getInstance();
 static Events *evt = Events::getInstance();
 static Game *game = Game::getInstance();
@@ -43,19 +49,17 @@ static MyBME *myBME = MyBME::getInstance();
 //debugClock
 void debugClock(AsyncWebServerRequest *request)
 {
-#ifdef DEBUG
   DEBUG_PRINTLN("Info Seite refresh!");
+#if defined(SYSLOGSERVER_SERVER)
+  syslog.log(LOG_INFO,"debugClock: start");
 #endif
+  AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
 
-#if defined(ESP8266)
-  String str_freeheap = String(ESP.getFreeHeap());
-  String str_maxfreeblocks = String(ESP.getMaxFreeBlockSize());
-  String str_heapfragmentation = String(ESP.getHeapFragmentation());
-#else
-  String str_freeheap = String(esp_get_free_heap_size());
+  String str_freeheap = String(heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+  String str_minheap = String(heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
   String str_maxfreeblocks = String(heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT));
-  String str_heapfragmentation = String(getHeapFragmentation());  
-#endif
+  String str_heapfragmentation = String(getHeapFragmentation());
+
   String message;
   message = F("<!doctype html>"
               "<html lang=\"");
@@ -176,11 +180,13 @@ void debugClock(AsyncWebServerRequest *request)
   message += ".";
   message += String(mt->year(lokalstartTime));
   message += F("</li>\n");
+  /*
   message += F("<li>" LANG_DAILY " " LANG_HOUR ": ");
   message += String(glb->randomHour);
   message += F("," LANG_HOURLY " " LANG_MINUTE ": ");
   message += String(glb->randomMinute);
   message += F("</li>\n");
+  */
   message += F("<li>" LANG_MOONPHASE " " LANG_CLOCK ": ");
   message += String(ow->moonphase);
   message += F(" Web: ");
@@ -188,21 +194,27 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</li>\n");
   message += F("</ul>\n</li>\n");
 
+  response->print(message);
+  message = "";
+
   // ######################### SYSTEM ##################
   message += F("<li><b>System</b>\n<ul>\n");
   message += F("<li>ESP-Board: ");
   message += BOARD;
   message += F("</li>\n");
-  message += F("<li>Free RAM: ");
-  message += str_freeheap + F(" bytes</li>\n");
-  message += F("<li>StackSize: ");
-  message += String(glb->stackSize);
-  message += F(" bytes</li>\n");
+  message += F("<li>RAM: ");
+  message += "free: " + str_freeheap + F("<br>");
+  message += "min: "  + str_minheap  + F(" bytes</li>\n");
+  //message += F("<li>StackSize: ");
+  //message += String(glb->stackSize);
+  //message += F(" bytes</li>\n");
   message += F("<li>Memory:<br>");
   
   for(uint8_t t=0; t<TASK_MAX; t++) {
     message += taskParams.taskInfo[t].name;
-    message += ": ";
+    message += ": Core=";
+    message += taskParams.taskInfo[t].core;
+    message += ", ";
     //message += "<br>";
     uint32_t ss = taskParams.taskInfo[t].stackSize;
     message += "&nbsp;&nbsp;stackSize: ";
@@ -265,6 +277,10 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</li>\n");
   message += F("</ul>\n</li>\n");
 
+  response->print(message);
+  message = "";
+
+  // #############
   // ######################### LDR ##################
 #ifdef LDR
     message += F("<li><b>LDR</b>\n<ul>\n");
@@ -412,33 +428,33 @@ void debugClock(AsyncWebServerRequest *request)
   // ######################### Events/Modes/Transitions ##################
   message += F("<li><b>Events/Mode/Transitions</b>\n"
                "<ul>\n");
-  message += F("<li>" LANG_MODECOUNT ": ");
-  message += String(glb->Modecount);
-  message += F("</li>\n");
+  //message += F("<li>" LANG_MODECOUNT ": ");
+  //message += String(glb->Modecount);
+  //message += F("</li>\n");
   message += F("<li>autoModeChange-Timer: ");
-  message += String(glb->autoModeChangeTimer);
+  message += String(autoModeChangeTimer);
   message += F("</li>\n");
   message += F("<li>" LANG_LASTTRANS ": (");
-  message += String(glb->akt_transition);
+  message += String(akt_transition);
   message += F(")<small>");
-  if      (glb->akt_transition == TRANSITION_NORMAL)        message += F(LANG_TRANSITION_00);
-  else if (glb->akt_transition == TRANSITION_FARBENMEER)    message += F(LANG_TRANSITION_01);
-  else if (glb->akt_transition == TRANSITION_MOVEUP)        message += F(LANG_TRANSITION_02);
-  else if (glb->akt_transition == TRANSITION_MOVEDOWN)      message += F(LANG_TRANSITION_03);
-  else if (glb->akt_transition == TRANSITION_MOVELEFT)      message += F(LANG_TRANSITION_04);
-  else if (glb->akt_transition == TRANSITION_MOVERIGHT)     message += F(LANG_TRANSITION_05);
-  else if (glb->akt_transition == TRANSITION_MOVELEFTDOWN)  message += F(LANG_TRANSITION_06);
-  else if (glb->akt_transition == TRANSITION_MOVERIGHTDOWN) message += F(LANG_TRANSITION_07);
-  else if (glb->akt_transition == TRANSITION_MOVECENTER)    message += F(LANG_TRANSITION_08);
-  else if (glb->akt_transition == TRANSITION_FADE)          message += F(LANG_TRANSITION_09);
-  else if (glb->akt_transition == TRANSITION_MATRIX)        message += F(LANG_TRANSITION_10);
-  else if (glb->akt_transition == TRANSITION_SPIRALE_LINKS) message += F(LANG_TRANSITION_11);
-  else if (glb->akt_transition == TRANSITION_SPIRALE_RECHTS) message += F(LANG_TRANSITION_12);
-  else if (glb->akt_transition == TRANSITION_ZEILENWEISE)   message += F(LANG_TRANSITION_13);
-  else if (glb->akt_transition == TRANSITION_REGENBOGEN)    message += F(LANG_TRANSITION_14);
-  else if (glb->akt_transition == TRANSITION_MITTE_LINKSHERUM) message += F(LANG_TRANSITION_15);
-  else if (glb->akt_transition == TRANSITION_QUADRATE)      message += F(LANG_TRANSITION_16);
-  else if (glb->akt_transition == TRANSITION_KREISE)        message += F(LANG_TRANSITION_17);
+  if      (akt_transition == TRANSITION_NORMAL)        message += F(LANG_TRANSITION_00);
+  else if (akt_transition == TRANSITION_FARBENMEER)    message += F(LANG_TRANSITION_01);
+  else if (akt_transition == TRANSITION_MOVEUP)        message += F(LANG_TRANSITION_02);
+  else if (akt_transition == TRANSITION_MOVEDOWN)      message += F(LANG_TRANSITION_03);
+  else if (akt_transition == TRANSITION_MOVELEFT)      message += F(LANG_TRANSITION_04);
+  else if (akt_transition == TRANSITION_MOVERIGHT)     message += F(LANG_TRANSITION_05);
+  else if (akt_transition == TRANSITION_MOVELEFTDOWN)  message += F(LANG_TRANSITION_06);
+  else if (akt_transition == TRANSITION_MOVERIGHTDOWN) message += F(LANG_TRANSITION_07);
+  else if (akt_transition == TRANSITION_MOVECENTER)    message += F(LANG_TRANSITION_08);
+  else if (akt_transition == TRANSITION_FADE)          message += F(LANG_TRANSITION_09);
+  else if (akt_transition == TRANSITION_MATRIX)        message += F(LANG_TRANSITION_10);
+  else if (akt_transition == TRANSITION_SPIRALE_LINKS) message += F(LANG_TRANSITION_11);
+  else if (akt_transition == TRANSITION_SPIRALE_RECHTS) message += F(LANG_TRANSITION_12);
+  else if (akt_transition == TRANSITION_ZEILENWEISE)   message += F(LANG_TRANSITION_13);
+  else if (akt_transition == TRANSITION_REGENBOGEN)    message += F(LANG_TRANSITION_14);
+  else if (akt_transition == TRANSITION_MITTE_LINKSHERUM) message += F(LANG_TRANSITION_15);
+  else if (akt_transition == TRANSITION_QUADRATE)      message += F(LANG_TRANSITION_16);
+  else if (akt_transition == TRANSITION_KREISE)        message += F(LANG_TRANSITION_17);
   else
     message += F("unbekannt");
   message += F(" </small></li>\n");
@@ -506,6 +522,12 @@ void debugClock(AsyncWebServerRequest *request)
   message += F("</ul>\n");
 
   message += F("</body></html>");
-  request->send(200,TEXT_HTML,message);
+  response->print(message);
   message = "";
+  // #############
+  request->send(response);
+  message = "";
+#if defined(SYSLOGSERVER_SERVER)
+  syslog.log(LOG_INFO,"debugClock: end");
+#endif
 }
