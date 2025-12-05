@@ -292,7 +292,7 @@ void queueScheduler(void *p) {
           anifs->akt_aniloop = 0;
           anifs->frame_fak = 0;
         
-          while(anifs->showAnimation(settings->mySettings.brightness)) {
+          while(anifs->showAnimation()) {
               vTaskDelay(pdMS_TO_TICKS(10));
           }
           vTaskDelay(pdMS_TO_TICKS(500));
@@ -487,8 +487,8 @@ void animationQueueHandler(void *p) {
         do {
           anifs->akt_aniframe = 0;
           anifs->akt_aniloop = 0;
-          anifs->frame_fak = 0;
-          while(anifs->showAnimation(settings->mySettings.brightness)) {
+          anifs->frame_fak = 1;
+          while(anifs->showAnimation()) {
             vTaskDelay(pdMS_TO_TICKS(30));
           }
           DEBUG_PRINTF("nach showAnimation: frame=%d, loop=%d, fak=%d\n",anifs->akt_aniframe, anifs->akt_aniloop, anifs->frame_fak);
@@ -972,14 +972,14 @@ void startup(void *) {
     vTaskDelay(1);
 
 #ifdef SYSLOGSERVER_SERVER
-  Serial.println(F("Starting syslog."));
-  Serial.println();
-  syslog.server(SYSLOGSERVER_SERVER, SYSLOGSERVER_PORT);
-  syslog.deviceHostname(HOSTNAME);
-  syslog.appName(settings->mySettings.systemname);
-  syslog.defaultPriority(LOG_INFO);
-  syslog.log(LOG_INFO, "Setup Starting syslog: IP=" + myWifi->IP().toString());
-  syslog.log(LOG_INFO, "Reset reason: " + String(esp_reset_reason()));
+    Serial.println(F("Starting syslog."));
+    Serial.println();
+    syslog.server(SYSLOGSERVER_SERVER, SYSLOGSERVER_PORT);
+    syslog.deviceHostname(HOSTNAME);
+    syslog.appName(settings->mySettings.systemname);
+    syslog.defaultPriority(LOG_INFO);
+    syslog.log(LOG_INFO, "Setup Starting syslog: IP=" + myWifi->IP().toString());
+    syslog.log(LOG_INFO, "Reset reason: " + String(esp_reset_reason()));
 #endif
 
     // MzOTA
@@ -1135,6 +1135,7 @@ void startup(void *) {
 
   DEBUG_PRINTLN("Task beendet sich selbst...");
   vTaskDelay(pdMS_TO_TICKS(1000));
+  taskParams.taskInfo[TASK_STARTUP].taskHandle = NULL;
   vTaskDelete(NULL); // Löscht die eigene Task
 
 }

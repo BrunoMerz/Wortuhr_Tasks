@@ -13,8 +13,6 @@
 #include "Helper.h"
 #include <LittleFS.h>
 
-//#define DEBUG_ANIMATION
-
 //#define myDEBUG
 #include "MyDebug.h"
 
@@ -127,7 +125,7 @@ void AnimationFS::saveAnimationsListe()
    }
    anioutput+= F(" ]\n}\n");
    bytesWritten = file.print(anioutput);
-#ifdef DEBUG_ANIMATION
+#ifdef myDEBUG
    if (bytesWritten > 0) 
    {
     Serial.println(F("File " ANIMATIONSLISTE " was written"));
@@ -143,10 +141,9 @@ void AnimationFS::saveAnimationsListe()
 // Lade die Animation
 bool AnimationFS::loadAnimation(String aniname )
 {
-#ifdef DEBUG_ANIMATION
-  Serial.print(F("Loading Animation "));
-  Serial.println (aniname);
-#endif
+  DEBUG_PRINT(F("Loading Animation "));
+  DEBUG_PRINTLN(aniname);
+
   String filename = "/ani_" + aniname + ".json";
   String filezeile;
   String typ;
@@ -220,7 +217,7 @@ bool AnimationFS::loadAnimation(String aniname )
 
   }
   file.close();
-#ifdef DEBUG_ANIMATION
+#ifdef myDEBUG
   Serial.print( "myanimation.name: " );
   Serial.println (myanimation.name);
   Serial.print( "myanimation.loops: " );
@@ -295,10 +292,10 @@ bool AnimationFS::loadjsonarry( int8_t frame, uint8_t zeile, String &jsonBuffer)
 bool AnimationFS::saveAnimation(String aniname ) {
 
   aniname.toUpperCase();
-#ifdef DEBUG_ANIMATION
-  Serial.print(F("Saving Animation "));
-  Serial.println (aniname);
-#endif  
+
+  DEBUG_PRINT(F("Saving Animation "));
+  DEBUG_PRINTLN(aniname);
+
   String filename = "/ani_" + aniname + ".json";
   String anioutput;
   int bytesWritten = 0;
@@ -333,7 +330,11 @@ bool AnimationFS::saveAnimation(String aniname ) {
   }
   anioutput += F(" ],\n");
 
+  DEBUG_PRINT(F("output="));
+  DEBUG_PRINTLN(anioutput);
+
   bytesWritten = file.print(anioutput);
+  DEBUG_PRINTF("bytesWritten=%d\n",bytesWritten);
   if (bytesWritten > 0) {
     anioutput = "";
     for ( uint8_t f = 0;f < MAXFRAMES;f++)
@@ -378,11 +379,11 @@ bool AnimationFS::saveAnimation(String aniname ) {
   }
   if (bytesWritten > 0) 
   {
-#ifdef DEBUG_ANIMATION
-    Serial.println(F("Save Animation: File was written"));
-    Serial.print(bytesWritten);
-    Serial.println(F(" bytes"));
-#endif
+
+    DEBUG_PRINTLN(F("Save Animation: File was written"));
+    DEBUG_PRINT(bytesWritten);
+    DEBUG_PRINTLN(F(" bytes"));
+
     retval = true;
   } else {
     Serial.println(F("File write failed"));
@@ -395,13 +396,14 @@ bool AnimationFS::saveAnimation(String aniname ) {
 
 // ################################################################################################################
 //  ANIMATIONEN
-bool AnimationFS::showAnimation(uint8_t brightness)
+bool AnimationFS::showAnimation(void)
 {
   uint8_t red;
   uint8_t green;
   uint8_t blue;
-  //  unsigned long aktmillis = millis();
-  // beim ersten Frame in der ersten loop die Corner LEDs löschen
+  uint8_t brightness = ledDriver->getBrightness();
+
+   // beim ersten Frame in der ersten loop die Corner LEDs löschen
   if (!akt_aniframe && !akt_aniloop)
   {
     for (uint8_t cp = 0; cp <= 3; cp++)
@@ -411,33 +413,30 @@ bool AnimationFS::showAnimation(uint8_t brightness)
     if (myanimation.laufmode < 2)
       frame_fak = 1;
   }
-#ifdef DEBUG_ANIMATION
-    DEBUG_PRINTF("Start Animation: akt_aniloop=%d, loops=%d\n", akt_aniloop, myanimation.loops);
-#endif
+
+  DEBUG_PRINTF("showAnimation: akt_aniloop=%d, loops=%d\n", akt_aniloop, myanimation.loops);
+
   if (akt_aniloop >= myanimation.loops)
   {
     akt_aniloop = 0;
     akt_aniframe = 0;
     frame_fak = 1;
-#ifdef DEBUG_ANIMATION
-    DEBUG_PRINTLN("Start Animation: returning false");
-#endif
+
+    DEBUG_PRINTLN("showAnimation: returning false");
 
     return false;
   }
   else
   {
-#ifdef DEBUG_ANIMATION
-    DEBUG_PRINTLN("Start Animation: " + String(myanimation.name) + " Loop: " + String(akt_aniloop) + " Frame: " + String(akt_aniframe));
-#endif
+    DEBUG_PRINTLN("showAnimation: " + String(myanimation.name) + " Loop: " + String(akt_aniloop) + " Frame: " + String(akt_aniframe));
 
     for (uint8_t z = 0; z <= 9; z++)
     {
       for (uint8_t x = 0; x <= 10; x++)
       {
-        red = myanimation.frame[akt_aniframe].color[x][z].red;// * brightness * 0.0039;
-        green = myanimation.frame[akt_aniframe].color[x][z].green;// * brightness * 0.0039;
-        blue = myanimation.frame[akt_aniframe].color[x][z].blue;// * brightness * 0.0039;
+        red = myanimation.frame[akt_aniframe].color[x][z].red * brightness * 0.0039;
+        green = myanimation.frame[akt_aniframe].color[x][z].green * brightness * 0.0039;
+        blue = myanimation.frame[akt_aniframe].color[x][z].blue * brightness * 0.0039;
         ledDriver->setPixelRGB(x, z, red, green, blue);
       }
     }
@@ -491,9 +490,9 @@ bool AnimationFS::showAnimation(uint8_t brightness)
 //mz      frame_fak = 1;
 //mz    }
     //screenBufferNeedsUpdate = true;
-#ifdef DEBUG_ANIMATION
-    DEBUG_PRINTLN("Start Animation: returning true");
-#endif
+
+    DEBUG_PRINTLN("showAnimation: returning true");
+
     return true;
   }
 }

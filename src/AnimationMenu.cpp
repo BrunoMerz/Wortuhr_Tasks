@@ -11,8 +11,8 @@
 #include "Animation.h"
 #include "TaskStructs.h"
 #include <LittleFS.h>
-
-#define DEBUG_ANIMATION
+#include "helper.h"
+#include "LedDriver_FastLED.h"
 
 //#define myDEBUG
 #include "MyDebug.h"
@@ -21,6 +21,48 @@ extern s_taskParams taskParams;
 extern EventGroupHandle_t xEvent;
 
 static AnimationFS *anifs = AnimationFS::getInstance();
+static LedDriver *ledDriver = LedDriver::getInstance();
+
+
+// Set Corner Pixel
+void setCornerPixel(uint32_t colornum_in)
+{
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+  red = num_to_color(colornum_in).red * ledDriver->getBrightness() * 0.0039;
+  green = num_to_color(colornum_in).green * ledDriver->getBrightness() * 0.0039;
+  blue = num_to_color(colornum_in).blue * ledDriver->getBrightness() * 0.0039;
+  for (uint8_t cp = 0; cp <= 3; cp++)
+  {
+    ledDriver->setPixelRGB(110 + cp, red, green, blue);
+  }
+  ledDriver->show();
+}
+
+
+// Zeige den aktuellen Frame während MakeAnimation an.
+void showMakeAnimation(void)
+{
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+  uint8_t brightness = ledDriver->getBrightness();
+
+  DEBUG_PRINTLN("showMakeAnimation: " + String(anifs->myanimation.name) + " Frame: " + String(anifs->akt_aniframe) );
+
+  for ( uint8_t z = 0; z <= 9; z++)
+  {
+    for ( uint8_t x = 0; x <= 10; x++)
+    {
+      red = anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].red * brightness * 0.0039;
+      green = anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].green * brightness * 0.0039;
+      blue = anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].blue * brightness * 0.0039;
+      ledDriver->setPixelRGB(x, z, red, green, blue);
+    }
+  }
+  ledDriver->show();
+}
 
 //###########################################################################
 // Animationsmenü
@@ -118,62 +160,179 @@ void makeAnimationmenue(AsyncWebServerRequest *request)
 void startAnimationsmenue(AsyncWebServerRequest *request)
 {
   anifs->getAnimationList();
-  taskParams.animation = anifs->myanimationslist[0];
-  taskParams.endless_loop = true;
+  anifs->animation = anifs->myanimationslist[0];
   anifs->akt_aniframe = 0;
   anifs->akt_aniloop = 0;
   anifs->frame_fak = 1;
 
-
-#ifdef  DEBUG_ANIMATION
-  DEBUG_PRINTLN("Start Animationsmenue: " + taskParams.animation + " Frame: " + String(anifs->akt_aniframe) );
-#endif
+  DEBUG_PRINTLN("startAnimationsmenue: " + anifs->animation + " Frame: " + String(anifs->akt_aniframe) );
 
   makeAnimationmenue(request);
 }
 
-//Starte Animationseditor
+// Start Animations Editor
 void startmakeAnimation(AsyncWebServerRequest *request)
 {
-  anifs->akt_aniframe = 0;
-  anifs->akt_aniloop = 0;
-  anifs->frame_fak = 1;
-//mz  mode = MODE_MAKEANIMATION;
-//mz  screenBufferNeedsUpdate = true;
+
+  DEBUG_PRINTF("startmakeAnimation: %s\n",anifs->animation.c_str());
+  taskParams.endless_loop = false;
+  // in order to terminate animation
+  anifs->akt_aniloop = anifs->myanimation.loops;
+  // wait for last animation loop
+  while(anifs->akt_aniframe) vTaskDelay(pdMS_TO_TICKS(1));
+
   // fülle die Zwischenablage mit dem ersten Frame
   for ( uint8_t z = 0; z <= 9; z++)
   {
     for ( uint8_t x = 0; x <= 10; x++)
     {
-      copyframe.color[x][z].red = anifs->myanimation.frame[0].color[x][z].red;
-      copyframe.color[x][z].green = anifs->myanimation.frame[0].color[x][z].green;
-      copyframe.color[x][z].blue = anifs->myanimation.frame[0].color[x][z].blue;
-      copyframe.delay = anifs->myanimation.frame[0].delay;
+      anifs->copyframe.color[x][z].red = anifs->myanimation.frame[0].color[x][z].red;
+      anifs->copyframe.color[x][z].green = anifs->myanimation.frame[0].color[x][z].green;
+      anifs->copyframe.color[x][z].blue = anifs->myanimation.frame[0].color[x][z].blue;
+      anifs->copyframe.delay = anifs->myanimation.frame[0].delay;
     }
   }
-  request->send(200, TEXT_HTML, "<!doctype html><html><head><script>window.onload=function(){window.location.replace('/web/animation.html?animation=" + String(taskParams.animation) + "');}</script></head></html>");
+  request->send(200, TEXT_HTML, "<!doctype html><html><head><script>window.onload=function(){window.location.replace('/web/animation.html?animation=" + String(anifs->animation) + "');}</script></head></html>");
+  showMakeAnimation();
 }
 
-//Verarbeitung Animationsauswahl
+// Verarbeitung Animationsauswahl
 void handleaniselect(AsyncWebServerRequest *request)
 {
+  DEBUG_PRINTLN("handleaniselect called");
   if ( request->arg("value") != "BACK" ) // wenn wir vom Editor zurückkommen
   {
-    taskParams.animation = request->arg("value");
-    taskParams.animation.toUpperCase();
-    taskParams.endless_loop = true;
-#ifdef  DEBUG_ANIMATION
-  DEBUG_PRINTLN("Animation gewählt: " + taskParams.animation );
-#endif
-  }
-#ifdef  DEBUG_ANIMATION
-  else
+    DEBUG_PRINTLN("handleaniselect: starting first animation from list");
+    anifs->animation = request->arg("value");
+    anifs->animation.toUpperCase();
+    taskParams.animation = anifs->animation;
+ 
+    DEBUG_PRINTLN("Animation gewählt: " + anifs->animation);
+  } else
   {
     DEBUG_PRINTLN("BACK");
+    taskParams.endless_loop = true;
   }
-#endif
-  bool load = anifs->loadAnimation(taskParams.animation);
+  // disable TASK_SCHEDULER an TASK_TIME
+  taskParams.taskInfo[TASK_TIME].handleEvent = false;
+  taskParams.taskInfo[TASK_SCHEDULER].handleEvent = false;
+  DEBUG_PRINTF("Calling loadAnimation: %s\n",anifs->animation.c_str());
+  bool load = anifs->loadAnimation(anifs->animation);
+  //showMakeAnimation();
   request->send(200, TEXT_PLAIN, F("OK"));
   if(load)
     xEventGroupSetBits(xEvent, MODE_SHOWANIMATION);
+}
+
+// Verarbeite Animationsoberfläche
+void handlemakeAnimation(AsyncWebServerRequest *request)
+{
+  String webargname;
+  String webargvalue;
+  String typ;
+  String wert;
+  uint8_t palidx;
+  uint8_t x, y;
+
+  if (request->arg(F("_action")) == "save")
+  {
+    if (anifs->saveAnimation(anifs->animation))
+    {
+      request->send(200, TEXT_PLAIN, anifs->animation);
+    }
+    else
+    {
+      request->send(200, TEXT_PLAIN, F("E"));
+    }
+    //    request->send(200, TEXT_HTML, "<!doctype html><html><head><script>window.onload=function(){window.location.replace('/animationmenue');}</script></head></html>");
+  }
+  else
+  {
+    for (int i = 0; i < request->args(); i++)
+    {
+      webargname += request->argName(i);
+      webargvalue += request->arg(i);
+
+      DEBUG_PRINTLN(" WebArg: " + webargname + " = " + webargvalue);
+
+      if (webargname == "aniname")
+      {
+        webargvalue.trim();
+        webargvalue.replace(" ", "_");
+        webargvalue.toUpperCase();
+        webargvalue.toCharArray(anifs->myanimation.name, webargvalue.length() + 1);
+        anifs->animation = webargvalue;
+        DEBUG_PRINTF("aniname=%s\n",anifs->animation);
+      }
+      if (webargname == "frame")
+        anifs->akt_aniframe = webargvalue.toInt();
+      if (webargname == "loops")
+        anifs->myanimation.loops = webargvalue.toInt();
+      if (webargname == "laufmode")
+        anifs->myanimation.laufmode = webargvalue.toInt();
+      if (webargname == "aktivfarbe")
+      {
+        wert = "#" + webargvalue;
+        setCornerPixel(string_to_num(wert));
+      }
+      if (webargname == "palette")
+      {
+        typ = webargvalue.substring(0, webargvalue.indexOf(":"));
+        wert = webargvalue.substring(webargvalue.indexOf(":") + 1);
+        wert = "#" + wert;
+        typ.replace("colorselect", "");
+        //         DEBUG_PRINTLN(typ + ":" + wert);
+        palidx = typ.toInt();
+        //         DEBUG_PRINTF("PALIDX: %i \n",palidx);
+        //         DEBUG_PRINTLN(String(palidx) + " = " + wert );
+        anifs->anipalette[palidx] = string_to_num(wert);
+        setCornerPixel(string_to_num(wert));
+        //         DEBUG_PRINTF ("anipalette %i = %i\n",palidx,anipalette[palidx]);
+      }
+      if (webargname == "delay")
+      {
+        anifs->myanimation.frame[anifs->akt_aniframe].delay = webargvalue.toInt();
+      }
+      if (webargname == "pixel")
+      {
+        typ = webargvalue.substring(0, webargvalue.indexOf(":"));
+        wert = webargvalue.substring(webargvalue.indexOf(":") + 1);
+        wert = "#" + wert;
+        typ.replace("c_", "");
+        x = typ.substring(0, typ.indexOf("_")).toInt();
+        y = typ.substring(typ.indexOf("_") + 1).toInt();
+        DEBUG_PRINTF("pixel x/y %i / %i = %s frame=%d\n", x, y, wert.c_str(), anifs->akt_aniframe);
+        anifs->myanimation.frame[anifs->akt_aniframe].color[x][y] = string_to_color(wert);
+      }
+      if (webargname == "copyframe")
+      {
+        for (uint8_t z = 0; z <= 9; z++)
+        {
+          for (uint8_t x = 0; x <= 10; x++)
+          {
+            anifs->copyframe.color[x][z].red = anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].red;
+            anifs->copyframe.color[x][z].green = anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].green;
+            anifs->copyframe.color[x][z].blue = anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].blue;
+            anifs->copyframe.delay = anifs->myanimation.frame[anifs->akt_aniframe].delay;
+          }
+        }
+      }
+      if (webargname == "pasteframe")
+      {
+        for (uint8_t z = 0; z <= 9; z++)
+        {
+          for (uint8_t x = 0; x <= 10; x++)
+          {
+            anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].red = anifs->copyframe.color[x][z].red;
+            anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].green = anifs->copyframe.color[x][z].green;
+            anifs->myanimation.frame[anifs->akt_aniframe].color[x][z].blue = anifs->copyframe.color[x][z].blue;
+            anifs->myanimation.frame[anifs->akt_aniframe].delay = anifs->copyframe.delay;
+          }
+        }
+      }
+    }
+    request->send(200, TEXT_PLAIN, F("OK"));
+    showMakeAnimation();
+  }
+  vTaskDelay(pdMS_TO_TICKS(1));
 }

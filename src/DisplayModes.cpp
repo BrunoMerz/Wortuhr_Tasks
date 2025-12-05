@@ -143,7 +143,7 @@ void DisplayModes::displayWeather(void) {
             anifs->akt_aniloop = 0;
             anifs->frame_fak = 0;
         
-            while(anifs->showAnimation(settings->mySettings.brightness)) {
+            while(anifs->showAnimation()) {
                 vTaskDelay(pdMS_TO_TICKS(10));
             }
             vTaskDelay(pdMS_TO_TICKS(500));

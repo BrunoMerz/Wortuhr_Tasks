@@ -228,7 +228,7 @@ void Events::runEvent(uint8_t akteventidx)
         anifs->akt_aniframe = 0;
         anifs->akt_aniloop = 0;
         anifs->frame_fak = 0;
-        while (anifs->showAnimation(settings->mySettings.brightness))
+        while (anifs->showAnimation())
         {
 #ifdef DEBUG_EVENTS
           Serial.println("Starte Event Pre Animation: " + String(anifs->myanimation.name) + " Loop: " + String(anifs->akt_aniloop) + " Frame: " + String(anifs->akt_aniframe));
@@ -263,7 +263,7 @@ void Events::runEvent(uint8_t akteventidx)
         anifs->akt_aniframe = 0;
         anifs->akt_aniloop = 0;
         anifs->frame_fak = 0;
-        while (anifs->showAnimation(settings->mySettings.brightness))
+        while (anifs->showAnimation())
         {
 #ifdef DEBUG_EVENTS
           Serial.println("Starte Event Pre Animation: " + String(anifs->myanimation.name) + " Loop: " + String(anifs->akt_aniloop) + " Frame: " + String(anifs->akt_aniframe));

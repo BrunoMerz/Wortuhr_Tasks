@@ -36,6 +36,7 @@ extern void handleFSExplorer(AsyncWebServerRequest *request);
 extern void handleFSExplorerCSS(AsyncWebServerRequest *request);
 extern void startAnimationsmenue(AsyncWebServerRequest *request);
 extern void startmakeAnimation(AsyncWebServerRequest *request);
+extern void handlemakeAnimation(AsyncWebServerRequest *request);
 extern void handleaniselect(AsyncWebServerRequest *request);
 extern void handlebacktoMODE_TIME(AsyncWebServerRequest *request);
 extern void debugClock(AsyncWebServerRequest *request);
@@ -134,11 +135,11 @@ void buttonOnOffPressed(AsyncWebServerRequest *request)
 // Zurück zum Hauptmenü + MODE_TIME
 void handlebacktoMODE_TIME(AsyncWebServerRequest *request)
 {
-  //mz  curControl = BTN_EXIT;
-  //mz  setMode(MODE_TIME);
   taskParams.animation = "";
   taskParams.endless_loop = false;
   taskParams.updateScreen = true;
+  taskParams.taskInfo[TASK_TIME].handleEvent = true;
+  taskParams.taskInfo[TASK_SCHEDULER].handleEvent = true;
   callRoot(request);
 }
 
@@ -190,7 +191,12 @@ void WebHandler::webRequests()
     startmakeAnimation(request);
   });
 
-  // Speichern
+  // Verarbeite Animationsoberfläche
+    webServer->on("/handlemakeanimation", HTTP_POST, [](AsyncWebServerRequest *request) {
+    handlemakeAnimation(request);
+  });
+
+// Speichern
   webServer->on("/commitSettings", HTTP_GET, [](AsyncWebServerRequest *request) {
     handleCommitSettings(request);
   });
