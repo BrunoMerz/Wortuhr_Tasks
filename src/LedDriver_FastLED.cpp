@@ -20,8 +20,10 @@ extern Syslog syslog;
 //#define myDEBUG
 #include "MyDebug.h"
 
+extern uint16_t nightOffTime;
+extern uint16_t dayOnTime;
 extern s_taskParams taskParams;
-SemaphoreHandle_t xLEDMutex;
+SemaphoreHandle_t ledMutex;
 
 #ifdef LED_LAYOUT_HORIZONTAL_1
     const uint8_t ledMap[] PROGMEM = {
@@ -168,8 +170,8 @@ LedDriver::LedDriver()
     lastLdrValue=0;
     mode = MODE_TIME;
     lastMode = MODE_TIME;
-    xLEDMutex = xSemaphoreCreateBinary();
-    xSemaphoreGive(xLEDMutex);  // Anfangszustand: freigegeben
+    ledMutex = xSemaphoreCreateMutex();
+    xSemaphoreGive(ledMutex);  // Anfangszustand: freigegeben
     FastLED.setMaxPowerInVoltsAndMilliamps(5, 2000);  // 5V, max. 2000 mA
 }
 
@@ -236,19 +238,18 @@ uint32_t  LedDriver::getRGBFromDegRnd(uint16_t offset, uint16_t dg) {
 
 void LedDriver::clear()
 {
-  fill_solid(strip, NUMPIXELS, CRGB::Black); 
+  //fill_solid(strip, NUMPIXELS, CRGB::Black);
+  FastLED.clear(false);
+  vTaskDelay(pdMS_TO_TICKS(1));
 }
 
 void LedDriver::show()
 {
   if(mode != MODE_BLANK) {
-#if defined(SYSLOGSERVER_SERVER)
-      syslog.log(LOG_INFO,"show: start");
-#endif
-      FastLED.show();
-#if defined(SYSLOGSERVER_SERVER)
-      syslog.log(LOG_INFO,"show: end");
-#endif
+    xSemaphoreTake(ledMutex, portMAX_DELAY);
+    taskYIELD();
+    FastLED.show();
+    xSemaphoreGive(ledMutex);
   }
 }
 
@@ -1250,7 +1251,6 @@ void LedDriver::writeScreenBuffer(uint16_t screenBuffer[], uint32_t color)
 
   show();
   colorold = color;
-  //cornercolorold = settings->mySettings.corcol;
 }
 
 uint8_t LedDriver::getBrightness(void)
@@ -1299,14 +1299,23 @@ void LedDriver::saveMatrix(uint16_t matrix[], bool clear) {
   }
 }
 
-void LedDriver::setOnOff(void) {
+void LedDriver::setOnOff(bool on) {
 
-  DEBUG_PRINTF("setOnOff: mode=%d\n", mode);
+  DEBUG_PRINTF("setOnOff: on=%d\n", on);
 #ifdef WITH_SECOND_BELL
   SecondBell *secondBell = SecondBell::getInstance();
 #endif
   Settings *settings = Settings::getInstance();
-  if(mode != MODE_BLANK) {
+  if(on) {
+    mode = MODE_TIME;
+#if defined(LILYGO_T_HMI)
+    analogWrite(TFT_BL,255);
+#endif
+    taskParams.updateScreen=true;
+#ifdef WITH_SECOND_BELL
+    secondBell->setStatus(true);
+#endif
+  } else {
     saveMatrix(matrix, true);
     lastMode = mode;
 #ifdef WITH_SECOND_BELL
@@ -1318,14 +1327,29 @@ void LedDriver::setOnOff(void) {
     analogWrite(TFT_BL,0);
 #endif
     taskParams.updateScreen=false;
-  } else {
-    mode = MODE_TIME;
-#if defined(LILYGO_T_HMI)
-    analogWrite(TFT_BL,255);
-#endif
-    taskParams.updateScreen=true;
-#ifdef WITH_SECOND_BELL
-    secondBell->setStatus(true);
-#endif
   }
+}
+
+void LedDriver::checkNightMode(uint8_t aktHour, uint8_t aktMinute) {
+    bool isNightOff=false;
+    uint32_t aktts = aktHour * 60 + aktMinute;
+    if (nightOffTime <= dayOnTime)
+    {
+      if (aktts >= nightOffTime && aktts < dayOnTime)
+        isNightOff=true;
+    }
+    else
+    {
+      if ((aktts >= nightOffTime && aktts < 1440) || (aktts >= 0 && aktts < dayOnTime))
+        isNightOff=true;
+    }
+
+    DEBUG_PRINTF("isNightOff=%d, dayOnTime=%d, nightOffTime=%d, aktts=%d, mode=%d\n", isNightOff, dayOnTime, nightOffTime, aktts, mode);
+
+    if(isNightOff && mode != MODE_BLANK) 
+      setOnOff(false);
+
+    if(!isNightOff && mode == MODE_BLANK) {
+      setOnOff(true);
+    }
 }

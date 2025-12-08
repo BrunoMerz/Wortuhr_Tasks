@@ -126,7 +126,10 @@ bool handleFile(AsyncWebServerRequest *request) {
 void buttonOnOffPressed(AsyncWebServerRequest *request)
 {
   DEBUG_PRINTF("On/off pressed: mode=%d\n", ledDriver->mode);
-  ledDriver->setOnOff();
+  if(ledDriver->mode == MODE_BLANK)
+    ledDriver->setOnOff(true);
+  else
+    ledDriver->setOnOff(false);
   callRoot(request);
   xEventGroupSetBits(xEvent, MODE_TIME);
 }
@@ -135,11 +138,15 @@ void buttonOnOffPressed(AsyncWebServerRequest *request)
 // Zurück zum Hauptmenü + MODE_TIME
 void handlebacktoMODE_TIME(AsyncWebServerRequest *request)
 {
+  DEBUG_PRINT("handlebacktoMODE_TIME ");
+  DEBUG_PRINTLN(ledDriver->mode);
   taskParams.animation = "";
   taskParams.endless_loop = false;
   taskParams.updateScreen = true;
-  taskParams.taskInfo[TASK_TIME].handleEvent = true;
-  taskParams.taskInfo[TASK_SCHEDULER].handleEvent = true;
+  // enable all led actions
+  for(uint8_t i=0; i < TASK_MAX; i++)
+    taskParams.taskInfo[i].handleEvent=true;
+  xEventGroupSetBits(xEvent, MODE_TIME);
   callRoot(request);
 }
 
@@ -226,10 +233,6 @@ void WebHandler::webRequests()
     request->send(200, IMAGE_PNG, p_hourglass, sizeof(p_hourglass));
   });
  
-  webServer->on("/handleButtonTime", [](AsyncWebServerRequest *request) {
-    request->send(200, TEXT_PLAIN, F("OK"));
-  });
-
   // sunrise/sunset Image
   webServer->on("/debugClock", HTTP_GET, [](AsyncWebServerRequest *request) {
     debugClock(request);
@@ -265,15 +268,7 @@ void WebHandler::webRequests()
   });
 
   webServer->on("/handleButtonTime", [](AsyncWebServerRequest *request) {
-      if ( ledDriver->mode != MODE_TIME) 
-        buttonTimePressed(request);
-#ifdef SHOW_MODE_ANSAGE
-      else 
-      {
-        //single_mode = true;
-        //setMode(MODE_ANSAGE);
-      }
-#endif
+    buttonTimePressed(request);
     request->send(200, TEXT_PLAIN, F("OK")); 
   });
 

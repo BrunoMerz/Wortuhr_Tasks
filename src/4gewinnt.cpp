@@ -521,7 +521,7 @@ void ShowBoard()
     for(uint8_t y=1;y<FIELD_HEIGHT;y++)
     {
       CRGB c(colorArray[rahmen]);
-      c.nscale8(ledDriver->getBrightness()/4);
+      c.nscale8(ledDriver->getBrightness());
       ledDriver->setPixelRGB(x,y, c);
     }
   }

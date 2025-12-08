@@ -1,5 +1,15 @@
-# Building: wordclock70.d1r2.lic.D4
+# Building: wordclock
+
 Import("env")
+
+from datetime import datetime
+now = datetime.now()
+bd = "#define BUILD_DATE \"" + f"{now.strftime('%d.%m.%Y')}" + "\"\n"
+bt = "#define BUILD_TIME \"" + f"{now.strftime('%H:%M:%S')}" + "\"\n"
+with open("src/BuildDateTime.h", "w") as f:
+        f.write(bd)
+        f.write(bt)
+
 variante=""
 defines = env.get("BUILD_FLAGS", [])
 print(defines)

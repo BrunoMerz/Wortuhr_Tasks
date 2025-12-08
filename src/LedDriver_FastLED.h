@@ -56,7 +56,8 @@ public:
     void setBrightness(uint8_t brightness);
     uint8_t getBrightness(void);
     void saveMatrix(uint16_t matrix[], bool clear=false);
-    void setOnOff(void);
+    void setOnOff(bool on);
+    void checkNightMode(uint8_t aktHour, uint8_t aktMinute);
     
     uint16_t ldrValue;
     uint16_t lastLdrValue;

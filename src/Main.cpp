@@ -89,6 +89,25 @@ s_taskParams taskParams = {
         [TASK_SCHEDULER]   = {NULL, 3660, true, STATE_INIT, 1, CORE_ANY, "queueScheduler"},
         [TASK_TIME]        = {NULL, 2995, true, STATE_INIT, 5, CORE_ANY, "DisplayTime"},
         [TASK_MODES]       = {NULL, 3328, true, STATE_INIT, 5, CORE_ANY, "ModesQueueHandler"},
+        [TASK_TEXT]        = {NULL, 3000, true, STATE_INIT, 11,CORE_ANY, "showTextHandler"},
+        [TASK_ANIMATION]   = {NULL, 1664, true, STATE_INIT, 5, CORE_ANY, "animationQueueHandler"},
+        [TASK_EVENT]       = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "eventQueueHandler"},
+#if defined(WITH_SECOND_BELL)
+        [TASK_SECOND_BELL] = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "DisplaySecondBell"},
+#endif
+#if defined(WITH_SECOND_HAND)
+        [TASK_SECOND_HAND] = {NULL, 2048, true, STATE_INIT, 5, CORE_ANY, "displaySecondHand"},
+#endif
+    }
+#endif
+
+#if defined(LILYGO_T_HMI)
+    .taskInfo = {
+      //                    handle stack active    state prio core  name
+        [TASK_STARTUP]     = {NULL, 3328, true, STATE_INIT, 3, CORE_1,   "Startup"},
+        [TASK_SCHEDULER]   = {NULL, 3660, true, STATE_INIT, 1, CORE_ANY, "queueScheduler"},
+        [TASK_TIME]        = {NULL, 2995, true, STATE_INIT, 5, CORE_ANY, "DisplayTime"},
+        [TASK_MODES]       = {NULL, 3328, true, STATE_INIT, 5, CORE_ANY, "ModesQueueHandler"},
         [TASK_TEXT]        = {NULL, 3000, true, STATE_INIT, 5, CORE_ANY, "showTextHandler"},
         [TASK_ANIMATION]   = {NULL, 1664, true, STATE_INIT, 5, CORE_ANY, "animationQueueHandler"},
         [TASK_EVENT]       = {NULL, 4096, true, STATE_INIT, 5, CORE_ANY, "eventQueueHandler"},
@@ -98,10 +117,8 @@ s_taskParams taskParams = {
 #if defined(WITH_SECOND_HAND)
         [TASK_SECOND_HAND] = {NULL, 2048, true, STATE_INIT, 5, CORE_ANY, "displaySecondHand"},
 #endif
-#if defined(LILYGO_T_HMI)
         [TASK_T_HMI]       = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "hmiHandler"},
         [TASK_DRAW]        = {NULL, 4096, true, STATE_INIT, 1, CORE_ANY, "drawTask"},
-#endif
     }
 #endif
 
@@ -220,7 +237,6 @@ void onOTAEnd(bool success) {
   } else {
     DEBUG_PRINTLN("There was an error during OTA update!");
   }
-  // <Add your own code here>
 }
 
 
@@ -242,8 +258,6 @@ void queueScheduler(void *p) {
   
   nightOffTime = mt->hour(settings->mySettings.nightOffTime) * 60 + mt->minute(settings->mySettings.nightOffTime);
   dayOnTime = mt->hour(settings->mySettings.dayOnTime) * 60 + mt->minute(settings->mySettings.dayOnTime);
-  uint32_t aktts;
-  bool isNightOff;
   autoModeChangeTimer = settings->mySettings.auto_mode_change * 60;
   uint8_t autoMode = 0;
   uint32_t colorsaver;
@@ -269,8 +283,6 @@ void queueScheduler(void *p) {
     aktMinute = mt->mytm.tm_min;
     aktSecond = mt->mytm.tm_sec;
     
-    isNightOff=false;
-
     String animation = "Z";
     if (aktHour <= 9)
       animation += "0";
@@ -313,29 +325,7 @@ void queueScheduler(void *p) {
 
     if(aktMinute != lastMinute) {
       lastMinute = aktMinute;
-      isNightOff=false;
-      aktts = aktHour * 60 + aktMinute;
-      if (nightOffTime <= dayOnTime)
-      {
-        if (aktts >= nightOffTime && aktts < dayOnTime)
-          isNightOff=true;
-      }
-      else
-      {
-        if ((aktts >= nightOffTime && aktts < 1440) || (aktts >= 0 && aktts < dayOnTime))
-          isNightOff=true;
-      }
-
-      DEBUG_PRINTF("isNightOff=%d, dayOnTime=%d, nightOffTime=%d, aktts=%d, mode=%d\n", isNightOff, dayOnTime, nightOffTime, aktts, ledDriver->mode);
-
-      if(isNightOff && ledDriver->mode != MODE_BLANK) 
-        ledDriver->setOnOff();
-
-      if(!isNightOff && ledDriver->mode == MODE_BLANK) {
-        evt->mustLoad = true;
-        ledDriver->setOnOff();
-      }
-
+      ledDriver->checkNightMode(aktHour, aktMinute);
       xEventGroupSetBits(xEvent, MODE_TIME);
     }
 
@@ -451,7 +441,6 @@ void showTextHandler(void *p) {
               matrix[2 + z] |= (b << y - 1) & 0b1111111111100000;
             }
             ledDriver->writeScreenBuffer(matrix, tp->feedColor);
-            ledDriver->show();
             vTaskDelay(pdMS_TO_TICKS(FEED_SPEED));
           }
         }
@@ -802,8 +791,6 @@ void displayTime(void *p) {
         renderer->clearScreenBuffer(matrix);
         renderer->setTime(aktHour, aktMinute, matrix);
         renderer->setCorners(aktMinute, matrix);
-        if (!settings->mySettings.itIs && ((aktMinute / 5) % 6))
-          renderer->clearEntryWords(matrix);
 
         if (aktDay != lastDay)
         {
@@ -1010,7 +997,28 @@ void startup(void *) {
     return;
   }
 
+  taskState = xTaskCreatePinnedToCore(
+    &showTextHandler,   // Function name of the task
+    taskParams.taskInfo[TASK_TEXT].name,  // Name of the task (e.g. for debugging)
+    taskParams.taskInfo[TASK_TEXT].stackSize,       // Stack size (bytes)
+    &taskParams,       // Parameter to pass
+    taskParams.taskInfo[TASK_TIME].priority,          // Task priority
+    &taskParams.taskInfo[TASK_TEXT].taskHandle,// Task handle
+    taskParams.taskInfo[TASK_TEXT].core
+  );
+  DEBUG_PRINTF("Nach start von TASK_TEXT, ret=%d\n", taskState);
+  vTaskDelay(1);
 
+  taskParams.feedText = "  " + String(settings->mySettings.systemname) + ":" + myWifi->IP().toString() + "  ";
+  taskParams.feedPosition = 0;
+  taskParams.feedColor = colorArray[WHITE];
+  taskParams.taskInfo[TASK_TEXT].state = STATE_INIT;
+  xEventGroupSetBits(xEvent, MODE_FEED);
+  while(!(taskParams.taskInfo[TASK_TEXT].state==STATE_PROCESSED))
+    vTaskDelay(pdMS_TO_TICKS(100));
+  DEBUG_PRINTLN("Display IP end");
+  vTaskDelay(1);
+ 
   taskState = xTaskCreatePinnedToCore(
     &queueScheduler,   // Function name of the task
     taskParams.taskInfo[TASK_SCHEDULER].name,  // Name of the task (e.g. for debugging)
@@ -1076,18 +1084,6 @@ void startup(void *) {
   vTaskDelay(1);
 
   taskState = xTaskCreatePinnedToCore(
-    &showTextHandler,   // Function name of the task
-    taskParams.taskInfo[TASK_TEXT].name,  // Name of the task (e.g. for debugging)
-    taskParams.taskInfo[TASK_TEXT].stackSize,       // Stack size (bytes)
-    &taskParams,       // Parameter to pass
-    taskParams.taskInfo[TASK_TIME].priority,          // Task priority
-    &taskParams.taskInfo[TASK_TEXT].taskHandle,// Task handle
-    taskParams.taskInfo[TASK_TEXT].core
-  );
-  DEBUG_PRINTF("Nach start von TASK_TEXT, ret=%d\n", taskState);
-  vTaskDelay(1);
-
-  taskState = xTaskCreatePinnedToCore(
     &animationQueueHandler,   // Function name of the task
     taskParams.taskInfo[TASK_ANIMATION].name,  // Name of the task (e.g. for debugging)
     taskParams.taskInfo[TASK_ANIMATION].stackSize,       // Stack size (bytes)
@@ -1124,14 +1120,6 @@ void startup(void *) {
   DEBUG_PRINTF("Nach start von TASK_T_HMI, ret=%d\n", taskState);
   vTaskDelay(1);
 #endif
-
-  taskParams.feedText = "  " + String(settings->mySettings.systemname) + ":" + myWifi->IP().toString();
-  taskParams.feedPosition = 0;
-  taskParams.feedColor = colorArray[WHITE];
-  taskParams.taskInfo[TASK_TEXT].state = STATE_INIT;
-  xEventGroupSetBits(xEvent, MODE_FEED);
-  while(!(taskParams.taskInfo[TASK_TEXT].state==STATE_PROCESSED))
-    vTaskDelay(pdMS_TO_TICKS(100));
 
   DEBUG_PRINTLN("Task beendet sich selbst...");
   vTaskDelay(pdMS_TO_TICKS(1000));

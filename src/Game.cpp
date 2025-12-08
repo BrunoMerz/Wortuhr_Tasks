@@ -7,9 +7,8 @@
 #include "Settings.h"
 #include "Animation.h"
 
-//#define DEBUG_GAME
 
-//#define myDEBUG
+#define myDEBUG
 #include "MyDebug.h"
 
 extern void callRoot(AsyncWebServerRequest *request);
@@ -45,10 +44,10 @@ void Game::startGame(AsyncWebServerRequest *request)
 {
  String webstring;
  String gamestring;
-#ifdef DEBUG_GAME
-  Serial.print("Start Game: ");
-  Serial.println(request->arg("game"));
-#endif
+
+  DEBUG_PRINT("Start Game: ");
+  DEBUG_PRINTLN(request->arg("game"));
+
   aktgame = request->arg("game").toInt();
   if ( aktgame == SNAKE )
     gamestring = F("SNAKE");
@@ -109,18 +108,16 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
     if (state == eDeleted) {
       gameTaskHandle = NULL;
 
-#ifdef DEBUG_GAME
-      Serial.printf("Game over, state=%d\n", state);
-#endif
+      DEBUG_PRINTF("Game over, state=%d\n", state);
+
       gameisrunning = false;
 
       // sichern der Higshcore Werte
       if (  highscore[SNAKE] > settings->mySettings.highscore[SNAKE] || highscore[TETRIS] > settings->mySettings.highscore[TETRIS] 
         || highscore[BRICKS] > settings->mySettings.highscore[BRICKS] || highscore[VIERGEWINNT] > settings->mySettings.highscore[VIERGEWINNT] ) 
       {
-#ifdef DEBUG_GAME
-        Serial.println(F("sichere Highscore in EEPROM"));
-#endif
+        DEBUG_PRINTLN(F("sichere Highscore in EEPROM"));
+
         settings->mySettings.highscore[SNAKE] = highscore[SNAKE];
         settings->mySettings.highscore[TETRIS] = highscore[TETRIS];
         settings->mySettings.highscore[BRICKS] = highscore[BRICKS];
@@ -133,9 +130,8 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
         //vTaskDelay(pdMS_TO_TICKS(1000));
         uint8_t gor = random(3);
         if ( gor == 0 ) {
-#ifdef DEBUG_GAME
-          Serial.println(F("Game over Animation"));
-#endif
+          DEBUG_PRINTLN(F("Game over Animation"));
+
           taskParams.animation = "GAME_OVER";
           taskParams.endless_loop = false;
           if(anifs->loadAnimation(taskParams.animation))
@@ -143,9 +139,8 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
           taskParams.taskInfo[TASK_ANIMATION].handleEvent=true;
         }
         if ( gor == 1 ) {
-#ifdef DEBUG_GAME
-          Serial.println(F("Game over Pixel"));
-#endif
+          DEBUG_PRINTLN(F("Game over Pixel"));
+
           ledDriver->clear();
           ledDriver->setPixel(10,1,colorArray[YELLOW]);
           ledDriver->show();
@@ -173,9 +168,8 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
           vTaskDelay(pdMS_TO_TICKS(3000));
         }
         if ( gor == 2 ) {
-#ifdef DEBUG_GAME
-          Serial.println(F("Game over Feed"));
-#endif
+          DEBUG_PRINTLN(F("Game over Feed"));
+
           taskParams.feedColor = colorArray[MAGENTA];
           taskParams.feedText = F("  Game Over   ");
           taskParams.feedPosition = 0;
@@ -184,12 +178,7 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
         }
       }
       anzPlayer = 1;
-#ifdef DEBUG_GAME
-      Serial.println(F("zurück zur Uhr..."));
-#endif
-      // enable all led actions
-      for(uint8_t i=0; i < TASK_MAX; i++)
-        taskParams.taskInfo[i].handleEvent=true;
+      DEBUG_PRINTLN(F("zurück zur Uhr..."));
     }
   }
 
@@ -198,7 +187,7 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
   if ( request->arg("button") == "start" ) 
   {
 
-#ifdef DEBUG_GAME
+#ifdef myDEBUG
       webreturn += "1#" + String(aktgame) + "#" + String(anzPlayer) + "#" + String(highscore[aktgame]) + "#" + String(aktscore) + "#" + String(debugval);
 #else
       webreturn += "1#" + String(aktgame) + "#" + String(anzPlayer) + "#" + String(highscore[aktgame]) + "#" + String(aktscore) + "#0";
@@ -249,22 +238,18 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
     if ( request->arg(F("level")).length() > 0) 
     {
       gamelevel = request->arg("level").toInt();
-#ifdef DEBUG_GAME
-      Serial.printf("GameLevel: %i\n",gamelevel);
-#endif      
+      DEBUG_PRINTF("GameLevel: %i\n",gamelevel);
     }
     
     if ( request->arg("size").length() > 0) 
     {
       gamesize = request->arg("size").toInt();
-#ifdef DEBUG_GAME
-      Serial.printf("GameSize: %i\n",gamesize);
-#endif      
+      DEBUG_PRINTF("GameSize: %i\n",gamesize);
     }
     
     if ( request->arg("button") == "back" )
     {
-#ifdef DEBUG_GAME
+#ifdef myDEBUG
       webreturn += "0#" + String(aktgame) + "#" + String(anzPlayer) + "#" + String(highscore[aktgame]) + "#" + String(aktscore) + "#" + String(debugval);
 #else
       webreturn += "0#" + String(aktgame) + "#" + String(anzPlayer) + "#" + String(highscore[aktgame]) + "#" + String(aktscore) + "#0";
@@ -299,12 +284,12 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
              if (PlayerIP[pip] == request->client()->remoteIP().toString() )  // Spieler mit der gleichen IP bekommen wieder die gleiche Spielernummer/Farbe
              {
                playerret = pip+1;
-  #ifdef DEBUG_GAME
-               Serial.print(F("Player refresh: "));
-               Serial.println(playerret);
-               Serial.print(F(" IP: "));
-               Serial.println(PlayerIP[pip]);
-  #endif
+
+               DEBUG_PRINT(F("Player refresh: "));
+               DEBUG_PRINTLN(playerret);
+               DEBUG_PRINT(F(" IP: "));
+               DEBUG_PRINTLN(PlayerIP[pip]);
+
                if ( random(0,2) == 0 ) break;
              }
            
@@ -317,12 +302,11 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
              PlayerIP[anzPlayer] = request->client()->remoteIP().toString();
              anzPlayer++;            // Spieler hinzu
              playerret = anzPlayer;
-  #ifdef DEBUG_GAME
-             Serial.print(F("Neuer Player: "));
-             Serial.println(anzPlayer);
-             Serial.print(F(" IP: "));
-             Serial.println(PlayerIP[anzPlayer-1]);
-  #endif
+  
+             DEBUG_PRINT(F("Neuer Player: "));
+             DEBUG_PRINTLN(anzPlayer);
+             DEBUG_PRINT(F(" IP: "));
+             DEBUG_PRINTLN(PlayerIP[anzPlayer-1]);
             }
             else
             {
@@ -345,7 +329,7 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
     {
       webreturn = "0#";
     }
-#ifdef DEBUG_GAME
+#ifdef myDEBUG
     webreturn += String(aktgame) + "#" + String(playerret) + "#" + String(highscore[aktgame]) + "#" + String(aktscore)+ "#" + String(debugval);
 #else
     webreturn += String(aktgame) + "#" + String(playerret) + "#" + String(highscore[aktgame]) + "#" + String(aktscore) + "#0";
@@ -358,9 +342,7 @@ void Game::handleGameControl(AsyncWebServerRequest *request)
 
 bool Game::ButtonIn(uint8_t buttonvalue)
 {
-#ifdef DEBUG_GAME
-  //Serial.printf("Button write: value: %i, write %i read %i\n", buttonvalue, buttonbuffer.write, buttonbuffer.read);
-#endif 
+  //DEBUG_PRINTF("Button write: value: %i, write %i read %i\n", buttonvalue, buttonbuffer.write, buttonbuffer.read);
   uint8_t next = ((buttonbuffer.write + 1) & CURCONTROL_BUFFER_MASK);
 
   if (buttonbuffer.read == next)
@@ -381,9 +363,9 @@ bool Game::readButton()
     return false;
   }
   
-#ifdef DEBUG_GAME
-  Serial.printf("Button read: value: %i, write %i read %i\n", buttonbuffer.data[buttonbuffer.read], buttonbuffer.write, buttonbuffer.read);
-#endif 
+
+  DEBUG_PRINTF("Button read: value: %i, write %i read %i\n", buttonbuffer.data[buttonbuffer.read], buttonbuffer.write, buttonbuffer.read);
+
   curControl = buttonbuffer.data[buttonbuffer.read];
 
   buttonbuffer.read = (buttonbuffer.read+1) & CURCONTROL_BUFFER_MASK;

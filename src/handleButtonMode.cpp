@@ -81,45 +81,17 @@ void infoAnzeige(void *p) {
 
 void buttonModePressed(AsyncWebServerRequest *request)
 {
-#ifdef DEBUG
   DEBUG_PRINTLN(F("Mode pressed."));
-#endif
 
-  if (ledDriver->mode == MODE_TIME)
-  {
-    //colorsaver = settings->mySettings.ledcol;
-    //settings->mySettings.ledcol = colorArray[WHITE];
-#ifdef DEBUG
-    DEBUG_PRINTLN(F("Mode Color White"));
-#endif
-  }
-  if (ledDriver->mode == MODE_WHITE)
-  {
-    //renderer->clearScreenBuffer(matrix);
-  }
-  /*
-  if (ledDriver->mode > MODE_COUNT || SHOW_TIME_BUTTON_BOOL)
-  {
-    renderer->clearScreenBuffer(matrix);
-    //setMode(MODE_TIME);
-  }
-  else
-  {
-    //setMode(mode++);
-  }
-  */
-//xEventGroupSetBits(xEvent, MODE_ANSAGE | MODE_WEEKDAY | MODE_DATE | MODE_MOONPHASE | 
-//                           MODE_WETTER | MODE_EXT_TEMP | MODE_EXT_HUMIDITY | MODE_SECONDS);
-
-    xTaskCreatePinnedToCore(
-        &infoAnzeige,   // Function name of the task
-        NULL,  // Name of the task (e.g. for debugging)
-        2800,       // Stack size (bytes)
-        &taskParams,       // Parameter to pass
-        1,          // Task priority
-        NULL,// Task handle
-        0
-    );
+  xTaskCreatePinnedToCore(
+      &infoAnzeige,   // Function name of the task
+      NULL,  // Name of the task (e.g. for debugging)
+      2800,       // Stack size (bytes)
+      &taskParams,       // Parameter to pass
+      1,          // Task priority
+      NULL,// Task handle
+      0
+  );
 }
 
 /******************************************************************************
@@ -128,21 +100,12 @@ void buttonModePressed(AsyncWebServerRequest *request)
 
 void buttonTimePressed(AsyncWebServerRequest *request)
 {
-#ifdef DEBUG
   DEBUG_PRINTLN(F("Time pressed."));
-#endif
-  if (ledDriver->mode != MODE_TIME)
-  {
-    //settings->mySettings.ledcol = colorsaver;
-    //modeTimeout = 0;
-#ifdef DEBUG
-    DEBUG_PRINTF("Color changed to: %u\r\n", settings->mySettings.color);
-#endif
-  }
-//  if (ledDriver->mode == MODE_WHITE)
-//    renderer->clearScreenBuffer(matrix);
-  //setMode(MODE_TIME);
-#ifdef DEBUG
-  DEBUG_PRINTF("modeTimeout: %i\r\n", modeTimeout);
-#endif
+  // clear all events
+  xEventGroupClearBits(xEvent, 0x00FFFFFF);
+  // enable Events
+  taskParams.taskInfo[TASK_SCHEDULER].handleEvent = true;
+  taskParams.taskInfo[TASK_TIME].handleEvent = true;
+  // display Time
+  xEventGroupSetBits(xEvent, MODE_TIME);
 }

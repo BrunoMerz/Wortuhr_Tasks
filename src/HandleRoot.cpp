@@ -9,6 +9,7 @@
 #include "Html_content.h"
 #include "OpenWeather.h"
 #include "TaskStructs.h"
+#include "BuildDateTime.h"
 
 #if defined(SYSLOGSERVER_SERVER)
 #include "Syslog.h"
@@ -81,16 +82,16 @@ String getWeatherIcon(String weathericonnummer)
 void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, uint8_t web_moonphase, time_t upTime, uint8_t sunriseMinute, uint8_t sunriseHour, uint8_t sunsetMinute, uint8_t sunsetHour)
 {
     AsyncResponseStream *response = request->beginResponseStream(TEXT_HTML);
-    String message;
+    
 #if defined(SYSLOGSERVER_SERVER)
     syslog.log(LOG_INFO, "handleRoot: start");
 #endif
-    message = F("<!doctype html>");
-    message += F("<html><head>");
-    message += F("<title>");
-    message += String(settings->mySettings.systemname);
-    message += F("</title>");
-    message += F("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+    response->print(F("<!doctype html>"));
+    response->print(F("<html><head>"));
+    response->print(F("<title>"));
+    response->print(String(settings->mySettings.systemname));
+    response->print(F("</title>"));
+    response->print(F("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
                   "<meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\"\n>"
                   "<meta http-equiv=\"refresh\" content=\"60\" charset=\"UTF-8\">\n"
                   "<link rel=\"icon\" type=\"image/png\" sizes=\"192x192\"  href=\"/web/android-icon-192x192.png\">"
@@ -101,342 +102,336 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
                   "<link rel=\"stylesheet\" href=\"/web/main.css\" >"
                   "<script src=\"/web/jquery-3.1.1.min.js\"></script>\n"
                   "</head>"
-                  "<body>");
-    message += F("<h1>");
-    message += String(settings->mySettings.systemname);
-    message += F("</h1>\n");
-    message += F("<h2>");
-    message += renderer->WEB_Uhrtext;
-    message += F("</h2>\n");
+                  "<body>"));
+    response->print(F("<h1>"));
+    response->print(String(settings->mySettings.systemname));
+    response->print(F("</h1>\n"));
+    response->print(F("<h2>"));
+    response->print(renderer->WEB_Uhrtext);
+    response->print(F("</h2>\n"));
   #ifdef DEDICATION
-    message += F(DEDICATION);
-    message += F("<br><br>");
+    response->print(F(DEDICATION));
+    response->print(F("<br><br>"));
   #endif
-    if (mode == MODE_BLANK) message += F("<button title=\"LEDs " LANG_ON "\" onclick=\"window.location.href='/handleButtonOnOff'\">&#9899;</button>\n");
-    else message += F("<button title=\"LEDs " LANG_OFF "\" onclick=\"window.location.href='/handleButtonOnOff'\">&#9898;</button>\n");
-    message += F("<button title=\"" LANG_SETTINGS "\" onclick=\"window.location.href='/handleButtonSettings'\">&#128295;</button>\n");
-    message += F("<button title=\"" LANG_ANIMATIONS "\" onclick=\"window.location.href='/animationmenue'\">&#127916;</button>\n");
-    message += F("<button title=\"" LANG_EVENTS "\" onclick=\"window.location.href='/web/events.html'\">&#128197;</button>\n"
+    if (mode == MODE_BLANK) response->print(F("<button title=\"LEDs " LANG_ON "\" onclick=\"window.location.href='/handleButtonOnOff'\">&#9899;</button>\n"));
+    else response->print(F("<button title=\"LEDs " LANG_OFF "\" onclick=\"window.location.href='/handleButtonOnOff'\">&#9898;</button>\n"));
+    response->print(F("<button title=\"" LANG_SETTINGS "\" onclick=\"window.location.href='/handleButtonSettings'\">&#128295;</button>\n"));
+    response->print(F("<button title=\"" LANG_ANIMATIONS "\" onclick=\"window.location.href='/animationmenue'\">&#127916;</button>\n"));
+    response->print(F("<button title=\"" LANG_EVENTS "\" onclick=\"window.location.href='/web/events.html'\">&#128197;</button>\n"
                   "<button title=\"" LANG_MESSAGE "\" onclick=\"window.location.href='/web/nachricht.html'\">&#128172;</button>\n"
                   "<button title=\"" LANG_GAMES "\" onclick=\"window.location.href='/web/Gamemenue.html'\">&#127922;</button>\n"
                   "<button title=\"" LANG_MODEBUTTON "\" id=\"button_mode\" type=\"button\" \">&#128512;</button>\n"
-                  "<button title=\"" LANG_TIMEBUTTON "\" id=\"button_zeit\" type=\"button\" \">&#128344;</button>\n");
+                  "<button title=\"" LANG_TIMEBUTTON "\" id=\"button_zeit\" type=\"button\" \">&#128344;</button>\n"));
 
-    message += F("<hr>\n");
-    response->print(message);
-    message = "";
+    response->print(F("<hr>\n"));
+
     // Abschnitt Mondphase
   #ifdef SHOW_MODE_MOONPHASE
 
-    message += F("<table><tr>");
-    message += F("<td style=\"width:30%\">");
-    message += F("<img id=\"Sonnen\" title=\"" LANG_SUNRISE "\" src=\"/sunrise\" alt=\"Sonnenaufgang\">");
-    message += F("</td>\n");
+    response->print(F("<table><tr>"));
+    response->print(F("<td style=\"width:30%\">"));
+    response->print(F("<img id=\"Sonnen\" title=\"" LANG_SUNRISE "\" src=\"/sunrise\" alt=\"Sonnenaufgang\">"));
+    response->print(F("</td>\n"));
 
-    message += F("<td style=\"width:30%\">");
-    message += F("<img id=\"Sonnen\" title=\"" LANG_SUNSET "\" src=\"/sunset\" alt=\"Sonnenuntergang\">");
-    message += F("</td>\n");
+    response->print(F("<td style=\"width:30%\">"));
+    response->print(F("<img id=\"Sonnen\" title=\"" LANG_SUNSET "\" src=\"/sunset\" alt=\"Sonnenuntergang\">"));
+    response->print(F("</td>\n"));
 
-    message += F("<td style=\"padding-top: 17px;width:40%;cursor:pointer\">");
-    message += F("<span id=\"Mond\" title=\"" LANG_MOONPHASE "\" onclick=\"moonphase()\">");
+    response->print(F("<td style=\"padding-top: 17px;width:40%;cursor:pointer\">"));
+    response->print(F("<span id=\"Mond\" title=\"" LANG_MOONPHASE "\" onclick=\"moonphase()\">"));
     switch (web_moonphase)
     {
-      case 0: message += F("&#127761;"); //Neumond
+      case 0: response->print(F("&#127761;")); //Neumond
         break;
-      case 1: message += F("&#127762;");
+      case 1: response->print(F("&#127762;"));
         break;
-      case 2: message += F("&#127763;");
+      case 2: response->print(F("&#127763;"));
         break;
-      case 3: message += F("&#127764;");
+      case 3: response->print(F("&#127764;"));
         break;
-      case 4: message += F("&#127765;"); //Vollmond
+      case 4: response->print(F("&#127765;")); //Vollmond
         break;
-      case 5: message += F("&#127766;");
+      case 5: response->print(F("&#127766;"));
         break;
-      case 6: message += F("&#127767;");
+      case 6: response->print(F("&#127767;"));
         break;
-      case 7: message += F("&#127768;");
+      case 7: response->print(F("&#127768;"));
     }
-    message += F("</span>");
-    message += F("</td>\n");
-    message += F("</tr>\n");
-    message += F("<tr>");
-    message += F("<td>");
+    response->print(F("</span>"));
+    response->print(F("</td>\n"));
+    response->print(F("</tr>\n"));
+    response->print(F("<tr>"));
+    response->print(F("<td>"));
 
   #if defined(SunRiseLib) || defined(APIKEY)
-    message += F("<span id=\"Sonnenzeit\" title=\"" LANG_SUNRISE "\">");
-    message += String(sunriseHour);
+    response->print(F("<span id=\"Sonnenzeit\" title=\"" LANG_SUNRISE "\">"));
+    response->print(String(sunriseHour));
   #ifdef FRONTCOVER_FR
-    message += F("h");
+    response->print(F("h"));
   #else
-    message += F(":");
+    response->print(F(":"));
   #endif  
-    if (sunriseMinute < 10) message += F("0");
-    message += String(sunriseMinute);
-    message += F(" ");
-    message += F(LANG_AM);
-    message += F("</span></td>\n");
+    if (sunriseMinute < 10) response->print(F("0"));
+    response->print(String(sunriseMinute));
+    response->print(F(" "));
+    response->print(F(LANG_AM));
+    response->print(F("</span></td>\n"));
   #endif
 
-    message += F("<td>");
+    response->print(F("<td>"));
 
   #if defined(SunRiseLib) || defined(APIKEY)
-    message += F("<span id=\"Sonnenzeit\" title=\"" LANG_SUNSET "\">");
+    response->print(F("<span id=\"Sonnenzeit\" title=\"" LANG_SUNSET "\">"));
   #ifdef FRONTCOVER_EN
-    message += String(sunsetHour-12);
+    response->print(String(sunsetHour-12));
   #else
-    message += String(sunsetHour);
+    response->print(String(sunsetHour));
   #endif
   #ifdef FRONTCOVER_FR
-    message += F("h");
+    response->print(F("h"));
   #else
-    message += F(":");
+    response->print(F(":"));
   #endif
-    if (sunsetMinute < 10) message += F("0");
-    message += String(sunsetMinute);
-    message += F(" ");
-    message += F(LANG_PM);
-    message += F("</span></td>\n");
+    if (sunsetMinute < 10) response->print(F("0"));
+    response->print(String(sunsetMinute));
+    response->print(F(" "));
+    response->print(F(LANG_PM));
+    response->print(F("</span></td>\n"));
   #endif
 
-    message += F("<td>");
-    message += F("<span id=\"Mondphase\" title=\"" LANG_MOONPHASE "\">");
-    if ( moonphase == 0 )                   message += F(LANG_NEWMOON);     // Neumond
-    if ( moonphase == 11 )                  message += F(LANG_FULLMOON);    // Vollmond
-    if ( moonphase > 0 && moonphase < 11 )  message += F(LANG_INCREASINGMOON);   // zunehmend
-    if ( moonphase > 11 && moonphase < 22 ) message += F(LANG_WANINGMOON);   // abnehmend
-    message += F("</span></td>\n");
-    message += F("</tr></table>");
-    message += F("<hr>\n");
+    response->print(F("<td>"));
+    response->print(F("<span id=\"Mondphase\" title=\"" LANG_MOONPHASE "\">"));
+    if ( moonphase == 0 )                   response->print(F(LANG_NEWMOON));     // Neumond
+    if ( moonphase == 11 )                  response->print(F(LANG_FULLMOON));    // Vollmond
+    if ( moonphase > 0 && moonphase < 11 )  response->print(F(LANG_INCREASINGMOON));   // zunehmend
+    if ( moonphase > 11 && moonphase < 22 ) response->print(F(LANG_WANINGMOON));   // abnehmend
+    response->print(F("</span></td>\n"));
+    response->print(F("</tr></table>"));
+    response->print(F("<hr>\n"));
   #endif
-  response->print(message);
-  message = "";
+
   // Abschnitt Innentemperatur + Luftfeuchtigkeit + Luftdruck
 
   #if defined(RTC_BACKUP) || defined(SENSOR_BME280)
-    message += F("<br><span title=\"" LANG_INDOOR "\" style=\"font-size:30px;\">&#127968;</span>");  //Haus
-    message += F("<br><br><span style=\"font-size:24px;\">&#127777;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modetemp()\">");
-    message += String(myBME->roomTemperature,1);
-    message += F("&deg;C");
+    response->print(F("<br><span title=\"" LANG_INDOOR "\" style=\"font-size:30px;\">&#127968;</span>"));  //Haus
+    response->print(F("<br><br><span style=\"font-size:24px;\">&#127777;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modetemp()\">"));
+    response->print(String(myBME->roomTemperature,1));
+    response->print(F("&deg;C"));
   #ifdef FRONTCOVER_EN  
-    message += F("/ "); 
-    message += String(myBME->roomTemperature * 1.8 + 32.0,1);
-    message += F("&deg;F");
+    response->print(F("/ ")); 
+    response->print(String(myBME->roomTemperature * 1.8 + 32.0,1));
+    response->print(F("&deg;F"));
   #endif
-    message +=F("</span>");
+    message +=F("</span>"));
   #endif
 
   #ifdef SENSOR_BME280
-    message += "<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modehum()\">" + String(myBME->roomHumidity,0) + "%RH</span>"
-                "<br><span style=\"font-size:24px;\">";
-    if (myBME->roomHumidity < 30) message += F("<span style=\"color:Red;\">&#9751;</span>");
-    else message += F("<span style=\"color:Red;\">&#9750;</span>");
-    if ((myBME->roomHumidity >= 30) && (myBME->roomHumidity < 40)) message += F("<span style=\"color:Orange;\">&#9751;</span>");
-    else message += F("<span style=\"color:Orange;\">&#9750;</span>");
-    if ((myBME->roomHumidity >= 40) && (myBME->roomHumidity <= 50)) message += F("<span style=\"color:MediumSeaGreen;\">&#9751;</span>");
-    else message += F("<span style=\"color:MediumSeaGreen;\">&#9750;</span>");
-    if ((myBME->roomHumidity > 50) && (myBME->roomHumidity < 60)) message += F("<span style=\"color:Lightblue;\">&#9751;</span>");
-    else message += F("<span style=\"color:Lightblue;\">&#9750;</span>");
-    if (myBME->roomHumidity >= 60) message += F("<span style=\"color:Blue;\">&#9751;</span>");
-    else message += F("<span style=\"color:Blue;\">&#9750;</span>");
-    message += F("</span>");
-    message += F("<br><br><span style=\"font-size:20px;\">&#128168;</span><span style=\"font-size:20px;\">rel. ");
-    message += String(myBME->Pressure_red,0);
-    message += F(" hPa <br>(abs. "); 
-    message += String(myBME->Pressure,0); 
-    message += F(" hPa) </span>");
+    response->print("<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modehum()\">" + String(myBME->roomHumidity,0) + "%RH</span>"
+                "<br><span style=\"font-size:24px;\">");
+    if (myBME->roomHumidity < 30) response->print(F("<span style=\"color:Red;\">&#9751;</span>"));
+    else response->print(F("<span style=\"color:Red;\">&#9750;</span>"));
+    if ((myBME->roomHumidity >= 30) && (myBME->roomHumidity < 40)) response->print(F("<span style=\"color:Orange;\">&#9751;</span>"));
+    else response->print(F("<span style=\"color:Orange;\">&#9750;</span>"));
+    if ((myBME->roomHumidity >= 40) && (myBME->roomHumidity <= 50)) response->print(F("<span style=\"color:MediumSeaGreen;\">&#9751;</span>"));
+    else response->print(F("<span style=\"color:MediumSeaGreen;\">&#9750;</span>"));
+    if ((myBME->roomHumidity > 50) && (myBME->roomHumidity < 60)) response->print(F("<span style=\"color:Lightblue;\">&#9751;</span>"));
+    else response->print(F("<span style=\"color:Lightblue;\">&#9750;</span>"));
+    if (myBME->roomHumidity >= 60) response->print(F("<span style=\"color:Blue;\">&#9751;</span>"));
+    else response->print(F("<span style=\"color:Blue;\">&#9750;</span>"));
+    response->print(F("</span>"));
+    response->print(F("<br><br><span style=\"font-size:20px;\">&#128168;</span><span style=\"font-size:20px;\">rel. "));
+    response->print(String(myBME->Pressure_red,0));
+    response->print(F(" hPa <br>(abs. ")); 
+    response->print(String(myBME->Pressure,0)); 
+    response->print(F(" hPa) </span>"));
 
     //#####################
     // Luftdruck Diagramm
     //#####################
-    message += F("<br>\n");
-    message += F("<br><span style=\"font-size:14px;\">");
-    message += F(LANG_AIRPRESSUREHIST);
-    message += F("  </span>");
-    message += F("<span style=\"font-size:24px;\">");
-    if ( myBME->luftdrucktendenz_web == 1 ) message += F(" &#8595;");
-    if ( myBME->luftdrucktendenz_web == 2 ) message += F(" &#8600;");
-    if ( myBME->luftdrucktendenz_web == 3 ) message += F(" &#8594;");
-    if ( myBME->luftdrucktendenz_web == 4 ) message += F(" &#8599;");
-    if ( myBME->luftdrucktendenz_web == 5 ) message += F(" &#8593;");
-    message += F("</span><span style=\"font-size:14px;\"> )</span>\n");
-    message += F("<div>\n");
-    message += F("<canvas id=\"canvas_druckdiagramm\" width=\"300\" height=\"270\" style=\"border:2px solid #d3d3d3;cursor:pointer\" onclick=\"luftdruck()\">");
-    message += F("<script type=\"text/javascript\">");
-    message += F("var canvas = document.getElementById(\"canvas_druckdiagramm\");\n");
-    message += F("var canvasWidth = 300;\n");
-    message += F("var canvasHeight = 270;\n");
-    message += F("canvas.setAttribute('width', canvasWidth);\n");
-    message += F("canvas.setAttribute('height', canvasHeight);\n");
-    message += F("var cv = canvas.getContext(\"2d\");\n");
+    response->print(F("<br>\n"));
+    response->print(F("<br><span style=\"font-size:14px;\">"));
+    response->print(F(LANG_AIRPRESSUREHIST));
+    response->print(F("  </span>"));
+    response->print(F("<span style=\"font-size:24px;\">"));
+    if ( myBME->luftdrucktendenz_web == 1 ) response->print(F(" &#8595;"));
+    if ( myBME->luftdrucktendenz_web == 2 ) response->print(F(" &#8600;"));
+    if ( myBME->luftdrucktendenz_web == 3 ) response->print(F(" &#8594;"));
+    if ( myBME->luftdrucktendenz_web == 4 ) response->print(F(" &#8599;"));
+    if ( myBME->luftdrucktendenz_web == 5 ) response->print(F(" &#8593;"));
+    response->print(F("</span><span style=\"font-size:14px;\"> )</span>\n"));
+    response->print(F("<div>\n"));
+    response->print(F("<canvas id=\"canvas_druckdiagramm\" width=\"300\" height=\"270\" style=\"border:2px solid #d3d3d3;cursor:pointer\" onclick=\"luftdruck()\">"));
+    response->print(F("<script type=\"text/javascript\">"));
+    response->print(F("var canvas = document.getElementById(\"canvas_druckdiagramm\"));\n"));
+    response->print(F("var canvasWidth = 300;\n"));
+    response->print(F("var canvasHeight = 270;\n"));
+    response->print(F("canvas.setAttribute('width', canvasWidth));\n"));
+    response->print(F("canvas.setAttribute('height', canvasHeight));\n"));
+    response->print(F("var cv = canvas.getContext(\"2d\"));\n"));
 
     //Options Grid
 
-    message += F("var yAchse = { values:[\n");
+    response->print(F("var yAchse = { values:[\n"));
     for (uint8_t i = 0; i <= 65; i = i + 5) {
-      message += F("{Y:\"");
-      if ( LUFTDRUCKMIN + i < 1000 ) message += F("  ");
-      message += String(LUFTDRUCKMIN + i);
-      message += F("hPa\",C:\"#000000\"},{Y:\" \",C:\"#000000\"},\n");
+      response->print(F("{Y:\""));
+      if ( LUFTDRUCKMIN + i < 1000 ) response->print(F("  "));
+      response->print(String(LUFTDRUCKMIN + i));
+      response->print(F("hPa\",C:\"#000000\"},{Y:\" \",C:\"#000000\"},\n"));
     }
 
-    message += F("]};\n");
-    message += F("var graphxoffset = 42;\n");
-    message += F("var graphyoffset = 15;\n");
-    message += F("var graphGridSize = (canvasHeight - graphyoffset) / yAchse.values.length;\n");
-    message += F("var graphGridY = (canvasHeight - graphyoffset) / graphGridSize;\n");
-    message += F("cv.lineWidth = 1;\n");
-    message += F("for(var i = 0; i < graphGridY; i++){\n");
-    message += F("cv.moveTo(canvasWidth,  canvasHeight - graphGridSize*i-graphyoffset);\n");
-    message += F("cv.lineTo(graphxoffset, canvasHeight - graphGridSize*i-graphyoffset);\n");
-    message += F("}\n");
-    message += F("cv.strokeStyle = \"#FFFFFF\";\n");
-    message += F("cv.stroke();\n");
+    response->print(F("]};\n"));
+    response->print(F("var graphxoffset = 42;\n"));
+    response->print(F("var graphyoffset = 15;\n"));
+    response->print(F("var graphGridSize = (canvasHeight - graphyoffset) / yAchse.values.length;\n"));
+    response->print(F("var graphGridY = (canvasHeight - graphyoffset) / graphGridSize;\n"));
+    response->print(F("cv.lineWidth = 1;\n"));
+    response->print(F("for(var i = 0; i < graphGridY; i++){\n"));
+    response->print(F("cv.moveTo(canvasWidth,  canvasHeight - graphGridSize*i-graphyoffset));\n"));
+    response->print(F("cv.lineTo(graphxoffset, canvasHeight - graphGridSize*i-graphyoffset));\n"));
+    response->print(F("}\n"));
+    response->print(F("cv.strokeStyle = \"#FFFFFF\";\n"));
+    response->print(F("cv.stroke());\n"));
 
-    message += F("cv.fillStyle = '#000000';\n");
-    message += F("cv.font = \"10px Arial\";\n");
-    message += F("for(var i = 0; i < graphGridY; i++){\n");
-    message += F("cv.fillStyle = yAchse.values[i].C;\n");
-    message += F("cv.fillText(yAchse.values[i].Y,0,canvasHeight - graphGridSize*i-graphyoffset+3,graphxoffset);\n");
-    message += F("}\n");
+    response->print(F("cv.fillStyle = '#000000';\n"));
+    response->print(F("cv.font = \"10px Arial\";\n"));
+    response->print(F("for(var i = 0; i < graphGridY; i++){\n"));
+    response->print(F("cv.fillStyle = yAchse.values[i].C;\n"));
+    response->print(F("cv.fillText(yAchse.values[i].Y,0,canvasHeight - graphGridSize*i-graphyoffset+3,graphxoffset));\n"));
+    response->print(F("}\n"));
 
     //Data Graph
-    message += F("var data = { values:[");
-    message += F("{A:\"-30h\",B:");
-    message += String(myBME->luftdruck_hist[0]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\"-27h\",B:");
-    message += String(myBME->luftdruck_hist[1]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\"-24h\",B:");
-    message += String(myBME->luftdruck_hist[2]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\"-21h\",B:");
-    message += String(myBME->luftdruck_hist[3]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\"-18h\",B:");
-    message += String(myBME->luftdruck_hist[4]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\"-15h\",B:");
-    message += String(myBME->luftdruck_hist[5]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\"-12h\",B:");
-    message += String(myBME->luftdruck_hist[6]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\" -9h\",B:");
-    message += String(myBME->luftdruck_hist[7]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\" -6h\",B:");
-    message += String(myBME->luftdruck_hist[8]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\" -3h\",B:");
-    message += String(myBME->luftdruck_hist[9]);
-    message += F(",C:\"#353746\"},\n");
-    message += F("{A:\" akt\",B:");
-    message += String(myBME->luftdruck_hist[10]);
-    message += F(",C:\"#353746\"}\n");
-    message += F("]};\n");
+    response->print(F("var data = { values:["));
+    response->print(F("{A:\"-30h\",B:"));
+    response->print(String(myBME->luftdruck_hist[0]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\"-27h\",B:"));
+    response->print(String(myBME->luftdruck_hist[1]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\"-24h\",B:"));
+    response->print(String(myBME->luftdruck_hist[2]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\"-21h\",B:"));
+    response->print(String(myBME->luftdruck_hist[3]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\"-18h\",B:"));
+    response->print(String(myBME->luftdruck_hist[4]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\"-15h\",B:"));
+    response->print(String(myBME->luftdruck_hist[5]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\"-12h\",B:"));
+    response->print(String(myBME->luftdruck_hist[6]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\" -9h\",B:"));
+    response->print(String(myBME->luftdruck_hist[7]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\" -6h\",B:"));
+    response->print(String(myBME->luftdruck_hist[8]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\" -3h\",B:"));
+    response->print(String(myBME->luftdruck_hist[9]));
+    response->print(F(",C:\"#353746\"},\n"));
+    response->print(F("{A:\" akt\",B:"));
+    response->print(String(myBME->luftdruck_hist[10]));
+    response->print(F(",C:\"#353746\"}\n"));
+    response->print(F("]};\n"));
 
     //Options Graph
-    message += F("var graphMinValue = "); 
-    message += String(LUFTDRUCKMIN);
-    message += F(";\n");    // Value der Nulllinie
-    message += F("var graphXDiff = 2.5;\n");       // Value für eine Abschnittsdifferenz
-    message += F("var graphPadding = 5;\n");
-    message += F("var graphFaktor = graphGridSize / graphXDiff;\n");
-    message += F("var graphWidth = (canvasWidth-graphPadding-graphxoffset) / data.values.length;\n");
-    message += F("var graphTextcolor = '#000000';\n");
+    response->print(F("var graphMinValue = ")); 
+    response->print(String(LUFTDRUCKMIN));
+    response->print(F(";\n"));    // Value der Nulllinie
+    response->print(F("var graphXDiff = 2.5;\n"));       // Value für eine Abschnittsdifferenz
+    response->print(F("var graphPadding = 5;\n"));
+    response->print(F("var graphFaktor = graphGridSize / graphXDiff;\n"));
+    response->print(F("var graphWidth = (canvasWidth-graphPadding-graphxoffset) / data.values.length;\n"));
+    response->print(F("var graphTextcolor = '#000000';\n"));
 
     //Draw Graph
-    message += F("for(var i = 0; i < data.values.length; i ++){\n");
-    message += F("Value = data.values[i].B-graphMinValue;\n");
-    message += F("tmpTop = (canvasHeight-graphyoffset-(graphFaktor*Value)).toFixed();\n");
-    message += F("tmpHeight = ((Value*graphFaktor)).toFixed();\n");
-    message += F("cv.fillStyle = data.values[i].C;\n");
-    message += F("cv.fillRect(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, tmpTop, graphWidth-graphPadding, tmpHeight);\n");
-    message += F("cv.fillStyle = graphTextcolor;\n");
-    message += F("cv.font = \"10px Arial\";\n");
-    message += F("cv.fillText(data.values[i].A, graphWidth+((i-1)*graphWidth)+graphPadding-2+graphxoffset, canvasHeight-3, graphWidth);\n");
-    message += F("}\n");
-    message += F("</script>");
-    message += F("</div>\n");
-    message += F("<hr>\n");
+    response->print(F("for(var i = 0; i < data.values.length; i ++){\n"));
+    response->print(F("Value = data.values[i].B-graphMinValue;\n"));
+    response->print(F("tmpTop = (canvasHeight-graphyoffset-(graphFaktor*Value)).toFixed());\n"));
+    response->print(F("tmpHeight = ((Value*graphFaktor)).toFixed());\n"));
+    response->print(F("cv.fillStyle = data.values[i].C;\n"));
+    response->print(F("cv.fillRect(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, tmpTop, graphWidth-graphPadding, tmpHeight));\n"));
+    response->print(F("cv.fillStyle = graphTextcolor;\n"));
+    response->print(F("cv.font = \"10px Arial\";\n"));
+    response->print(F("cv.fillText(data.values[i].A, graphWidth+((i-1)*graphWidth)+graphPadding-2+graphxoffset, canvasHeight-3, graphWidth));\n"));
+    response->print(F("}\n"));
+    response->print(F("</script>"));
+    response->print(F("</div>\n"));
+    response->print(F("<hr>\n"));
 
-    response->print(message);
-    message = "";
   #else
-    message += F("<br>\n");
+    response->print(F("<br>\n"));
   #endif
 
   // Abschnitt Außentemperatur + Luftfeuchtigkeit
   #ifdef APIKEY
     if ( strlen(settings->mySettings.openweatherapikey) > 25 )
     {
-      message += F("<br>");
-      message += F("<span title=\"" LANG_OUTDOOR "\" style=\"font-size:30px;\">&#127794;  "); //Baum
+      response->print(F("<br>"));
+      response->print(F("<span title=\"" LANG_OUTDOOR "\" style=\"font-size:30px;\">&#127794;  ")); //Baum
       char *result = strchr(settings->mySettings.openweatherlocation, ',');
       if (result) { // Falls ein Komma gefunden wurde
         size_t len = result - settings->mySettings.openweatherlocation;
-        message += String(settings->mySettings.openweatherlocation).substring(0,len);
+        response->print(String(settings->mySettings.openweatherlocation).substring(0,len));
       }
-      message += F("</span>");
-      message += F("<br><br><span style=\"font-size:24px;\">&#127777;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modeexttemp()\">");
-      message += String(outdoorWeather->temperature,1);
-      message += F("&deg;C");
+      response->print(F("</span>"));
+      response->print(F("<br><br><span style=\"font-size:24px;\">&#127777;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modeexttemp()\">"));
+      response->print(String(outdoorWeather->temperature,1));
+      response->print(F("&deg;C"));
   #ifdef FRONTCOVER_EN  
-      message += F("/ "); 
-      message += String(outdoorWeather->temperature * 1.8 + 32.0,1);
-      message += F("&deg;F");
+      response->print(F("/ ")); 
+      response->print(String(outdoorWeather->temperature * 1.8 + 32.0,1));
+      response->print(F("&deg;F"));
   #endif
-      message += F("</span>");
-      message += F("<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modeexthum()\">");
-      message += String(outdoorWeather->humidity);
-      message += F("%RH</span><br><br><span style=\"font-size:20px;\">");
-      message += F(LANG_WINDSPEED); 
-      message += F(" ");
-      message += String(outdoorWeather->windspeed,1);
-      message += F(" &#13223;</span><br><br><span style=\"font-size:20px;cursor:pointer\" onclick=\"wetter()\">");
-      message += outdoorWeather->description;
-      message += F("</span><br>");
+      response->print(F("</span>"));
+      response->print(F("<br><br><span style=\"font-size:18px;\">&#128167;</span> <span style=\"font-size:20px;cursor:pointer\" onclick=\"modeexthum()\">"));
+      response->print(String(outdoorWeather->humidity));
+      response->print(F("%RH</span><br><br><span style=\"font-size:20px;\">"));
+      response->print(F(LANG_WINDSPEED)); 
+      response->print(F(" "));
+      response->print(String(outdoorWeather->windspeed,1));
+      response->print(F(" &#13223;</span><br><br><span style=\"font-size:20px;cursor:pointer\" onclick=\"wetter()\">"));
+      response->print(outdoorWeather->description);
+      response->print(F("</span><br>"));
       if ( outdoorWeather->weathericon1.length() > 1 )
       {
-        message += F("<img id=\"Wettersymbole\" title=\"" LANG_WEATHER "\" src=\"/web/web_" );
-        message += getWeatherIcon(outdoorWeather->weathericon1);
-        message += F(".png\" alt=\"Wetter\">");
+        response->print(F("<img id=\"Wettersymbole\" title=\"" LANG_WEATHER "\" src=\"/web/web_" ));
+        response->print(getWeatherIcon(outdoorWeather->weathericon1));
+        response->print(F(".png\" alt=\"Wetter\">"));
       }
       if ( outdoorWeather->weathericon2.length() > 1 && outdoorWeather->weathericon1 != outdoorWeather->weathericon2 )
       {
-        message += F("<img id=\"Wettersymbole\" title=\"" LANG_WEATHER "\" src=\"/web/web_" );
-        message += getWeatherIcon(outdoorWeather->weathericon2);
-        message += F(".png\" alt=\"Wetter\">");
+        response->print(F("<img id=\"Wettersymbole\" title=\"" LANG_WEATHER "\" src=\"/web/web_" ));
+        response->print(getWeatherIcon(outdoorWeather->weathericon2));
+        response->print(F(".png\" alt=\"Wetter\">"));
       }
 
-      message += F("<br><br><hr>\n");
+      response->print(F("<br><br><hr>\n"));
     }
-    response->print(message);
-    message = "";
-  #endif
+   #endif
 
   #ifdef SENSOR_BME280
     //#####################
     // Temperatur Diagramm
     //#####################
-    message += F("<br>\n");
-    message += F("<span style=\"font-size:14px;\">");
-    message += F(LANG_TEMPHIST);
-    message += F("</span>\n");
-    message += F("<div>\n");
-    message += F("<canvas id=\"canvas_tempdiagramm\" width=\"400\" height=\"200\" style=\"border:1px solid #d3d3d3;\">\n");
-    message += F("<script type=\"text/javascript\">\n");
-    message += F("var canvas = document.getElementById(\"canvas_tempdiagramm\");\n");
-    message += F("var canvasWidth = 330;\n");
-    message += F("var canvasHeight = 270;\n");
-    message += F("canvas.setAttribute('width', canvasWidth);\n");
-    message += F("canvas.setAttribute('height', canvasHeight);\n");
-    message += F("var cv = canvas.getContext(\"2d\");\n");
+    response->print(F("<br>\n"));
+    response->print(F("<span style=\"font-size:14px;\">"));
+    response->print(F(LANG_TEMPHIST));
+    response->print(F("</span>\n"));
+    response->print(F("<div>\n"));
+    response->print(F("<canvas id=\"canvas_tempdiagramm\" width=\"400\" height=\"200\" style=\"border:1px solid #d3d3d3;\">\n"));
+    response->print(F("<script type=\"text/javascript\">\n"));
+    response->print(F("var canvas = document.getElementById(\"canvas_tempdiagramm\"));\n"));
+    response->print(F("var canvasWidth = 330;\n"));
+    response->print(F("var canvasHeight = 270;\n"));
+    response->print(F("canvas.setAttribute('width', canvasWidth));\n"));
+    response->print(F("canvas.setAttribute('height', canvasHeight));\n"));
+    response->print(F("var cv = canvas.getContext(\"2d\"));\n"));
     //Options Grid
 
-    message += F("var yAchse = { values:[\n"
+    response->print(F("var yAchse = { values:[\n"
                   "{Y:\" -20°C\",C:\"#990099\"},\n"
                   "{Y:\" -15°C\",C:\"#330099\"},\n"
                   "{Y:\" -10°C\",C:\"#0000aa\"},\n"
@@ -450,142 +445,140 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
                   "{Y:\"  30°C\",C:\"#992222\"},\n"
                   "{Y:\"  35°C\",C:\"#771111\"},\n"
                   "{Y:\"  40°C\",C:\"#770000\"}\n"
-                  "]};\n");
+                  "]};\n"));
 
     //X-Grid:
-    message += F("var graphxoffset = 30;\n");
-    message += F("var graphyoffset = 15;\n");
-    message += F("var graphGridSize = (canvasHeight - graphyoffset) / yAchse.values.length;\n");
-    message += F("var graphGridY = (canvasHeight - graphyoffset) / graphGridSize;\n");
+    response->print(F("var graphxoffset = 30;\n"));
+    response->print(F("var graphyoffset = 15;\n"));
+    response->print(F("var graphGridSize = (canvasHeight - graphyoffset) / yAchse.values.length;\n"));
+    response->print(F("var graphGridY = (canvasHeight - graphyoffset) / graphGridSize;\n"));
 
-    message += F("cv.lineWidth = 1;\n");
-    message += F("for(var i = 0; i < graphGridY; i++){\n");
-    message += F("cv.moveTo(canvasWidth,  canvasHeight - graphGridSize*i-graphyoffset);\n");
-    message += F("cv.lineTo(graphxoffset, canvasHeight - graphGridSize*i-graphyoffset);\n");
-    message += F("}\n");
-    message += F("cv.strokeStyle = \"#FFFFFF\";\n");
-    message += F("cv.stroke();\n");
+    response->print(F("cv.lineWidth = 1;\n"));
+    response->print(F("for(var i = 0; i < graphGridY; i++){\n"));
+    response->print(F("cv.moveTo(canvasWidth,  canvasHeight - graphGridSize*i-graphyoffset));\n"));
+    response->print(F("cv.lineTo(graphxoffset, canvasHeight - graphGridSize*i-graphyoffset));\n"));
+    response->print(F("}\n"));
+    response->print(F("cv.strokeStyle = \"#FFFFFF\";\n"));
+    response->print(F("cv.stroke());\n"));
 
     //Y-Achse Text:
-    message += F("cv.fillStyle = '#000000';\n");
-    message += F("cv.font = \"10px Arial\";\n");
-    message += F("for(var i = 0; i < graphGridY; i++){\n");
-    message += F("cv.fillStyle = yAchse.values[i].C;\n");
-    message += F("cv.fillText(yAchse.values[i].Y,0,canvasHeight - graphGridSize*i-graphyoffset+3,graphxoffset);\n");
-    message += F("}\n");
+    response->print(F("cv.fillStyle = '#000000';\n"));
+    response->print(F("cv.font = \"10px Arial\";\n"));
+    response->print(F("for(var i = 0; i < graphGridY; i++){\n"));
+    response->print(F("cv.fillStyle = yAchse.values[i].C;\n"));
+    response->print(F("cv.fillText(yAchse.values[i].Y,0,canvasHeight - graphGridSize*i-graphyoffset+3,graphxoffset));\n"));
+    response->print(F("}\n"));
 
     //Data Graph:
-    message += "var data = { values:[\n";
+    response->print("var data = { values:[\n");
     for ( int i = 0; i <= 71; i++)
     {
-      message += F("{T:\"");
-      message += myBME->temperatur_hist[i].stundeminute;
-      message += F("\",GA:");
-      message += String(myBME->temperatur_hist[i].aussentemp);
-      message += F(",GB:");
-      message += String(myBME->temperatur_hist[i].innentemp);
-      message += F("},\n");
+      response->print(F("{T:\""));
+      response->print(myBME->temperatur_hist[i].stundeminute);
+      response->print(F("\",GA:"));
+      response->print(String(myBME->temperatur_hist[i].aussentemp));
+      response->print(F(",GB:"));
+      response->print(String(myBME->temperatur_hist[i].innentemp));
+      response->print(F("},\n"));
     }
-    message += F("{T:\"");
-    message += myBME->temperatur_hist[72].stundeminute;
-    message += F("\",GA:");
-    message += String(myBME->temperatur_hist[72].aussentemp);
-    message += F(",GB:");
-    message += String(myBME->temperatur_hist[72].innentemp);
-    message += F("}\n");
-    message += F("]};\n");
+    response->print(F("{T:\""));
+    response->print(myBME->temperatur_hist[72].stundeminute);
+    response->print(F("\",GA:"));
+    response->print(String(myBME->temperatur_hist[72].aussentemp));
+    response->print(F(",GB:"));
+    response->print(String(myBME->temperatur_hist[72].innentemp));
+    response->print(F("}\n"));
+    response->print(F("]};\n"));
 
     //Options Graph
 
-    message += F("var graphMinValue = -20;\n"                         // Value der Nulllinie
+    response->print(F("var graphMinValue = -20;\n"                         // Value der Nulllinie
                   "var graphXDiff = 5;\n"                              // Value für eine Abschnittsdifferenz
                   "var graphFaktor = graphGridSize/graphXDiff;\n"
                   "var graphPadding = 1;\n"
                   "var graphWidth = (canvasWidth-graphPadding-graphxoffset)/data.values.length;\n"
                   "var graphTextcolor = '#000000';\n"
-                  "var gradient = cv.createLinearGradient(0,canvasHeight,0,0);\n");
-    message += F("gradient.addColorStop(\"0\",\"magenta\");"
+                  "var gradient = cv.createLinearGradient(0,canvasHeight,0,0));\n"));
+    response->print(F("gradient.addColorStop(\"0\",\"magenta\");"
                   "gradient.addColorStop(\"0.3\",\"blue\");"
                   "gradient.addColorStop(\"0.4\",\"green\");"
                   "gradient.addColorStop(\"0.6\",\"yellow\");"
-                  "gradient.addColorStop(\"1.0\",\"red\");\n");
+                  "gradient.addColorStop(\"1.0\",\"red\");\n"));
 
     //Draw Graph
-    message += F("for(var i = 1; i < data.values.length; i ++){\n");
+    response->print(F("for(var i = 1; i < data.values.length; i ++){\n"));
     // Graph1
-    message += F("ValueA1 = data.values[i-1].GA-graphMinValue;\n");
-    message += F("ValueA2 = data.values[i].GA-graphMinValue;\n");
-    message += F("tmpTopA1 = (canvasHeight-graphyoffset-(graphFaktor*ValueA1)).toFixed();\n");
-    message += F("tmpTopA2 = (canvasHeight-graphyoffset-(graphFaktor*ValueA2)).toFixed();\n");
+    response->print(F("ValueA1 = data.values[i-1].GA-graphMinValue;\n"));
+    response->print(F("ValueA2 = data.values[i].GA-graphMinValue;\n"));
+    response->print(F("tmpTopA1 = (canvasHeight-graphyoffset-(graphFaktor*ValueA1)).toFixed();\n"));
+    response->print(F("tmpTopA2 = (canvasHeight-graphyoffset-(graphFaktor*ValueA2)).toFixed();\n"));
 
     // Graph2
-    message += F("ValueB1 = data.values[i-1].GB-graphMinValue;\n");
-    message += F("ValueB2 = data.values[i].GB-graphMinValue;\n");
-    message += F("tmpTopB1 = (canvasHeight-graphyoffset-(graphFaktor*ValueB1)).toFixed();\n");
-    message += F("tmpTopB2 = (canvasHeight-graphyoffset-(graphFaktor*ValueB2)).toFixed();\n");
+    response->print(F("ValueB1 = data.values[i-1].GB-graphMinValue;\n"));
+    response->print(F("ValueB2 = data.values[i].GB-graphMinValue;\n"));
+    response->print(F("tmpTopB1 = (canvasHeight-graphyoffset-(graphFaktor*ValueB1)).toFixed();\n"));
+    response->print(F("tmpTopB2 = (canvasHeight-graphyoffset-(graphFaktor*ValueB2)).toFixed();\n"));
 
     // Y-Grid + X-Beschriftung
-    message += F("if ( data.values[i-1].T.substr(-2) == \"00\" ) {\n");
-    message += F("cv.fillStyle = graphTextcolor;\n");
-    message += F("cv.font = \"9px Arial\";\n");
-    message += F("cv.fillText(data.values[i-1].T.substr(0,2), graphWidth+((i-1)*graphWidth)+graphPadding-5+graphxoffset, canvasHeight-2,graphWidth*3);\n");
-    message += F("cv.beginPath();\n");
-    message += F("cv.moveTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, canvasHeight - graphyoffset+4);\n");
-    message += F("cv.lineTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, 0);\n");
-    message += F("cv.lineWidth = 1;\n");
-    message += F("cv.strokeStyle = \"#FFFFFF\";\n");
-    message += F("cv.stroke();\n");
-    message += F("}\n");
-    message += F("cv.beginPath();\n");
-    message += F("cv.lineWidth = 3;\n");
-    message += F("cv.moveTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, tmpTopA1);\n");
-    message += F("cv.lineTo(graphWidth+((i)*graphWidth)+graphPadding+graphxoffset, tmpTopA2);\n");
-    message += F("cv.strokeStyle = gradient;\n");
-    message += F("cv.stroke();\n");
-    message += F("cv.beginPath();\n");
-    message += F("cv.lineWidth = 3;\n");
-    message += F("cv.moveTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, tmpTopB1);\n");
-    message += F("cv.lineTo(graphWidth+((i)*graphWidth)+graphPadding+graphxoffset, tmpTopB2);\n");
-    message += F("cv.strokeStyle = \"#000000\";\n");
-    message += F("cv.stroke();\n");
-    message += F("}\n");
-    message += F("</script></div><hr>\n");
+    response->print(F("if ( data.values[i-1].T.substr(-2) == \"00\" ) {\n"));
+    response->print(F("cv.fillStyle = graphTextcolor;\n"));
+    response->print(F("cv.font = \"9px Arial\";\n"));
+    response->print(F("cv.fillText(data.values[i-1].T.substr(0,2), graphWidth+((i-1)*graphWidth)+graphPadding-5+graphxoffset, canvasHeight-2,graphWidth*3);\n"));
+    response->print(F("cv.beginPath());\n"));
+    response->print(F("cv.moveTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, canvasHeight - graphyoffset+4);\n"));
+    response->print(F("cv.lineTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, 0);\n"));
+    response->print(F("cv.lineWidth = 1;\n"));
+    response->print(F("cv.strokeStyle = \"#FFFFFF\";\n"));
+    response->print(F("cv.stroke());\n"));
+    response->print(F("}\n"));
+    response->print(F("cv.beginPath());\n"));
+    response->print(F("cv.lineWidth = 3;\n"));
+    response->print(F("cv.moveTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, tmpTopA1);\n"));
+    response->print(F("cv.lineTo(graphWidth+((i)*graphWidth)+graphPadding+graphxoffset, tmpTopA2);\n"));
+    response->print(F("cv.strokeStyle = gradient;\n"));
+    response->print(F("cv.stroke());\n"));
+    response->print(F("cv.beginPath());\n"));
+    response->print(F("cv.lineWidth = 3;\n"));
+    response->print(F("cv.moveTo(graphWidth+((i-1)*graphWidth)+graphPadding+graphxoffset, tmpTopB1);\n"));
+    response->print(F("cv.lineTo(graphWidth+((i)*graphWidth)+graphPadding+graphxoffset, tmpTopB2);\n"));
+    response->print(F("cv.strokeStyle = \"#000000\";\n"));
+    response->print(F("cv.stroke();\n"));
+    response->print(F("}\n"));
+    response->print(F("</script></div><hr>\n"));
 
-    response->print(message);
-    message = "";
   #endif
 
     // Abschnitt Wortuhr und Uptime
-    message += F("<table>");
-    message += F("<tr>");
-    message += F("<td>");
+    response->print(F("<table>"));
+    response->print(F("<tr>"));
+    response->print(F("<td>"));
 
-    message += F("<span style=\"font-size:12px;\">\n");
-    message += F("<br>");
-    message += F(LANG_WORDCLOCK);
-    message += F("<br>\nUptime: ");
-    message += mt->convertSeconds(upTime);
-    message += F("<br>\nFirmware: ");
-    message += FIRMWARE_VERSION;
-    message += " ";
-    message += BUILD_DATE;
-    message += F("<br>\n");
+    response->print(F("<span style=\"font-size:12px;\">\n"));
+    response->print(F("<br>"));
+    response->print(F(LANG_WORDCLOCK));
+    response->print(F("<br>\nUptime: "));
+    response->print(mt->convertSeconds(upTime));
+    response->print(F("<br>\nFirmware: "));
+    response->print(FIRMWARE_VERSION);
+    response->print(" ");
+    response->print(BUILD_DATE);
+    response->print(F("<br>\n"));
 
     // QR-Code Button
-    message += F("</td>");
-    message += F("<td>");
-    message += F("<button style=\"background: none; border: none;\" onclick=\"window.location.href='https://merz-aktuell.de/Wordclock/Doku/WortuhrBeschreibung10.x.pdf'\">");
-    message += F("<img src=\"/web/qr-code.png\" alt=\"Handbuch\" width=\"120\" height=\"120\">");
-    message += F("</button>");
-    message += F("</td>");
-    message += F("</tr>");
-    message += F("</table>");
+    response->print(F("</td>"));
+    response->print(F("<td>"));
+    response->print(F("<button style=\"background: none; border: none;\" onclick=\"window.location.href='https://merz-aktuell.de/Wordclock/Doku/WortuhrBeschreibung10.x.pdf'\">"));
+    response->print(F("<img src=\"/web/qr-code.png\" alt=\"Handbuch\" width=\"120\" height=\"120\">"));
+    response->print(F("</button>"));
+    response->print(F("</td>"));
+    response->print(F("</tr>"));
+    response->print(F("</table>"));
 
     // Abschnitt Info Button
-    message += F("<hr>\n");
-    message += F("<button id=\"Infobutton\" title=\"Info\" name=\"Info\" onclick=\"window.location.href='/debugClock'\">Info</button>");
-    message += F("</span>");
-    message += F("\n<script>\n"
+    response->print(F("<hr>\n"));
+    response->print(F("<button id=\"Infobutton\" title=\"Info\" name=\"Info\" onclick=\"window.location.href='/debugClock'\">Info</button>"));
+    response->print(F("</span>"));
+    response->print(F("\n<script>\n"
                   "$(\"#button_zeit\").click(function() {"
                   "$.post(\"/handleButtonTime\");"
                   "});\n"
@@ -596,40 +589,39 @@ void handleRoot(AsyncWebServerRequest *request, Mode mode, uint8_t moonphase, ui
                   "if (!document.hidden){"
                   " location.reload();"
                   "}"
-                  "});\n");
+                  "});\n"));
 
   #ifdef SHOW_MODE_MOONPHASE
-    message += F("function moonphase() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_MOONPHASE);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
+    response->print(F("function moonphase() {"
+                    "$.post(\"/control?mode=")); 
+    response->print(String(MODE_MOONPHASE));
+    response->print(F("&sound=" SMODE_SOUND "\");"
+                  "};\n"));
   #endif
 
   #ifdef APIKEY 
-    message += F("function modeexttemp() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_EXT_TEMP);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
-    message += F("function modeexthum() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_EXT_HUMIDITY);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
-    message += F("function wetter() {"
-                    "$.post(\"/control?mode="); 
-    message += String(MODE_WETTER);
-    message += F("&sound=" SMODE_SOUND "\");"
-                  "};\n");
+    response->print(F("function modeexttemp() {"
+                    "$.post(\"/control?mode=")); 
+    response->print(String(MODE_EXT_TEMP));
+    response->print(F("&sound=" SMODE_SOUND "\");"
+                  "};\n"));
+    response->print(F("function modeexthum() {"
+                    "$.post(\"/control?mode=")); 
+    response->print(String(MODE_EXT_HUMIDITY));
+    response->print(F("&sound=" SMODE_SOUND "\");"
+                  "};\n"));
+    response->print(F("function wetter() {"
+                    "$.post(\"/control?mode=")); 
+    response->print(String(MODE_WETTER));
+    response->print(F("&sound=" SMODE_SOUND "\");"
+                  "};\n"));
   #endif
 
   // Ende Script
-  message += F("</script>\n");
+  response->print(F("</script>\n"));
 
   // Ende Webserver
-  message += F("</body></html>");
-  response->print(message);
+  response->print(F("</body></html>"));
   request->send(response);
 #if defined(SYSLOGSERVER_SERVER)
   syslog.log(LOG_INFO, "handleRoot: end");

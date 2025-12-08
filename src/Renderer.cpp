@@ -28,18 +28,18 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 // DEUTSCH
 //########################################################################################################################
 #if defined(FRONTCOVER_DE_DE) || defined(FRONTCOVER_DE_SW) || defined(FRONTCOVER_DE_BA) || defined(FRONTCOVER_DE_SA)
-		DE_ESIST;
     if (itIs) 
     { 
-      WEB_Uhrtext = F("Es ist ");
+		DE_ESIST;
+      	WEB_Uhrtext = F("Es ist ");
     }
     else 
     { 
       WEB_Uhrtext = "";
     }
 
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// full hour
 			setHours(hours, true, matrix);
@@ -48,26 +48,26 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 nach
 			DE_FUENF;
 			DE_NACH;
-      WEB_Uhrtext += F("f&uuml;nf nach ");
+      		WEB_Uhrtext += F("f&uuml;nf nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 nach
 			DE_ZEHN;
 			DE_NACH;
-      WEB_Uhrtext += F("zehn nach ");
+      		WEB_Uhrtext += F("zehn nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
 			// viertel nach
 			if(language==FC_DE_SW || language==FC_DE_SA) {
 				DE_VIERTEL;
-        WEB_Uhrtext += F("viertel ");
+        		WEB_Uhrtext += F("viertel ");
 				setHours(hours + 1, false, matrix);
 			} else {
 				DE_VIERTEL;
 				DE_NACH;
-        WEB_Uhrtext += F("viertel nach ");
+        		WEB_Uhrtext += F("viertel nach ");
 				setHours(hours, false, matrix);
 			}
 			break;
@@ -91,13 +91,13 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			DE_FUENF;
 			DE_VOR;
 			DE_HALB;
-      WEB_Uhrtext += F("f&uuml;nf vor halb ");
+      		WEB_Uhrtext += F("f&uuml;nf vor halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 6:
 			// halb
 			DE_HALB;
-      WEB_Uhrtext += F("halb ");
+      		WEB_Uhrtext += F("halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 7:
@@ -105,7 +105,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			DE_FUENF;
 			DE_NACH;
 			DE_HALB;
-      WEB_Uhrtext += F("f&uuml;nf nach halb ");
+      		WEB_Uhrtext += F("f&uuml;nf nach halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
@@ -114,12 +114,12 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 				DE_ZEHN;
 				DE_NACH;
 				DE_HALB;
-        WEB_Uhrtext += F("zehn nach halb ");
+        		WEB_Uhrtext += F("zehn nach halb ");
 				setHours(hours + 1, false, matrix);
 			} else {
 				DE_ZWANZIG;
 				DE_VOR;
-        WEB_Uhrtext += F("zwanzig vor ");
+        		WEB_Uhrtext += F("zwanzig vor ");
 				setHours(hours + 1, false, matrix);
 			}
 			break;
@@ -150,33 +150,33 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
       		WEB_Uhrtext += F("f&uuml;nf vor ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
-    	WEB_Uhrtext += F("<br>");
+	}
+    WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
 #if defined(FRONTCOVER_DE_MKF_DE) || defined(FRONTCOVER_DE_MKF_SW) || defined(FRONTCOVER_DE_MKF_BA) || defined(FRONTCOVER_DE_MKF_SA)
-		DE_MKF_ESIST;
     if (settings.mySettings.itIs) 
     { 
-      WEB_Uhrtext = F("Es ist ");
+		DE_MKF_ESIST;
+      	WEB_Uhrtext = F("Es ist ");
     }
     else 
     { 
-      WEB_Uhrtext = "";
+      	WEB_Uhrtext = "";
     }
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -185,42 +185,42 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 nach
 			DE_MKF_FUENF;
 			DE_MKF_NACH;
-      WEB_Uhrtext += F("f&uuml;nf nach ");
+      		WEB_Uhrtext += F("f&uuml;nf nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 nach
 			DE_MKF_ZEHN;
 			DE_MKF_NACH;
-      WEB_Uhrtext += F("zehn nach ");
+      		WEB_Uhrtext += F("zehn nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
 			// viertel nach
 #if defined(FRONTCOVER_DE_MKF_SW) || defined(FRONTCOVER_DE_MKF_SA)
-				DE_MKF_VIERTEL;
-        WEB_Uhrtext += F("viertel ");
-				setHours(hours + 1, false, matrix);
+			DE_MKF_VIERTEL;
+        	WEB_Uhrtext += F("viertel ");
+			setHours(hours + 1, false, matrix);
 #else
-				DE_MKF_VIERTEL;
-				DE_MKF_NACH;
-        WEB_Uhrtext += F("viertel nach ");
-				setHours(hours, false, matrix);
+			DE_MKF_VIERTEL;
+			DE_MKF_NACH;
+        	WEB_Uhrtext += F("viertel nach ");
+			setHours(hours, false, matrix);
 #endif
 			break;
 		case 4:
 			// 20 nach
 #if defined(FRONTCOVER_DE_MKF_SA)
-				DE_MKF_ZEHN;
-				DE_MKF_VOR;
-				DE_MKF_HALB;
-        WEB_Uhrtext += F("zehn vor halb ");
-				setHours(hours + 1, false, matrix);
+			DE_MKF_ZEHN;
+			DE_MKF_VOR;
+			DE_MKF_HALB;
+        	WEB_Uhrtext += F("zehn vor halb ");
+			setHours(hours + 1, false, matrix);
 #else
-				DE_MKF_ZWANZIG;
-				DE_MKF_NACH;
-        WEB_Uhrtext += F("zwanzig nach ");
-				setHours(hours, false, matrix);
+			DE_MKF_ZWANZIG;
+			DE_MKF_NACH;
+        	WEB_Uhrtext += F("zwanzig nach ");
+			setHours(hours, false, matrix);
 #endif
 			break;
 		case 5:
@@ -228,13 +228,13 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			DE_MKF_FUENF;
 			DE_MKF_VOR;
 			DE_MKF_HALB;
-      WEB_Uhrtext += F("f&uuml;nf vor halb ");
+      		WEB_Uhrtext += F("f&uuml;nf vor halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 6:
 			// halb
 			DE_MKF_HALB;
-      WEB_Uhrtext += F("halb ");
+      		WEB_Uhrtext += F("halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 7:
@@ -242,70 +242,70 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			DE_MKF_FUENF;
 			DE_MKF_NACH;
 			DE_MKF_HALB;
-      WEB_Uhrtext += F("f&uuml;nf nach halb ");
+      		WEB_Uhrtext += F("f&uuml;nf nach halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
 			// 20 vor
 #if defined(FRONTCOVER_DE_MKF_SA)
-				DE_MKF_ZEHN;
-				DE_MKF_NACH;
-				DE_MKF_HALB;
-        WEB_Uhrtext += F("zehn nach halb ");
-				setHours(hours + 1, false, matrix);
+			DE_MKF_ZEHN;
+			DE_MKF_NACH;
+			DE_MKF_HALB;
+        	WEB_Uhrtext += F("zehn nach halb ");
+			setHours(hours + 1, false, matrix);
 #else
-				DE_MKF_ZWANZIG;
-				DE_MKF_VOR;
-        WEB_Uhrtext += F("zwanzig vor ");
-				setHours(hours + 1, false, matrix);
+			DE_MKF_ZWANZIG;
+			DE_MKF_VOR;
+        	WEB_Uhrtext += F("zwanzig vor ");
+			setHours(hours + 1, false, matrix);
 #endif
 			break;
 		case 9:
 			// viertel vor
 #if defined(FRONTCOVER_DE_MKF_SW) || defined(FRONTCOVER_DE_MKF_BA) || defined(FRONTCOVER_DE_MKF_SA)
-				DE_MKF_DREIVIERTEL;
-        WEB_Uhrtext += F("dreiviertel ");
-				setHours(hours + 1, false, matrix);
+			DE_MKF_DREIVIERTEL;
+        	WEB_Uhrtext += F("dreiviertel ");
+			setHours(hours + 1, false, matrix);
 #else
-				DE_MKF_VIERTEL;
-				DE_MKF_VOR;
-        WEB_Uhrtext += F("viertel vor ");
-				setHours(hours + 1, false, matrix);
+			DE_MKF_VIERTEL;
+			DE_MKF_VOR;
+        	WEB_Uhrtext += F("viertel vor ");
+			setHours(hours + 1, false, matrix);
 #endif
 			break;
 		case 10:
 			// 10 vor
 			DE_MKF_ZEHN;
 			DE_MKF_VOR;
-      WEB_Uhrtext += F("zehn vor ");
+      		WEB_Uhrtext += F("zehn vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 11:
 			// 5 vor
 			DE_MKF_FUENF;
 			DE_MKF_VOR;
-      WEB_Uhrtext += F("f&uuml;nf vor ");
+      		WEB_Uhrtext += F("f&uuml;nf vor ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
 #if defined(FRONTCOVER_D3)
-		D3_ESISCH;
-		switch (minutes / 5)
-		{
+	D3_ESISCH;
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -377,7 +377,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			D3_VOR;
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
 #endif
 
 //########################################################################################################################
@@ -385,25 +385,23 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_CH)
-    
-
     if (settings.mySettings.itIs) 
     {
       if (minutes % 5) CH_GSI;
     }
 
-    CH_ESISCH;
     if (settings.mySettings.itIs) 
     {
-      WEB_Uhrtext = F("Es isch ");
+		CH_ESISCH;
+      	WEB_Uhrtext = F("Es isch ");
     }
     else
     {
-      WEB_Uhrtext = F("");
+      	WEB_Uhrtext = F("");
     }
 
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -412,28 +410,28 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 ab
 			CH_FUEF;
 			CH_AB;
-      WEB_Uhrtext += F("f&ouml;f ab ");
+      		WEB_Uhrtext += F("f&ouml;f ab ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 ab
 			CH_ZAEAE;
 			CH_AB;
-      WEB_Uhrtext += F("z&auml;&auml; ab ");
+      		WEB_Uhrtext += F("z&auml;&auml; ab ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
 			// viertel ab
 			CH_VIERTU;
 			CH_AB;
-      WEB_Uhrtext += F("viertu ab ");
+      		WEB_Uhrtext += F("viertu ab ");
 			setHours(hours, false, matrix);
 			break;
 		case 4:
 			// 20 ab
 			CH_ZWAENZG;
 			CH_AB;
-      WEB_Uhrtext += F("zw&auml;nzg ab ");
+      		WEB_Uhrtext += F("zw&auml;nzg ab ");
 			setHours(hours, false, matrix);
 			break;
 		case 5:
@@ -441,13 +439,13 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			CH_FUEF;
 			CH_VOR;
 			CH_HAUBI;
-      WEB_Uhrtext += F("f&ouml;f vor haubi ");
+      		WEB_Uhrtext += F("f&ouml;f vor haubi ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 6:
 			// halb
 			CH_HAUBI;
-      WEB_Uhrtext += F("haubi ");
+      		WEB_Uhrtext += F("haubi ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 7:
@@ -455,49 +453,49 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			CH_FUEF;
 			CH_AB;
 			CH_HAUBI;
-      WEB_Uhrtext += F("f&ouml;f ab haubi ");
+      		WEB_Uhrtext += F("f&ouml;f ab haubi ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
 			// 20 vor
 			CH_ZWAENZG;
 			CH_VOR;
-      WEB_Uhrtext += F("zw&auml;nzg vor ");
+      		WEB_Uhrtext += F("zw&auml;nzg vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 9:
 			// viertel vor
 			CH_VIERTU;
 			CH_VOR;
-      WEB_Uhrtext += F("viertu vor ");
+      		WEB_Uhrtext += F("viertu vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 10:
 			// 10 vor
 			CH_ZAEAE;
 			CH_VOR;
-      WEB_Uhrtext += F("z&auml;&auml; vor ");
+      		WEB_Uhrtext += F("z&auml;&auml; vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 11:
 			// 5 vor
 			CH_FUEF;
 			CH_VOR;
-      WEB_Uhrtext += F("f&ouml;if vor ");
+      		WEB_Uhrtext += F("f&ouml;if vor ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }            
 #endif
 
@@ -658,17 +656,18 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_EN)
-		EN_ITIS;
+		
     if (settings.mySettings.itIs) 
     { 
+	  EN_ITIS;
       WEB_Uhrtext = F("It is ");
     }
     else 
     { 
       WEB_Uhrtext = "";
     }
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -677,14 +676,14 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 nach
 			EN_FIVE;
 			EN_PAST;
-      WEB_Uhrtext += F("five past ");
+      		WEB_Uhrtext += F("five past ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 nach
 			EN_TEN;
 			EN_PAST;
-      WEB_Uhrtext += F("ten past ");
+      		WEB_Uhrtext += F("ten past ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
@@ -692,14 +691,14 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			EN_A;
 			EN_QUATER;
 			EN_PAST;
-      WEB_Uhrtext += F("a quarter past ");
+      		WEB_Uhrtext += F("a quarter past ");
 			setHours(hours, false, matrix);
 			break;
 		case 4:
 			// 20 nach
 			EN_TWENTY;
 			EN_PAST;
-      WEB_Uhrtext += F("twenty past ");
+      		WEB_Uhrtext += F("twenty past ");
 			setHours(hours, false, matrix);
 			break;
 		case 5:
@@ -707,14 +706,14 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			EN_TWENTY;
 			EN_FIVE;
 			EN_PAST;
-      WEB_Uhrtext += F("twenty-five past ");
+      		WEB_Uhrtext += F("twenty-five past ");
 			setHours(hours, false, matrix);
 			break;
 		case 6:
 			// halb
 			EN_HALF;
 			EN_PAST;
-      WEB_Uhrtext += F("half past ");
+      		WEB_Uhrtext += F("half past ");
 			setHours(hours, false, matrix);
 			break;
 		case 7:
@@ -722,14 +721,14 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			EN_TWENTY;
 			EN_FIVE;
 			EN_TO;
-      WEB_Uhrtext += F("twenty-five to ");
+      		WEB_Uhrtext += F("twenty-five to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
 			// 20 vor
 			EN_TWENTY;
 			EN_TO;
-      WEB_Uhrtext += F("twenty to ");
+      		WEB_Uhrtext += F("twenty to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 9:
@@ -737,35 +736,35 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			EN_A;
 			EN_QUATER;
 			EN_TO;
-      WEB_Uhrtext += F("a quarter to ");
+      		WEB_Uhrtext += F("a quarter to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 10:
 			// 10 vor
 			EN_TEN;
 			EN_TO;
-      WEB_Uhrtext += F("ten to ");
+      		WEB_Uhrtext += F("ten to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 11:
 			// 5 vor
 			EN_FIVE;
 			EN_TO;
-      WEB_Uhrtext += F("five to ");
+      		WEB_Uhrtext += F("five to ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -775,8 +774,8 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 
 #if defined(FRONTCOVER_ES)
     WEB_Uhrtext = "";
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			ES_hours(hours, matrix);
@@ -788,7 +787,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_CINCO;
 			ES_hours(hours, matrix);
 			setHours(hours, false, matrix);
-      WEB_Uhrtext += F("y cinco ");
+      		WEB_Uhrtext += F("y cinco ");
 			break;
 		case 2:
 			// 10 nach
@@ -796,7 +795,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_DIEZ;
 			ES_hours(hours, matrix);
 			setHours(hours, false, matrix);
-      WEB_Uhrtext += F("y diez ");
+      		WEB_Uhrtext += F("y diez ");
 			break;
 		case 3:
 			// viertel nach
@@ -804,7 +803,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_CUARTO;
 			ES_hours(hours, matrix);
 			setHours(hours, false, matrix);
-      WEB_Uhrtext += F("y cuarto ");
+      		WEB_Uhrtext += F("y cuarto ");
 			break;
 		case 4:
 			// 20 nach
@@ -812,7 +811,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_VEINTE;
 			ES_hours(hours, matrix);
 			setHours(hours, false, matrix);
-      WEB_Uhrtext += F("y veinte ");
+      		WEB_Uhrtext += F("y veinte ");
 			break;
 		case 5:
 			// 5 vor halb
@@ -820,7 +819,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_VEINTICINCO;
 			ES_hours(hours, matrix);
 			setHours(hours, false, matrix);
-      WEB_Uhrtext += F("y veinticinco ");
+      		WEB_Uhrtext += F("y veinticinco ");
 			break;
 		case 6:
 			// halb
@@ -828,7 +827,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_MEDIA;
 			ES_hours(hours, matrix);
 			setHours(hours, false, matrix);
-      WEB_Uhrtext += F("y media ");
+      		WEB_Uhrtext += F("y media ");
 			break;
 		case 7:
 			// 5 nach halb
@@ -836,7 +835,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_VEINTICINCO;
 			ES_hours(hours + 1, matrix);
 			setHours(hours + 1, false, matrix);
-      WEB_Uhrtext += F("menos veinticinco ");
+      		WEB_Uhrtext += F("menos veinticinco ");
 			break;
 		case 8:
 			// 20 vor
@@ -844,7 +843,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_VEINTE;
 			ES_hours(hours + 1, matrix);
 			setHours(hours + 1, false, matrix);
-      WEB_Uhrtext += F("menos veinte ");
+      		WEB_Uhrtext += F("menos veinte ");
 			break;
 		case 9:
 			// viertel vor
@@ -852,7 +851,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_CUARTO;
 			ES_hours(hours + 1, matrix);
 			setHours(hours + 1, false, matrix);
-      WEB_Uhrtext += F("menos cuarto ");
+      		WEB_Uhrtext += F("menos cuarto ");
 			break;
 		case 10:
 			// 10 vor
@@ -860,7 +859,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_DIEZ;
 			ES_hours(hours + 1, matrix);
 			setHours(hours + 1, false, matrix);
-      WEB_Uhrtext += F("menos diez ");
+      		WEB_Uhrtext += F("menos diez ");
 			break;
 		case 11:
 			// 5 vor
@@ -868,20 +867,20 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			ES_CINCO;
 			ES_hours(hours + 1, matrix);
 			setHours(hours + 1, false, matrix);
-      WEB_Uhrtext += F("menos cinco ");
+      		WEB_Uhrtext += F("menos cinco ");
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 3:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 2:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 1:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -890,37 +889,36 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_FR)
-		FR_ILEST;
     if (settings.mySettings.itIs) 
     { 
-      WEB_Uhrtext = F("Il est ");
+		FR_ILEST;
+      	WEB_Uhrtext = F("Il est ");
     }
     else 
     { 
       WEB_Uhrtext = "";
     }
    
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
 			FR_hours(hours, matrix);
-      
 			break;
 		case 1:
 			// 5 nach
 			setHours(hours, false, matrix);
 			FR_hours(hours, matrix);
 			FR_CINQ;
-      WEB_Uhrtext += F("cinq");
+      		WEB_Uhrtext += F("cinq");
 			break;
 		case 2:
 			// 10 nach
 			setHours(hours, false, matrix);
 			FR_hours(hours, matrix);
 			FR_DIX;
-      WEB_Uhrtext += F("dix");
+      		WEB_Uhrtext += F("dix");
 			break;
 		case 3:
 			// viertel nach
@@ -928,14 +926,14 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_hours(hours, matrix);
 			FR_ET;
 			FR_QUART;
-      WEB_Uhrtext += F("et quart");
+      		WEB_Uhrtext += F("et quart");
 			break;
 		case 4:
 			// 20 nach
 			setHours(hours, false, matrix);
 			FR_hours(hours, matrix);
 			FR_VINGT;
-      WEB_Uhrtext += F("vingt");
+      		WEB_Uhrtext += F("vingt");
 			break;
 		case 5:
 			// 5 vor halb
@@ -944,7 +942,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_VINGT;
 			FR_TRAIT;
 			FR_CINQ;
-      WEB_Uhrtext += F("vingt-cinq");
+      		WEB_Uhrtext += F("vingt-cinq");
 			break;
 		case 6:
 			// halb
@@ -952,7 +950,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_hours(hours, matrix);
 			FR_ET;
 			FR_DEMIE;
-      WEB_Uhrtext += F("et demi");
+      		WEB_Uhrtext += F("et demi");
 			break;
 		case 7:
 			// 5 nach halb
@@ -962,7 +960,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_VINGT;
 			FR_TRAIT;
 			FR_CINQ;
-      WEB_Uhrtext += F("moins vingt-cinq");
+      		WEB_Uhrtext += F("moins vingt-cinq");
 			break;
 		case 8:
 			// 20 vor
@@ -970,7 +968,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_hours(hours + 1, matrix);
 			FR_MOINS;
 			FR_VINGT;
-      WEB_Uhrtext += F("moins vingt");
+      		WEB_Uhrtext += F("moins vingt");
 			break;
 		case 9:
 			// viertel vor
@@ -979,7 +977,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_MOINS;
 			FR_LE;
 			FR_QUART;
-      WEB_Uhrtext += F("moins le quart");
+      		WEB_Uhrtext += F("moins le quart");
 			break;
 		case 10:
 			// 10 vor
@@ -987,7 +985,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_hours(hours + 1, matrix);
 			FR_MOINS;
 			FR_DIX;
-      WEB_Uhrtext += F("moins dix");
+      		WEB_Uhrtext += F("moins dix");
 			break;
 		case 11:
 			// 5 vor
@@ -995,20 +993,20 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			FR_hours(hours + 1, matrix);
 			FR_MOINS;
 			FR_CINQ;
-      WEB_Uhrtext += F("moins cinq");
+      		WEB_Uhrtext += F("moins cinq");
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -1018,8 +1016,8 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 
 #if defined(FRONTCOVER_IT)
     WEB_Uhrtext = "";
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -1031,7 +1029,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_CINQUE;
 			setHours(hours, false, matrix);
 			IT_hours(hours, matrix);
-      WEB_Uhrtext += F("e cinque");
+      		WEB_Uhrtext += F("e cinque");
 			break;
 		case 2:
 			// 10 nach
@@ -1039,7 +1037,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_DIECI;
 			setHours(hours, false, matrix);
 			IT_hours(hours, matrix);
-      WEB_Uhrtext += F("e dieci");
+      		WEB_Uhrtext += F("e dieci");
 			break;
 		case 3:
 			// viertel nach
@@ -1048,7 +1046,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_QUARTO;
 			setHours(hours, false, matrix);
 			IT_hours(hours, matrix);
-      WEB_Uhrtext += F("e un quarto");
+      		WEB_Uhrtext += F("e un quarto");
 			break;
 		case 4:
 			// 20 nach
@@ -1056,7 +1054,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_VENTI;
 			setHours(hours, false, matrix);
 			IT_hours(hours, matrix);
-      WEB_Uhrtext += F("e venti");
+      		WEB_Uhrtext += F("e venti");
 			break;
 		case 5:
 			// 5 vor halb
@@ -1065,7 +1063,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_CINQUE;
 			setHours(hours, false, matrix);
 			IT_hours(hours, matrix);
-      WEB_Uhrtext += F("e venti cinque");
+      		WEB_Uhrtext += F("e venti cinque");
 			break;
 		case 6:
 			// halb
@@ -1073,7 +1071,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_MEZZA;
 			setHours(hours, false, matrix);
 			IT_hours(hours, matrix);
-      WEB_Uhrtext += F("e mezza");
+      		WEB_Uhrtext += F("e mezza");
 			break;
 		case 7:
 			// 5 nach halb
@@ -1082,7 +1080,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_CINQUE;
 			setHours(hours + 1, false, matrix);
 			IT_hours(hours + 1, matrix);
-      WEB_Uhrtext += F("meno venti cinque");
+      		WEB_Uhrtext += F("meno venti cinque");
 			break;
 		case 8:
 			// 20 vor
@@ -1090,7 +1088,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_VENTI;
 			setHours(hours + 1, false, matrix);
 			IT_hours(hours + 1, matrix);
-      WEB_Uhrtext += F("meno venti");
+      		WEB_Uhrtext += F("meno venti");
 			break;
 		case 9:
 			// viertel vor
@@ -1099,7 +1097,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_QUARTO;
 			setHours(hours + 1, false, matrix);
 			IT_hours(hours + 1, matrix);
-      WEB_Uhrtext += F("meno un quarto");
+      		WEB_Uhrtext += F("meno un quarto");
 			break;
 		case 10:
 			// 10 vor
@@ -1107,7 +1105,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_DIECI;
 			setHours(hours + 1, false, matrix);
 			IT_hours(hours + 1, matrix);
-      WEB_Uhrtext += F("meno dieci");
+      		WEB_Uhrtext += F("meno dieci");
 			break;
 		case 11:
 			// 5 vor
@@ -1115,20 +1113,20 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			IT_CINQUE;
 			setHours(hours + 1, false, matrix);
 			IT_hours(hours + 1, matrix);
-      WEB_Uhrtext += F("meno un cinque");
+      		WEB_Uhrtext += F("meno un cinque");
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 3:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 2:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 1:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -1137,18 +1135,18 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_NL)
-		NL_HETIS;
     if (settings.mySettings.itIs) 
     { 
-      WEB_Uhrtext = F("het is ");
+		NL_HETIS;
+      	WEB_Uhrtext = F("het is ");
     }
     else 
     { 
-      WEB_Uhrtext = "";
+      	WEB_Uhrtext = "";
     }
     
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -1157,21 +1155,21 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 nach
 			NL_VIJF;
 			NL_OVER;
-      WEB_Uhrtext += F("vijf over ");
+      		WEB_Uhrtext += F("vijf over ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 nach
 			NL_TIEN;
 			NL_OVER;
-      WEB_Uhrtext += F("tien over ");
+      		WEB_Uhrtext += F("tien over ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
 			// viertel nach
 			NL_KWART;
 			NL_OVER2;
-      WEB_Uhrtext += F("kwart over ");
+      		WEB_Uhrtext += F("kwart over ");
 			setHours(hours, false, matrix);
 			break;
 		case 4:
@@ -1179,7 +1177,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			NL_TIEN;
 			NL_VOOR;
 			NL_HALF;
-      WEB_Uhrtext += F("tien voor half ");
+      		WEB_Uhrtext += F("tien voor half ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 5:
@@ -1187,13 +1185,13 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			NL_VIJF;
 			NL_VOOR;
 			NL_HALF;
-      WEB_Uhrtext += F("vijf voor half ");
+      		WEB_Uhrtext += F("vijf voor half ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 6:
 			// halb
 			NL_HALF;
-      WEB_Uhrtext += F("half ");
+      		WEB_Uhrtext += F("half ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 7:
@@ -1201,7 +1199,7 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			NL_VIJF;
 			NL_OVER;
 			NL_HALF;
-      WEB_Uhrtext += F("vijf over half ");
+      		WEB_Uhrtext += F("vijf over half ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
@@ -1209,42 +1207,42 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			NL_TIEN;
 			NL_OVER;
 			NL_HALF;
-      WEB_Uhrtext += F("tien over half ");
+      		WEB_Uhrtext += F("tien over half ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 9:
 			// viertel vor
 			NL_KWART;
 			NL_VOOR2;
-      WEB_Uhrtext += F("kwart voor ");
+      		WEB_Uhrtext += F("kwart voor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 10:
 			// 10 vor
 			NL_TIEN;
 			NL_VOOR;
-      WEB_Uhrtext += F("tien voor ");
+      		WEB_Uhrtext += F("tien voor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 11:
 			// 5 vor
 			NL_VIJF;
 			NL_VOOR;
-      WEB_Uhrtext += F("vijf voor ");
+      		WEB_Uhrtext += F("vijf voor ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 3:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 2:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     case 1:
-    WEB_Uhrtext += F("&bull;");
+    	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -1253,17 +1251,17 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_AE_DE)
-		AE_ESIST;
     if (settings.mySettings.itIs) 
     { 
-      WEB_Uhrtext = F("ES ist ");
+		AE_ESIST;
+      	WEB_Uhrtext = F("ES ist ");
     }
     else 
     { 
-      WEB_Uhrtext = "";
+      	WEB_Uhrtext = "";
     }
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -1272,26 +1270,26 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 nach
 			AE_PLUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("f&uuml;nf nach ");
+      		WEB_Uhrtext += F("f&uuml;nf nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 nach
 			AE_PLUS_ZEHN;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("zehn nach ");
+      		WEB_Uhrtext += F("zehn nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
 			// viertel nach
 			AE_PLUS_VIERTEL;
-      WEB_Uhrtext += F("viertel nach ");
+      		WEB_Uhrtext += F("viertel nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 4:
 			// 20 nach
 			AE_PLUS_DRITTEL;
-      WEB_Uhrtext += F("zwanzig nach ");
+      		WEB_Uhrtext += F("zwanzig nach ");
 			setHours(hours, false, matrix);
 			break;
 		case 5:
@@ -1299,13 +1297,13 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			AE_PLUS_DRITTEL;
           	AE_PLUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("f&uuml;nf vor halb ");
+      		WEB_Uhrtext += F("f&uuml;nf vor halb ");
 			setHours(hours, false, matrix);
 			break;
 		case 6:
 			// halb
 			AE_HALB;
-      WEB_Uhrtext += F("halb ");
+      		WEB_Uhrtext += F("halb ");
 			setHours(hours, false, matrix);
 			break;
 		case 7:
@@ -1313,47 +1311,47 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			AE_HALB;
           	AE_PLUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("f&uuml;nf nach halb ");
+      		WEB_Uhrtext += F("f&uuml;nf nach halb ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
 			// 20 vor
 			AE_MINUS_DRITTEL;
-      WEB_Uhrtext += F("zwanzig vor ");
+      		WEB_Uhrtext += F("zwanzig vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 9:
 			// viertel vor
 			AE_MINUS_VIERTEL;
-      WEB_Uhrtext += F("viertel vor ");
+      		WEB_Uhrtext += F("viertel vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 10:
 			// 10 vor
 			AE_MINUS_ZEHN;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("zehn vor ");
+      		WEB_Uhrtext += F("zehn vor ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 11:
 			// 5 vor
 			AE_MINUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("f&uuml;nf vor ");
+      		WEB_Uhrtext += F("f&uuml;nf vor ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -1362,17 +1360,17 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_AE_EN)
-		AE_ESIST;
     if (settings.mySettings.itIs) 
     { 
-      WEB_Uhrtext = F("It is ");
+		AE_ESIST;
+      	WEB_Uhrtext = F("It is ");
     }
     else 
     { 
-      WEB_Uhrtext = "";
+      	WEB_Uhrtext = "";
     }
-		switch (minutes / 5)
-		{
+	switch (minutes / 5)
+	{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -1381,26 +1379,26 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			// 5 nach
 			AE_PLUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("five past ");
+      		WEB_Uhrtext += F("five past ");
 			setHours(hours, false, matrix);
 			break;
 		case 2:
 			// 10 nach
 			AE_PLUS_ZEHN;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("ten past ");
+      		WEB_Uhrtext += F("ten past ");
 			setHours(hours, false, matrix);
 			break;
 		case 3:
 			// viertel nach
 			AE_PLUS_VIERTEL;
-      WEB_Uhrtext += F("a quarter past ");
+      		WEB_Uhrtext += F("a quarter past ");
 			setHours(hours, false, matrix);
 			break;
 		case 4:
 			// 20 nach
 			AE_PLUS_DRITTEL;
-      WEB_Uhrtext += F("twenty past ");
+      		WEB_Uhrtext += F("twenty past ");
 			setHours(hours, false, matrix);
 			break;
 		case 5:
@@ -1408,13 +1406,13 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			AE_PLUS_DRITTEL;
           	AE_PLUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("twenty-five past ");
+      		WEB_Uhrtext += F("twenty-five past ");
 			setHours(hours, false, matrix);
 			break;
 		case 6:
 			// halb
 			AE_HALB;
-      WEB_Uhrtext += F("half past ");
+      		WEB_Uhrtext += F("half past ");
 			setHours(hours, false, matrix);
 			break;
 		case 7:
@@ -1422,47 +1420,47 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 			AE_HALB;
           	AE_PLUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("twenty-five to ");
+      		WEB_Uhrtext += F("twenty-five to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 8:
 			// 20 vor
 			AE_MINUS_DRITTEL;
-      WEB_Uhrtext += F("twenty to ");
+      		WEB_Uhrtext += F("twenty to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 9:
 			// viertel vor
 			AE_MINUS_VIERTEL;
-      WEB_Uhrtext += F("a quarter to ");
+      		WEB_Uhrtext += F("a quarter to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 10:
 			// 10 vor
 			AE_MINUS_ZEHN;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("ten to ");
+      		WEB_Uhrtext += F("ten to ");
 			setHours(hours + 1, false, matrix);
 			break;
 		case 11:
 			// 5 vor
 			AE_MINUS_FUENF;
           	AE_MINUTEN;
-      WEB_Uhrtext += F("five to ");
+      		WEB_Uhrtext += F("five to ");
 			setHours(hours + 1, false, matrix);
 			break;
-		}
+	}
     WEB_Uhrtext += F("<br>");
     switch (minutes % 5)
     {
     case 4:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 3:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 2:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     case 1:
-      WEB_Uhrtext += F("&bull;");
+      	WEB_Uhrtext += F("&bull;");
     }
 #endif
 
@@ -1480,80 +1478,80 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 // DEUTSCH
 //########################################################################################################################  
 #if defined(FRONTCOVER_DE_DE) || defined(FRONTCOVER_DE_SW) || defined(FRONTCOVER_DE_BA) || defined(FRONTCOVER_DE_SA)
-		if (glatt)
-			DE_UHR;
-		switch (hours)
-		{
+	if (glatt)
+		DE_UHR;
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			DE_H_ZWOELF;
-      WEB_Uhrtext += F("zw&ouml;lf ");
+      		WEB_Uhrtext += F("zw&ouml;lf ");
 			break;
 		case 1:
 		case 13:
 			if (glatt)
-      {
+      		{
 				DE_H_EIN;
-        WEB_Uhrtext += F("ein ");
-      }
+        		WEB_Uhrtext += F("ein ");
+			}
 			else
-      {
+			{
 				DE_H_EINS;
-        WEB_Uhrtext += F("eins ");
-      }
+        		WEB_Uhrtext += F("eins ");
+      		}
 			break;
 		case 2:
 		case 14:
 			DE_H_ZWEI;
-      WEB_Uhrtext += F("zwei ");
+      		WEB_Uhrtext += F("zwei ");
 			break;
 		case 3:
 		case 15:
 			DE_H_DREI;
-      WEB_Uhrtext += F("drei ");
+      		WEB_Uhrtext += F("drei ");
 			break;
 		case 4:
 		case 16:
 			DE_H_VIER;
-      WEB_Uhrtext += F("vier ");
+      		WEB_Uhrtext += F("vier ");
 			break;
 		case 5:
 		case 17:
 			DE_H_FUENF;
-      WEB_Uhrtext += F("f&uuml;nf ");
+      		WEB_Uhrtext += F("f&uuml;nf ");
 			break;
 		case 6:
 		case 18:
 			DE_H_SECHS;
-      WEB_Uhrtext += F("sechs ");
+      		WEB_Uhrtext += F("sechs ");
 			break;
 		case 7:
 		case 19:
 			DE_H_SIEBEN;
-      WEB_Uhrtext += F("sieben ");
+      		WEB_Uhrtext += F("sieben ");
 			break;
 		case 8:
 		case 20:
 			DE_H_ACHT;
-      WEB_Uhrtext += F("acht ");
+      		WEB_Uhrtext += F("acht ");
 			break;
 		case 9:
 		case 21:
 			DE_H_NEUN;
-      WEB_Uhrtext += F("neun ");
+      		WEB_Uhrtext += F("neun ");
 			break;
 		case 10:
 		case 22:
 			DE_H_ZEHN;
-      WEB_Uhrtext += F("zehn ");
+      		WEB_Uhrtext += F("zehn ");
 			break;
 		case 11:
 		case 23:
 			DE_H_ELF;
-      WEB_Uhrtext += F("elf ");
+      		WEB_Uhrtext += F("elf ");
 			break;
-		}
+	}
     if (glatt) WEB_Uhrtext += F("Uhr");
 #endif
 
@@ -1564,83 +1562,83 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
     }
     switch (hours)
     {
-    case 0:
-    case 12:
-    case 24:
-      DE_MKF_H_ZWOELF;
-      WEB_Uhrtext += F("zw&ouml;lf ");
-      break;
-    case 1:
-    case 13:
-      if (glatt)
-      {
-        DE_MKF_H_EIN;
-        WEB_Uhrtext += F("ein ");
-      }
-      else
-      {
-        DE_MKF_H_EINS;
-        WEB_Uhrtext += F("eins ");
-      }
-      break;
-    case 2:
-    case 14:
-      DE_MKF_H_ZWEI;
-      WEB_Uhrtext += F("zwei ");
-      break;
-    case 3:
-    case 15:
-      DE_MKF_H_DREI;
-      WEB_Uhrtext += F("drei ");
-      break;
-    case 4:
-    case 16:
-      DE_MKF_H_VIER;
-      WEB_Uhrtext += F("vier ");
-      break;
-    case 5:
-    case 17:
-      DE_MKF_H_FUENF;
-      WEB_Uhrtext += F("f&uuml;nf ");
-      break;
-    case 6:
-    case 18:
-      DE_MKF_H_SECHS;
-      WEB_Uhrtext += F("sechs ");
-      break;
-    case 7:
-    case 19:
-      DE_MKF_H_SIEBEN;
-      WEB_Uhrtext += F("sieben ");
-      break;
-    case 8:
-    case 20:
-      DE_MKF_H_ACHT;
-      WEB_Uhrtext += F("acht ");
-      break;
-    case 9:
-    case 21:
-      DE_MKF_H_NEUN;
-      WEB_Uhrtext += F("neun ");
-      break;
-    case 10:
-    case 22:
-      DE_MKF_H_ZEHN;
-      WEB_Uhrtext += F("zehn ");
-      break;
-    case 11:
-    case 23:
-      DE_MKF_H_ELF;
-      WEB_Uhrtext += F("elf ");
-      break;
+		case 0:
+		case 12:
+		case 24:
+			DE_MKF_H_ZWOELF;
+			WEB_Uhrtext += F("zw&ouml;lf ");
+			break;
+		case 1:
+		case 13:
+			if (glatt)
+			{
+				DE_MKF_H_EIN;
+				WEB_Uhrtext += F("ein ");
+			}
+			else
+			{
+				DE_MKF_H_EINS;
+				WEB_Uhrtext += F("eins ");
+			}
+			break;
+		case 2:
+		case 14:
+			DE_MKF_H_ZWEI;
+			WEB_Uhrtext += F("zwei ");
+			break;
+		case 3:
+		case 15:
+			DE_MKF_H_DREI;
+			WEB_Uhrtext += F("drei ");
+			break;
+		case 4:
+		case 16:
+			DE_MKF_H_VIER;
+			WEB_Uhrtext += F("vier ");
+			break;
+		case 5:
+		case 17:
+			DE_MKF_H_FUENF;
+			WEB_Uhrtext += F("f&uuml;nf ");
+			break;
+		case 6:
+		case 18:
+			DE_MKF_H_SECHS;
+			WEB_Uhrtext += F("sechs ");
+			break;
+		case 7:
+		case 19:
+			DE_MKF_H_SIEBEN;
+			WEB_Uhrtext += F("sieben ");
+			break;
+		case 8:
+		case 20:
+			DE_MKF_H_ACHT;
+			WEB_Uhrtext += F("acht ");
+			break;
+		case 9:
+		case 21:
+			DE_MKF_H_NEUN;
+			WEB_Uhrtext += F("neun ");
+			break;
+		case 10:
+		case 22:
+			DE_MKF_H_ZEHN;
+			WEB_Uhrtext += F("zehn ");
+			break;
+		case 11:
+		case 23:
+			DE_MKF_H_ELF;
+			WEB_Uhrtext += F("elf ");
+			break;
     }
     if (glatt) WEB_Uhrtext += F("Uhr");
 #endif
 
 
 #if defined(FRONTCOVER_D3)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
@@ -1690,7 +1688,7 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 		case 23:
 			D3_H_ELFE;
 			break;
-		}
+	}
 #endif
 
 //########################################################################################################################
@@ -1698,70 +1696,70 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_CH)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			CH_H_ZWOEUFI;
-      WEB_Uhrtext += F("Zw&ouml;ufi ");
+      		WEB_Uhrtext += F("Zw&ouml;ufi ");
 			break;
 		case 1:
 		case 13:
 			CH_H_EIS;
-      WEB_Uhrtext += F("Eis ");
+      		WEB_Uhrtext += F("Eis ");
 			break;
 		case 2:
 		case 14:
 			CH_H_ZWOEI;
-      WEB_Uhrtext += F("Zw&ouml;i ");
+      		WEB_Uhrtext += F("Zw&ouml;i ");
 			break;
 		case 3:
 		case 15:
 			CH_H_DRUE;
-      WEB_Uhrtext += F("Dr&uuml;&uuml; ");
+      		WEB_Uhrtext += F("Dr&uuml;&uuml; ");
 			break;
 		case 4:
 		case 16:
 			CH_H_VIER;
-      WEB_Uhrtext += F("Vieri ");
+      		WEB_Uhrtext += F("Vieri ");
 			break;
 		case 5:
 		case 17:
 			CH_H_FUEFI;
-      WEB_Uhrtext += F("F&ouml;ifi ");
+      		WEB_Uhrtext += F("F&ouml;ifi ");
 			break;
 		case 6:
 		case 18:
 			CH_H_SAECHSI;
-      WEB_Uhrtext += F("S&auml;chsi ");
+      		WEB_Uhrtext += F("S&auml;chsi ");
 			break;
 		case 7:
 		case 19:
 			CH_H_SIEBNI;
-      WEB_Uhrtext += F("Sebni ");
+      		WEB_Uhrtext += F("Sebni ");
 			break;
 		case 8:
 		case 20:
 			CH_H_ACHTI;
-      WEB_Uhrtext += F("Achti ");
+      		WEB_Uhrtext += F("Achti ");
 			break;
 		case 9:
 		case 21:
 			CH_H_NUENI;
-      WEB_Uhrtext += F("N&uuml;&uuml;ni ");
+      		WEB_Uhrtext += F("N&uuml;&uuml;ni ");
 			break;
 		case 10:
 		case 22:
 			CH_H_ZAENI;
-      WEB_Uhrtext += F("Z&auml;hni ");
+      		WEB_Uhrtext += F("Z&auml;hni ");
 			break;
 		case 11:
 		case 23:
 			CH_H_EUFI;
-      WEB_Uhrtext += F("Eufi ");
+      		WEB_Uhrtext += F("Eufi ");
 			break;
-		}
+	}
     if (settings.mySettings.itIs) 
     {
       if (minute() % 5 ) WEB_Uhrtext += F("gsi");
@@ -1781,14 +1779,14 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
     case 0:
     case 12:
     case 24:
-  #if defined(FRONTCOVER_CH_AG)   
-      CH_H_ZWOELF;
-      WEB_Uhrtext += F("Zw&ouml;ufi ");
-  #else
-      CH_H_ZWOELF;
-      WEB_Uhrtext += F("Zw&ouml;lfi ");
-  #endif      
-      break;
+#if defined(FRONTCOVER_CH_AG)   
+      	CH_H_ZWOELF;
+      	WEB_Uhrtext += F("Zw&ouml;ufi ");
+#else
+      	CH_H_ZWOELF;
+      	WEB_Uhrtext += F("Zw&ouml;lfi ");
+#endif      
+      	break;
     case 1:
     case 13:
 //      if (glatt)
@@ -1804,59 +1802,59 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
         break;
     case 2:
     case 14:
-      CH_H_ZWEI;
-      WEB_Uhrtext += F("Zw&ouml;i ");
-      break;
+      	CH_H_ZWEI;
+      	WEB_Uhrtext += F("Zw&ouml;i ");
+      	break;
     case 3:
     case 15:
-      CH_H_DREI;
-      WEB_Uhrtext += F("Dr&uuml;&uuml; ");
-      break;
+      	CH_H_DREI;
+      	WEB_Uhrtext += F("Dr&uuml;&uuml; ");
+      	break;
     case 4:
     case 16:
-      CH_H_VIER;
-      WEB_Uhrtext += F("Vieri ");
-      break;
+      	CH_H_VIER;
+      	WEB_Uhrtext += F("Vieri ");
+      	break;
     case 5:
     case 17:
-      CH_H_FUENF;
-      WEB_Uhrtext += F("F&ouml;ifi ");
-      break;
+      	CH_H_FUENF;
+      	WEB_Uhrtext += F("F&ouml;ifi ");
+      	break;
     case 6:
     case 18:
-      CH_H_SECHS;
-      WEB_Uhrtext += F("S&auml;chsi ");
-      break;
+      	CH_H_SECHS;
+      	WEB_Uhrtext += F("S&auml;chsi ");
+      	break;
     case 7:
     case 19:
-      CH_H_SIEBEN;
-      WEB_Uhrtext += F("Sebni ");
-      break;
+      	CH_H_SIEBEN;
+      	WEB_Uhrtext += F("Sebni ");
+      	break;
     case 8:
     case 20:
-      CH_H_ACHT;
-      WEB_Uhrtext += F("Achti ");
-      break;
+      	CH_H_ACHT;
+      	WEB_Uhrtext += F("Achti ");
+      	break;
     case 9:
     case 21:
-      CH_H_NEUN;
-      WEB_Uhrtext += F("N&uuml;&uuml;ni ");
-      break;
+      	CH_H_NEUN;
+      	WEB_Uhrtext += F("N&uuml;&uuml;ni ");
+      	break;
     case 10:
     case 22:
-      CH_H_ZEHN;
-      WEB_Uhrtext += F("Z&auml;hni ");
-      break;
+      	CH_H_ZEHN;
+      	WEB_Uhrtext += F("Z&auml;hni ");
+      	break;
     case 11:
     case 23:
-  #if defined(FRONTCOVER_CH_AG) 
-      CH_H_ELF;
-      WEB_Uhrtext += F("Eufi ");
-  #else
-      CH_H_ELF;
-      WEB_Uhrtext += F("Elfi ");
-  #endif      
-      break;
+#if defined(FRONTCOVER_CH_AG) 
+      	CH_H_ELF;
+      	WEB_Uhrtext += F("Eufi ");
+#else
+      	CH_H_ELF;
+      	WEB_Uhrtext += F("Elfi ");
+#endif      
+      	break;
     }
     if (settings.mySettings.itIs) 
     {
@@ -1871,72 +1869,72 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_EN)
-		if (glatt)
-			EN_OCLOCK;
-		switch (hours)
-		{
+	if (glatt)
+		EN_OCLOCK;
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			EN_H_TWELVE;
-      WEB_Uhrtext += F("twelve ");
+      		WEB_Uhrtext += F("twelve ");
 			break;
 		case 1:
 		case 13:
 			EN_H_ONE;
-      WEB_Uhrtext += F("one ");
+      		WEB_Uhrtext += F("one ");
 			break;
 		case 2:
 		case 14:
 			EN_H_TWO;
-      WEB_Uhrtext += F("two ");
+      		WEB_Uhrtext += F("two ");
 			break;
 		case 3:
 		case 15:
 			EN_H_THREE;
-      WEB_Uhrtext += F("three ");
+      		WEB_Uhrtext += F("three ");
 			break;
 		case 4:
 		case 16:
 			EN_H_FOUR;
-      WEB_Uhrtext += F("four ");
+      		WEB_Uhrtext += F("four ");
 			break;
 		case 5:
 		case 17:
 			EN_H_FIVE;
-      WEB_Uhrtext += F("five ");
+      		WEB_Uhrtext += F("five ");
 			break;
 		case 6:
 		case 18:
 			EN_H_SIX;
-      WEB_Uhrtext += F("six ");
+      		WEB_Uhrtext += F("six ");
 			break;
 		case 7:
 		case 19:
 			EN_H_SEVEN;
-      WEB_Uhrtext += F("seven ");
+      		WEB_Uhrtext += F("seven ");
 			break;
 		case 8:
 		case 20:
 			EN_H_EIGHT;
-      WEB_Uhrtext += F("eight ");
+      		WEB_Uhrtext += F("eight ");
 			break;
 		case 9:
 		case 21:
 			EN_H_NINE;
-      WEB_Uhrtext += F("nine ");
+      		WEB_Uhrtext += F("nine ");
 			break;
 		case 10:
 		case 22:
 			EN_H_TEN;
-      WEB_Uhrtext += F("ten ");
+      		WEB_Uhrtext += F("ten ");
 			break;
 		case 11:
 		case 23:
 			EN_H_ELEVEN;
-      WEB_Uhrtext += F("eleven ");
+      		WEB_Uhrtext += F("eleven ");
 			break;
-		}
+	}
    if (glatt) WEB_Uhrtext += F("o'clock");
 #endif
 
@@ -1945,70 +1943,70 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_ES)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			ES_H_DOCE;
-      WEB_Uhrtext += F("doce ");
+      		WEB_Uhrtext += F("doce ");
 			break;
 		case 1:
 		case 13:
 			ES_H_UNA;
-      WEB_Uhrtext += F("una ");
+      		WEB_Uhrtext += F("una ");
 			break;
 		case 2:
 		case 14:
 			ES_H_DOS;
-      WEB_Uhrtext += F("dos ");
+      		WEB_Uhrtext += F("dos ");
 			break;
 		case 3:
 		case 15:
 			ES_H_TRES;
-      WEB_Uhrtext += F("tres ");
+      		WEB_Uhrtext += F("tres ");
 			break;
 		case 4:
 		case 16:
 			ES_H_CUATRO;
-      WEB_Uhrtext += F("cuatro ");
+      		WEB_Uhrtext += F("cuatro ");
 			break;
 		case 5:
 		case 17:
 			ES_H_CINCO;
-      WEB_Uhrtext += F("cinco ");
+      		WEB_Uhrtext += F("cinco ");
 			break;
 		case 6:
 		case 18:
 			ES_H_SEIS;
-      WEB_Uhrtext += F("seis ");
+      		WEB_Uhrtext += F("seis ");
 			break;
 		case 7:
 		case 19:
 			ES_H_SIETE;
-      WEB_Uhrtext += F("siete ");
+      		WEB_Uhrtext += F("siete ");
 			break;
 		case 8:
 		case 20:
 			ES_H_OCHO;
-      WEB_Uhrtext += F("ocho ");
+      		WEB_Uhrtext += F("ocho ");
 			break;
 		case 9:
 		case 21:
 			ES_H_NUEVE;
-      WEB_Uhrtext += F("nueve ");
+      		WEB_Uhrtext += F("nueve ");
 			break;
 		case 10:
 		case 22:
 			ES_H_DIEZ;
-      WEB_Uhrtext += F("diez ");
+      		WEB_Uhrtext += F("diez ");
 			break;
 		case 11:
 		case 23:
 			ES_H_ONCE;
-      WEB_Uhrtext += F("once ");
+      		WEB_Uhrtext += F("once ");
 			break;
-		}
+	}
 #endif
 
 //########################################################################################################################
@@ -2016,73 +2014,73 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_FR)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 24:
 			FR_H_MINUIT;
-      WEB_Uhrtext += F("minuit ");
+      		WEB_Uhrtext += F("minuit ");
 			break;
 		case 12:
 			FR_H_MIDI;
-      WEB_Uhrtext += F("midi ");
+      			WEB_Uhrtext += F("midi ");
 			break;
 		case 1:
 		case 13:
 			FR_H_UNE;
-      WEB_Uhrtext += F("une ");
+      		WEB_Uhrtext += F("une ");
 			break;
 		case 2:
 		case 14:
 			FR_H_DEUX;
-      WEB_Uhrtext += F("deux ");
+      		WEB_Uhrtext += F("deux ");
 			break;
 		case 3:
 		case 15:
 			FR_H_TROIS;
-      WEB_Uhrtext += F("trois ");
+      		WEB_Uhrtext += F("trois ");
 			break;
 		case 4:
 		case 16:
 			FR_H_QUATRE;
-      WEB_Uhrtext += F("quatre ");
+      		WEB_Uhrtext += F("quatre ");
 			break;
 		case 5:
 		case 17:
 			FR_H_CINQ;
-      WEB_Uhrtext += F("cinq ");
+      		WEB_Uhrtext += F("cinq ");
 			break;
 		case 6:
 		case 18:
 			FR_H_SIX;
-      WEB_Uhrtext += F("six ");
+     		WEB_Uhrtext += F("six ");
 			break;
 		case 7:
 		case 19:
 			FR_H_SEPT;
-      WEB_Uhrtext += F("sept ");
+      		WEB_Uhrtext += F("sept ");
 			break;
 		case 8:
 		case 20:
 			FR_H_HUIT;
-      WEB_Uhrtext += F("huit ");
+      		WEB_Uhrtext += F("huit ");
 			break;
 		case 9:
 		case 21:
 			FR_H_NEUF;
-      WEB_Uhrtext += F("neuf ");
+      		WEB_Uhrtext += F("neuf ");
 			break;
 		case 10:
 		case 22:
 			FR_H_DIX;
-     WEB_Uhrtext += F("dix ");
+     		WEB_Uhrtext += F("dix ");
 			break;
 		case 11:
 		case 23:
 			FR_H_ONZE;
-      WEB_Uhrtext += F("onze ");
+      		WEB_Uhrtext += F("onze ");
 			break;
-		}
+	}
 #endif
 
 //########################################################################################################################
@@ -2090,68 +2088,68 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_IT)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			IT_H_DODICI;
-      WEB_Uhrtext += F("dodici ");
+      		WEB_Uhrtext += F("dodici ");
 			break;
 		case 1:
 		case 13:
 			IT_H_LUNA;
-      WEB_Uhrtext += F("l'una ");
+      		WEB_Uhrtext += F("l'una ");
 			break;
 		case 2:
 		case 14:
 			IT_H_DUE;
-      WEB_Uhrtext += F("due ");
+      		WEB_Uhrtext += F("due ");
 			break;
 		case 3:
 		case 15:
 			IT_H_TRE;
-      WEB_Uhrtext += F("tre ");
+      		WEB_Uhrtext += F("tre ");
 			break;
 		case 4:
 		case 16:
 			IT_H_QUATTRO;
-      WEB_Uhrtext += F("quattro ");
+      		WEB_Uhrtext += F("quattro ");
 			break;
 		case 5:
 		case 17:
 			IT_H_CINQUE;
-      WEB_Uhrtext += F("cinque ");
+      		WEB_Uhrtext += F("cinque ");
 			break;
 		case 6:
 		case 18:
 			IT_H_SEI;
-      WEB_Uhrtext += F("sei ");
+      		WEB_Uhrtext += F("sei ");
 			break;
 		case 7:
 		case 19:
 			IT_H_SETTE;
-      WEB_Uhrtext += F("sette ");
+      		WEB_Uhrtext += F("sette ");
 			break;
 		case 8:
 		case 20:
 			IT_H_OTTO;
-      WEB_Uhrtext += F("otto ");
+      		WEB_Uhrtext += F("otto ");
 			break;
 		case 9:
 		case 21:
 			IT_H_NOVE;
-      WEB_Uhrtext += F("nove ");
+      		WEB_Uhrtext += F("nove ");
 			break;
 		case 10:
 		case 22:
 			IT_H_DIECI;
-      WEB_Uhrtext += F("dieci ");
+      		WEB_Uhrtext += F("dieci ");
 			break;
 		case 11:
 		case 23:
 			IT_H_UNDICI;
-      WEB_Uhrtext += F("undici ");
+      		WEB_Uhrtext += F("undici ");
 			break;
 		}
 #endif
@@ -2161,72 +2159,72 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_NL)
-		if (glatt)
-			NL_UUR;
-		switch (hours)
-		{
+	if (glatt)
+		NL_UUR;
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			NL_H_TWAALF;
-      WEB_Uhrtext += F("twaalf");
+      		WEB_Uhrtext += F("twaalf");
 			break;
 		case 1:
 		case 13:
 			NL_H_EEN;
-      WEB_Uhrtext += F("een");
+      		WEB_Uhrtext += F("een");
 			break;
 		case 2:
 		case 14:
 			NL_H_TWEE;
-      WEB_Uhrtext += F("twee");
+      		WEB_Uhrtext += F("twee");
 			break;
 		case 3:
 		case 15:
 			NL_H_DRIE;
-      WEB_Uhrtext += F("drie");
+      		WEB_Uhrtext += F("drie");
 			break;
 		case 4:
 		case 16:
 			NL_H_VIER;
-      WEB_Uhrtext += F("vier");
+      		WEB_Uhrtext += F("vier");
 			break;
 		case 5:
 		case 17:
 			NL_H_VIJF;
-      WEB_Uhrtext += F("vijf");
+      		WEB_Uhrtext += F("vijf");
 			break;
 		case 6:
 		case 18:
 			NL_H_ZES;
-      WEB_Uhrtext += F("zes");
+      		WEB_Uhrtext += F("zes");
 			break;
 		case 7:
 		case 19:
 			NL_H_ZEVEN;
-      WEB_Uhrtext += F("zeven");
+      		WEB_Uhrtext += F("zeven");
 			break;
 		case 8:
 		case 20:
 			NL_H_ACHT;
-      WEB_Uhrtext += F("acht");
+      		WEB_Uhrtext += F("acht");
 			break;
 		case 9:
 		case 21:
 			NL_H_NEGEN;
-      WEB_Uhrtext += F("negen");
+      		WEB_Uhrtext += F("negen");
 			break;
 		case 10:
 		case 22:
 			NL_H_TIEN;
-      WEB_Uhrtext += F("tien");
+      		WEB_Uhrtext += F("tien");
 			break;
 		case 11:
 		case 23:
 			NL_H_ELF;
-      WEB_Uhrtext += F("elf");
+      		WEB_Uhrtext += F("elf");
 			break;
-		}
+	}
     if (glatt) WEB_Uhrtext += F("uur");
 #endif
 
@@ -2235,71 +2233,71 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_AE_DE)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			AE_H_ZWOELF;
-      WEB_Uhrtext += F("zw&ouml;lf ");
+      		WEB_Uhrtext += F("zw&ouml;lf ");
 			break;
 		case 1:
 		case 13:
 			AE_H_EIN;
-      WEB_Uhrtext += F("eins ");
+      		WEB_Uhrtext += F("eins ");
 			break;
 		case 2:
 		case 14:
 			AE_H_ZWEI;
-      WEB_Uhrtext += F("zwei ");
+      		WEB_Uhrtext += F("zwei ");
 			break;
 		case 3:
 		case 15:
 			AE_H_DREI;
-      WEB_Uhrtext += F("drei ");
+      		WEB_Uhrtext += F("drei ");
 			break;
 		case 4:
 		case 16:
 			AE_H_VIER;
-      WEB_Uhrtext += F("vier ");
+      		WEB_Uhrtext += F("vier ");
 			break;
 		case 5:
 		case 17:
 			AE_H_FUENF;
-      WEB_Uhrtext += F("f&uuml;nf ");
+      		WEB_Uhrtext += F("f&uuml;nf ");
 			break;
 		case 6:
 		case 18:
 			AE_H_SECHS;
-      WEB_Uhrtext += F("sechs ");
+      		WEB_Uhrtext += F("sechs ");
 			break;
 		case 7:
 		case 19:
 			AE_H_SIEBEN;
-      WEB_Uhrtext += F("sieben ");
+      		WEB_Uhrtext += F("sieben ");
 			break;
 		case 8:
 		case 20:
 			AE_H_ACHT;
-      WEB_Uhrtext += F("acht ");
+      		WEB_Uhrtext += F("acht ");
 			break;
 		case 9:
 		case 21:
 			AE_H_NEUN;
-      WEB_Uhrtext += F("neun ");
+      		WEB_Uhrtext += F("neun ");
 			break;
 		case 10:
 		case 22:
 			AE_H_ZEHN;
-      WEB_Uhrtext += F("zehn ");
+      		WEB_Uhrtext += F("zehn ");
 			break;
 		case 11:
 		case 23:
 			AE_H_ELF;
-      WEB_Uhrtext += F("elf ");
+      		WEB_Uhrtext += F("elf ");
 			break;
-		}
-   if (glatt) WEB_Uhrtext += F("Uhr");
+	}
+   	if (glatt) WEB_Uhrtext += F("Uhr");
 #endif
 
 //########################################################################################################################
@@ -2307,71 +2305,71 @@ void Renderer::setHours(uint8_t hours, boolean glatt, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_AE_EN)
-		switch (hours)
-		{
+	switch (hours)
+	{
 		case 0:
 		case 12:
 		case 24:
 			AE_H_ZWOELF;
-      WEB_Uhrtext += F("twelve ");
+      		WEB_Uhrtext += F("twelve ");
 			break;
 		case 1:
 		case 13:
 			AE_H_EIN;
-      WEB_Uhrtext += F("one ");
+      		WEB_Uhrtext += F("one ");
 			break;
 		case 2:
 		case 14:
 			AE_H_ZWEI;
-      WEB_Uhrtext += F("two ");
+      		WEB_Uhrtext += F("two ");
 			break;
 		case 3:
 		case 15:
 			AE_H_DREI;
-      WEB_Uhrtext += F("three ");
+      		WEB_Uhrtext += F("three ");
 			break;
 		case 4:
 		case 16:
 			AE_H_VIER;
-      WEB_Uhrtext += F("four ");
+      		WEB_Uhrtext += F("four ");
 			break;
 		case 5:
 		case 17:
 			AE_H_FUENF;
-      WEB_Uhrtext += F("five ");
+      		WEB_Uhrtext += F("five ");
 			break;
 		case 6:
 		case 18:
 			AE_H_SECHS;
-      WEB_Uhrtext += F("six ");
+      		WEB_Uhrtext += F("six ");
 			break;
 		case 7:
 		case 19:
 			AE_H_SIEBEN;
-      WEB_Uhrtext += F("seven ");
+     		WEB_Uhrtext += F("seven ");
 			break;
 		case 8:
 		case 20:
 			AE_H_ACHT;
-      WEB_Uhrtext += F("eight ");
+      		WEB_Uhrtext += F("eight ");
 			break;
 		case 9:
 		case 21:
 			AE_H_NEUN;
-      WEB_Uhrtext += F("nine ");
+      		WEB_Uhrtext += F("nine ");
 			break;
 		case 10:
 		case 22:
 			AE_H_ZEHN;
-      WEB_Uhrtext += F("ten ");
+      		WEB_Uhrtext += F("ten ");
 			break;
 		case 11:
 		case 23:
 			AE_H_ELF;
-      WEB_Uhrtext += F("eleven ");
+      		WEB_Uhrtext += F("eleven ");
 			break;
-		}
-   if (glatt) WEB_Uhrtext += F("o'clock");
+	}
+   	if (glatt) WEB_Uhrtext += F("o'clock");
 #endif
 
 }
@@ -2456,29 +2454,29 @@ void Renderer::setAMPM(uint8_t hours, uint16_t matrix[])
 void Renderer::ES_hours(uint8_t hours, uint16_t matrix[])
 {
 	if ((hours == 1) || (hours == 13))
-  {
+  	{
 		ES_ESLA;
-    if (settings.mySettings.itIs) 
-    { 
-      WEB_Uhrtext += F("es la ");
-    }
-    else 
-    { 
-      WEB_Uhrtext += "";
-    }
-  }
+    	if (settings.mySettings.itIs) 
+    	{ 
+      		WEB_Uhrtext += F("es la ");
+    	}
+    	else 
+    	{ 
+      		WEB_Uhrtext += "";
+    	}
+  	}
 	else
-  {
+  	{
 		ES_SONLAS;
-    if (settings.mySettings.itIs) 
-    { 
-      WEB_Uhrtext += F("son las ");
-    }
-    else 
-    { 
-      WEB_Uhrtext += "";
-    }
-  }    
+    	if (settings.mySettings.itIs) 
+    	{ 
+      		WEB_Uhrtext += F("son las ");
+    	}
+    	else 
+    	{ 
+      		WEB_Uhrtext += "";
+    	}
+  	}    
 }
 #endif
 
@@ -2487,19 +2485,19 @@ void Renderer::ES_hours(uint8_t hours, uint16_t matrix[])
 void Renderer::FR_hours(uint8_t hours, uint16_t matrix[])
 {
 	if ((hours == 1) || (hours == 13))
-  {
+  	{
 		FR_HEURE;
-    WEB_Uhrtext += F("heure ");
-  }
+    	WEB_Uhrtext += F("heure ");
+  	}
 	else
-  {
+  	{
 		if ((hours == 0) || (hours == 12) || (hours == 24))
 			;
 		else
-    {
+    	{
 			FR_HEURES;
-      WEB_Uhrtext += F("heures ");
-    }
+      		WEB_Uhrtext += F("heures ");
+    	}
   }
 }
 #endif
@@ -2510,28 +2508,28 @@ void Renderer::IT_hours(uint8_t hours, uint16_t matrix[])
 {
 	if ((hours != 1) && (hours != 13))
 	{	
-	  IT_SONOLE;
-    if (settings.mySettings.itIs) 
-    { 
-      WEB_Uhrtext += F("Sono le ");
-    }
-    else 
-    { 
-      WEB_Uhrtext += "";
-    }
+	  	IT_SONOLE;
+    	if (settings.mySettings.itIs) 
+    	{ 
+      		WEB_Uhrtext += F("Sono le ");
+    	}
+    	else 
+    	{ 
+      		WEB_Uhrtext += "";
+    	}
 	}
 	else
-  {
+  	{
 		IT_E;
-    if (settings.mySettings.itIs) 
-    { 
-      WEB_Uhrtext += F("È ");
-    }
-    else 
-    { 
-      WEB_Uhrtext += "";
-    }
-  }
+    	if (settings.mySettings.itIs) 
+    	{ 
+      		WEB_Uhrtext += F("È ");
+    	}
+    	else 
+    	{ 
+      		WEB_Uhrtext += "";
+    	}
+  	}
 }
 #endif
 

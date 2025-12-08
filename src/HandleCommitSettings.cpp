@@ -8,6 +8,7 @@
 #include "Html_content.h"
 #include "Helper.h"
 #include "Game.h"
+#include "TaskStructs.h"
 
 //#define myDEBUG
 #include "MyDebug.h"
@@ -19,6 +20,8 @@ extern void callRoot(AsyncWebServerRequest *request);
 extern uint16_t matrix[];
 extern uint16_t nightOffTime;
 extern uint16_t dayOnTime;
+extern s_taskParams taskParams;
+extern EventGroupHandle_t xEvent;
 
 
 static Settings *settings = Settings::getInstance();
@@ -427,19 +430,24 @@ void handleCommitSettings(AsyncWebServerRequest *request)
 
     renderer->language = settings->mySettings.language;
     renderer->itIs = settings->mySettings.itIs;
+    /*
     ledDriver->setDegreeOffset((mt->mytm.tm_hour*15+mt->mytm.tm_min*6)%360);
     ledDriver->corcol=settings->mySettings.corcol;
     renderer->clearScreenBuffer(matrix);
     renderer->setTime(mt->mytm.tm_hour, mt->mytm.tm_min, matrix);
     renderer->setCorners(mt->mytm.tm_min, matrix);
-    if (!settings->mySettings.itIs && ((mt->mytm.tm_min / 5) % 6))
-      renderer->clearEntryWords(matrix);
+    //if (!settings->mySettings.itIs && ((mt->mytm.tm_min / 5) % 6))
+    //  renderer->clearEntryWords(matrix);
     ledDriver->writeScreenBufferFade(matrix, settings->mySettings.ledcol);
-
+    */
     nightOffTime  =  (settings->mySettings.nightOffTime / 3600) * 60;
     nightOffTime  += (settings->mySettings.nightOffTime % 3600) / 60;
     dayOnTime     =  (settings->mySettings.dayOnTime / 3600) * 60;
     dayOnTime     += (settings->mySettings.dayOnTime % 3600) / 60;
+
+    ledDriver->checkNightMode(mt->mytm.tm_hour, mt->mytm.tm_min);
+    taskParams.updateScreen = true;
+    xEventGroupSetBits(xEvent, MODE_TIME);
 
     callRoot(request);
   }
