@@ -28,10 +28,10 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 // DEUTSCH
 //########################################################################################################################
 #if defined(FRONTCOVER_DE_DE) || defined(FRONTCOVER_DE_SW) || defined(FRONTCOVER_DE_BA) || defined(FRONTCOVER_DE_SA)
+	DE_ESIST;
     if (itIs) 
     { 
-		DE_ESIST;
-      	WEB_Uhrtext = F("Es ist ");
+      WEB_Uhrtext = F("Es ist ");
     }
     else 
     { 
@@ -166,10 +166,10 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 #endif
 
 #if defined(FRONTCOVER_DE_MKF_DE) || defined(FRONTCOVER_DE_MKF_SW) || defined(FRONTCOVER_DE_MKF_BA) || defined(FRONTCOVER_DE_MKF_SA)
+	DE_MKF_ESIST;
     if (settings.mySettings.itIs) 
     { 
-		DE_MKF_ESIST;
-      	WEB_Uhrtext = F("Es ist ");
+      WEB_Uhrtext = F("Es ist ");
     }
     else 
     { 
@@ -303,9 +303,9 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 #endif
 
 #if defined(FRONTCOVER_D3)
-	D3_ESISCH;
-	switch (minutes / 5)
-	{
+		D3_ESISCH;
+		switch (minutes / 5)
+		{
 		case 0:
 			// glatte Stunde
 			setHours(hours, true, matrix);
@@ -385,15 +385,17 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_CH)
+    
+
     if (settings.mySettings.itIs) 
     {
       if (minutes % 5) CH_GSI;
     }
 
+    CH_ESISCH;
     if (settings.mySettings.itIs) 
     {
-		CH_ESISCH;
-      	WEB_Uhrtext = F("Es isch ");
+      WEB_Uhrtext = F("Es isch ");
     }
     else
     {
@@ -656,10 +658,9 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_EN)
-		
+	EN_ITIS;
     if (settings.mySettings.itIs) 
     { 
-	  EN_ITIS;
       WEB_Uhrtext = F("It is ");
     }
     else 
@@ -889,10 +890,10 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_FR)
+	FR_ILEST;
     if (settings.mySettings.itIs) 
     { 
-		FR_ILEST;
-      	WEB_Uhrtext = F("Il est ");
+      WEB_Uhrtext = F("Il est ");
     }
     else 
     { 
@@ -1135,10 +1136,10 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_NL)
+	NL_HETIS;
     if (settings.mySettings.itIs) 
     { 
-		NL_HETIS;
-      	WEB_Uhrtext = F("het is ");
+      WEB_Uhrtext = F("het is ");
     }
     else 
     { 
@@ -1251,10 +1252,10 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_AE_DE)
+	AE_ESIST;
     if (settings.mySettings.itIs) 
     { 
-		AE_ESIST;
-      	WEB_Uhrtext = F("ES ist ");
+      WEB_Uhrtext = F("ES ist ");
     }
     else 
     { 
@@ -1360,10 +1361,10 @@ void Renderer::setTime(uint8_t hours, uint8_t minutes, uint16_t matrix[])
 //########################################################################################################################
 
 #if defined(FRONTCOVER_AE_EN)
+	AE_ESIST;
     if (settings.mySettings.itIs) 
     { 
-		AE_ESIST;
-      	WEB_Uhrtext = F("It is ");
+      WEB_Uhrtext = F("It is ");
     }
     else 
     { 

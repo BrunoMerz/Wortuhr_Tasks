@@ -791,8 +791,11 @@ void displayTime(void *p) {
         renderer->clearScreenBuffer(matrix);
         renderer->setTime(aktHour, aktMinute, matrix);
         renderer->setCorners(aktMinute, matrix);
-
-        if (aktDay != lastDay)
+        
+        if (!settings->mySettings.itIs)
+               renderer->clearEntryWords(matrix);
+        
+               if (aktDay != lastDay)
         {
           lastDay = aktDay;
 
