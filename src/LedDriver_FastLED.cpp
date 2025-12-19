@@ -700,8 +700,7 @@ void LedDriver::matrix_regen(uint16_t screenBufferNew[], uint32_t color)
         } // x
       }  // y
       show();
-      vTaskDelay(pdMS_TO_TICKS(int(TRANSITION_SPEED / 9)));
-      vTaskDelay(pdMS_TO_TICKS(1));
+      vTaskDelay(pdMS_TO_TICKS(int(TRANSITION_SPEED / 18)));
     }
     if ( i > 100 && mleer == 0x7FF) break;
   }
