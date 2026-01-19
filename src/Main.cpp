@@ -158,6 +158,7 @@ uint16_t nightOffTime;
 uint16_t dayOnTime;
 uint32_t autoModeChangeTimer;
 uint8_t akt_transition;
+int WLAN_reconnect;
 
 
 uint16_t matrix[10] = {};
@@ -327,6 +328,24 @@ void queueScheduler(void *p) {
       lastMinute = aktMinute;
       ledDriver->checkNightMode(aktHour, aktMinute);
       xEventGroupSetBits(xEvent, MODE_TIME);
+
+      // check if wifi reconect is needed
+      IPAddress myIP = WiFi.localIP();
+      if (WiFi.status() != WL_CONNECTED || (myIP[0] == 0 && myIP[1] == 0 && myIP[2] == 0 && myIP[3] == 0))
+      {
+  #ifdef SYSLOGSERVER_SERVER
+        syslog.log(LOG_INFO, "Aktuelle IP ist : " + WiFi.localIP().toString());
+        syslog.log(LOG_INFO, "WLAN-Reconnect!");
+  #endif
+        WiFi.reconnect();
+        WLAN_reconnect++;
+        delay(100);
+  #ifdef DEBUG
+        DEBUG_PRINT(F("Aktuelle IP nach Reconnect ist : "));
+        DEBUG_PRINTLN(WiFi.localIP());
+  #endif
+      }
+
     }
 
     autoModeChangeTimer--;
@@ -795,9 +814,10 @@ void displayTime(void *p) {
         if (!settings->mySettings.itIs)
                renderer->clearEntryWords(matrix);
         
-               if (aktDay != lastDay)
+        if (aktDay != lastDay)
         {
           lastDay = aktDay;
+          WLAN_reconnect = 0;
 
 #ifdef SHOW_MODE_MOONPHASE
           ow->moonphase = ow->getMoonphase(mt->mytm.tm_year, mt->mytm.tm_mon, mt->mytm.tm_mday);

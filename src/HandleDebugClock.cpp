@@ -31,6 +31,7 @@ extern float getHeapFragmentation();
 extern s_taskParams taskParams;
 extern uint32_t autoModeChangeTimer;
 extern uint8_t akt_transition;
+extern int WLAN_reconnect;
 
 static MyTime *mt = MyTime::getInstance();
 static Settings *settings = Settings::getInstance();
@@ -130,8 +131,8 @@ void debugClock(AsyncWebServerRequest *request)
   if ( WiFi.RSSI() >= -90 && WiFi.RSSI() < -80 ) response->print(F(LANG_WIFIQ6));
   if ( WiFi.RSSI() < -90 ) response->print(F(LANG_WIFIQ7));
   response->print(F(")</li>\n"));
-//  response->print(F("<li>" LANG_WIFIRECON ": "));
-//  response->print(String(glb->WLAN_reconnect) + "</li>\n";
+  response->print(F("<li>" LANG_WIFIRECON ": "));
+  response->print(String(WLAN_reconnect)) + "</li>\n";
   response->print(F("<li>" LANG_IPADRESS ": "));
   response->print(myWifi->IP().toString());
   response->print(F("</li>\n<li>Client IP-Addr: "));
