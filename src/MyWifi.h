@@ -41,7 +41,6 @@ class MyWifi {
     void doReset(void);
     void saveSSIDandPWD(void);
     AsyncWebServer *getServer(void);
-    bool startConfigPortal(char *ssid);
     static String _scanResultHTML;
   
   private:

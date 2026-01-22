@@ -164,7 +164,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info){
 }
 
 
-void handleRoot(AsyncWebServerRequest *request) {
+void handleApRoot(AsyncWebServerRequest *request) {
   String html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="de">
@@ -260,12 +260,16 @@ void handleRoot(AsyncWebServerRequest *request) {
 }
 
 
-void handleSave(AsyncWebServerRequest *request) {
+void handleApSave(AsyncWebServerRequest *request) {
   String _ssid = request->arg("ssid");
   String _passwd = request->arg("pass");
   request->send(200, "text/plain", "SSID: " + _ssid + "\nPasswort: " + _passwd + "\nGespeichert!");
+  delay(500);
   WiFi.disconnect();
+  delay(200);
   WiFi.mode(WIFI_STA);
+	delay(200);
+  DEBUG_PRINTF("handleApSave: ssid=%s, passwd=%s\n",_ssid.c_str(), _passwd.c_str());
   WiFi.begin(_ssid, _passwd);
 }
 
@@ -285,53 +289,47 @@ MyWifi::MyWifi(void) {
 
 }
 
-
-bool MyWifi::startConfigPortal(char *ssid) {
-  DEBUG_PRINTLN("Starting Config Portal");
+void startConfigPortal(void *p) {
+  DEBUG_PRINTLN("Starting Task Config Portal");
   IPAddress apIP(192, 168, 4, 1);
   const byte DNS_PORT = 53;
 
   DEBUG_PRINTLN("Suche nach WLAN-Netzen...");
   bool ret;
   int n = WiFi.scanNetworks();
-  _scanResultHTML = "";
+  MyWifi::_scanResultHTML = "";
 
   if (n == 0) {
-    _scanResultHTML = "<li>Keine Netzwerke gefunden</li>";
+    MyWifi::_scanResultHTML = "<li>Keine Netzwerke gefunden</li>";
     ret = false;
   } else {
     for (int i = 0; i < n; ++i) {
       String ssid = WiFi.SSID(i);
       ssid.replace("\"", ""); // doppelte Anführungszeichen vermeiden
-      if(_scanResultHTML.indexOf(ssid) < 0)
-        _scanResultHTML += "<li onclick=\"setInputValue('"+ ssid + "')\">" + ssid + "</li>";
+      if(MyWifi::_scanResultHTML.indexOf(ssid) < 0)
+        MyWifi::_scanResultHTML += "<li onclick=\"setInputValue('"+ ssid + "')\">" + ssid + "</li>";
     }
     ret = true;
   }
-  DEBUG_PRINTF("Suche nach WLAN-Netzen beendet: ret=%d, _scanResultHTML=%s\n", ret, _scanResultHTML.c_str());
+  DEBUG_PRINTF("Suche nach WLAN-Netzen beendet: ret=%d, _scanResultHTML=%s\n", ret, MyWifi::_scanResultHTML.c_str());
 
-
-  WiFi.disconnect(true);
-  vTaskDelay(pdMS_TO_TICKS(100));
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-  WiFi.softAP(ssid);
+  WiFi.softAP(settings->mySettings.systemname);
   vTaskDelay(pdMS_TO_TICKS(100));
  
   DEBUG_PRINTLN("adding handler");
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    handleRoot(request);
+    handleApRoot(request);
   });
   
 
   server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request) {
-    handleSave(request);
+    handleApSave(request);
   });
 
   server.onNotFound([](AsyncWebServerRequest *request) { 
-    AsyncWebServerResponse *response = request->beginResponse(302, "text/plain");
-    response->addHeader("Location", "/");
-    request->send(response);
+    request->redirect("/");
   });
 
   DEBUG_PRINTLN("Starting DNS Portal");
@@ -348,8 +346,11 @@ bool MyWifi::startConfigPortal(char *ssid) {
     vTaskDelay(pdMS_TO_TICKS(10));
   }
   DEBUG_PRINTLN("server.end()");
+  dns.stop();
+  server.reset();
   server.end();
-  return true;
+
+  vTaskDelete(NULL); // Löscht die eigene Task
 }
 
 
@@ -429,7 +430,7 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
 
   int16_t i=0;
   DEBUG_PRINTF("pass=%s\n",_passwd.c_str());
-  if (_passwd.length() > 0) {
+  if (_ssid.length() > 0 && _passwd.length() > 0) {
     int j=0;
     _wifi_stat = -1;
     if(WiFi.isConnected()) {
@@ -459,6 +460,7 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
 #endif
         vTaskDelay(pdMS_TO_TICKS(1000));
         if(digitalRead(WIFI_RESET)) {
+          DEBUG_PRINTF("Got WIFI_RESET from pin %d\n", WIFI_RESET);
           doReset();
         }
       }
@@ -471,7 +473,19 @@ bool MyWifi::myBegin(char *ssid, char *passwd) {
     ir->renderAndDisplayPNG("/tft/accesspoint.png",0,1);
 #endif
     Serial.println(F("Starting Accesspoint"));
-    ret = startConfigPortal(settings->mySettings.systemname);
+
+    BaseType_t taskWifi = xTaskCreatePinnedToCore(
+      &startConfigPortal,   // Function name of the task
+      "startConfigPortal",  // Name of the task (e.g. for debugging)
+      4096,// Stack size (bytes)
+      NULL,       // Parameter to pass
+      0,          // Task priority
+      NULL,       // Task handle
+      0
+    );
+    while(!_got_ip)
+      vTaskDelay(pdMS_TO_TICKS(100));
+
     _ssid = WiFi.SSID();
     _passwd = WiFi.psk();
     saveSSIDandPWD();

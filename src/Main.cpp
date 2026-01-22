@@ -931,6 +931,8 @@ void startup(void *) {
   taskParams.taskInfo[TASK_STARTUP].core = xPortGetCoreID();
   taskParams.taskInfo[TASK_STARTUP].priority = uxTaskPriorityGet(NULL);
 
+  pinMode(WIFI_RESET,INPUT_PULLDOWN);
+
   settings->init();
   vTaskDelay(1);
 

@@ -448,7 +448,9 @@ void handleButtonSettings(AsyncWebServerRequest *request)
                ":</td><td>");
   message += F("<input type=\"text\" value=\"");
   message += String(settings->mySettings.systemname);
-  message += F("\" name=\"sysname\" minlength=\"3\" maxlength=\"29\">"
+  message += F("\" name=\"sysname\" minlength=\"3\" maxlength=\"29\""
+               " pattern=\"^[a-zA-Z0-9]{1}[\\-a-zA-Z0-9]+[a-zA-Z0-9]+$\""
+               " title=\"Erlaubte Zeichen A-Z, Ziffern oder Bindestrich\">"
                "</td></tr>\n");
   // ------------------------------------------------------------------------
 #if defined(SunRiseLib) || defined(APIKEY)
